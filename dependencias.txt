@@ -1,0 +1,1 @@
+pip install cryptography//cuando se quiere realizar la migracion de los modelos

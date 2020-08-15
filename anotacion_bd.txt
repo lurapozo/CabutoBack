@@ -1,0 +1,9 @@
+base: marketdb
+user: administrador@localhost pass: admin123
+
+
+
+create database marketDB character set utf8mb4;
+CREATE USER administrador@localhost IDENTIFIED BY 'admin123';
+GRANT ALL PRIVILEGES ON marketdb.* TO administrador@localhost;
+FLUSH PRIVILEGES;
