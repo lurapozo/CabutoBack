@@ -1,0 +1,8 @@
+Prepara ambiente virtual
+myvenv\Scripts\activate
+
+***django admin***
+
+http://localhost:8000/admin/
+user:superadmin
+pass: superadmin2020
