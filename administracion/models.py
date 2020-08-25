@@ -29,7 +29,7 @@ def __str__(self):
 
 class Categoria(models.Model):
 	id_categoria=models.AutoField(primary_key=True)
-	nombre = models.CharField(max_length=100)
+	nombre = models.TextField()
 	image=models.BinaryField()
 	id_establecimiento=models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
 
