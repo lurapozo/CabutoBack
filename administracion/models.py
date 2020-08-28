@@ -41,7 +41,7 @@ class Producto(models.Model):
 	nombre=models.CharField(max_length=100)
 	descripcion=models.CharField(max_length=100)
 	precio=models.FloatField()
-	image=models.BinaryField()
+	image=models.BinaryField(blank = True, null = True)
 	estado=models.CharField(max_length=1)
 	id_categoria=models.ForeignKey(Categoria,on_delete=models.SET_NULL, null=True)
 
