@@ -7,8 +7,7 @@ urlpatterns = [
 	path('producto/orderAsc', getProductoAaZ),
 	path('producto/orderDesc',getProductoZaA),
 	path('producto/precioMenor', getProductoPrecioMenor),
-	path('producto/precioMayor', getProductoPrecioMayor)
-
+	path('producto/precioMayor', getProductoPrecioMayor),
 
 
 
