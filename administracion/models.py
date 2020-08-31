@@ -47,3 +47,28 @@ class Producto(models.Model):
 
 def __str__(self):
 	return self.nombre
+
+class Usuario(models.Model):
+	id_usuario = models.AutoField(primary_key=True)
+	username=models.CharField(max_length=100)
+	cedula=models.CharField(max_length=100)
+	correo=models.EmailField(max_length=100)
+	contrasena=models.CharField()
+	fecha_R=models.DateField(default=datetime.now)
+	tipo_usuario=models.CharField(max_length=100,default="cliente")
+
+def __str__(self):
+	return self.username
+
+class Cliente(models.Model):
+	id_cliente = models.AutoField(primary_key=True)
+	nombre=models.CharField(max_length=100)
+	apellido=models.CharField(max_length=100)
+	metodo_pago= models.CharField(max_length=100)
+	telefono =models.CharField(max_length=100)
+	direccion = models.CharField(max_length=100)
+	fecha_Nac=models.DateField()
+	usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
+	
+def __str__(self):
+	return '%s %s' %(self.nombre, self.apellido)
