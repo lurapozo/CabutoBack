@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime
 
 # Create your models here.
 class Empresa(models.Model):
@@ -53,7 +54,7 @@ class Usuario(models.Model):
 	username=models.CharField(max_length=100)
 	cedula=models.CharField(max_length=100)
 	correo=models.EmailField(max_length=100)
-	contrasena=models.CharField()
+	contrasena=models.CharField(max_length=64)
 	fecha_R=models.DateField(default=datetime.now)
 	tipo_usuario=models.CharField(max_length=100,default="cliente")
 
