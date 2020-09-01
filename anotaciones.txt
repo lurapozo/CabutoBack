@@ -1,5 +1,26 @@
-Prepara ambiente virtual
+1. crea ambiente virtual preferible afuera del proyecto
+python -m venv myvenv
+
+2. Prepara ambiente virtual, te debe salir el nombre de tu ambiente virtual en la consola
 myvenv\Scripts\activate
+
+3. actualiza paquetes
+python -m pip install --upg
+
+4. instala todas las dependencias necesarias que se encuentran en el archivo dependencias.txt
+
+5. anda a mysql workbench y ejecuta los siguientes comandos uno por uno:
+create database marketDB character set utf8mb4;
+CREATE USER administrador@localhost IDENTIFIED BY 'admin123';
+GRANT ALL PRIVILEGES ON marketdb.* TO administrador@localhost;
+FLUSH PRIVILEGES;
+
+6. ubicate en el proyecto y ejecuta el archivo manage.py para que se genere todas las tablas de la base de datos
+python .\manage.py migrate
+
+7. ejecuta el servidor con python
+python .\manage.py runserver
+
 
 ***django admin***
 

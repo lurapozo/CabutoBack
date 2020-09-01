@@ -51,7 +51,7 @@ def __str__(self):
 
 class Usuario(models.Model):
 	id_usuario = models.AutoField(primary_key=True)
-	username=models.CharField(max_length=100)
+	username=models.CharField(max_length=100,default = "NULL")
 	cedula=models.CharField(max_length=100)
 	correo=models.EmailField(max_length=100)
 	contrasena=models.CharField(max_length=64)
@@ -65,10 +65,10 @@ class Cliente(models.Model):
 	id_cliente = models.AutoField(primary_key=True)
 	nombre=models.CharField(max_length=100)
 	apellido=models.CharField(max_length=100)
-	metodo_pago= models.CharField(max_length=100)
-	telefono =models.CharField(max_length=100)
-	direccion = models.CharField(max_length=100)
-	fecha_Nac=models.DateField()
+	metodo_pago= models.CharField(max_length=100, default = "Efectivo")
+	telefono =models.CharField(max_length=100, default = "NONE")
+	direccion = models.CharField(max_length=100, default = "NONE")
+	fecha_Nac=models.DateField(default=datetime.now)
 	usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
 	
 def __str__(self):
