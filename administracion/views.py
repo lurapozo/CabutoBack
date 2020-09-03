@@ -123,9 +123,9 @@ def registro(request):
 		c.save()
 		##return render(response,"http://localhost:8100//login")
 		return HttpResponse(status=200)
-	else
-		print("algo salio mal")
-		return render(response,"/register")
+	#else
+		#print("algo salio mal")
+		#return render(response,"/register")
 
 
 
@@ -150,6 +150,6 @@ def registro(request):
 		c.save()
 		##return render(response,"http://localhost:8100//login")
 		return HttpResponse(status=200)
-	else
-		print("algo salio mal")
-		return render(response,"/register")
+	#else
+		#print("algo salio mal")
+		#return render(response,"/register")
