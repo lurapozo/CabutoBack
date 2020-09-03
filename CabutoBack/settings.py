@@ -90,11 +90,13 @@ WSGI_APPLICATION = 'CabutoBack.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'marketdb',
-        'USER': 'administrador',
-        'PASSWORD': 'admin123',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': 'CabutoShop$marketdb',
+        'USER': 'CabutoShop',
+        'PASSWORD': 'market2020',
+        'HOST': 'CabutoShop.mysql.pythonanywhere-services.com',
+        'PORT': '3306'
+        
+        
         }
 }
 
