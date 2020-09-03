@@ -129,7 +129,33 @@ def registro(request):
 		c.save()
 		##return render(response,"http://localhost:8100//login")
 		return HttpResponse(status=200)
-	else:
-		print("algo salio mal")
-		return render(response,"/register")
+	#else
+		#print("algo salio mal")
+		#return render(response,"/register")
 
+
+
+@csrf_exempt
+def registro(request):
+	if request.method == 'POST':
+		print("estoy en django, metodo registro ")
+		response = json.loads(request.body)
+		print(response)
+		cedula = response["cedula"]
+		email = response['email']
+		contra =response['contrasena']
+		contraR = response['confirma']
+		##if contraR != contra:
+		##	return return HttpResponse(status=400)
+		nombre = response['nombre']
+		apellido = response['apellido']
+		u =Usuario(cedula=cedula,correo=email,contrasena=contra)
+		u.save()
+		u2=Usuario.objects.filter().values()
+		c = Cliente(nombre=nombre,apellido=apellido,usuario=u)
+		c.save()
+		##return render(response,"http://localhost:8100//login")
+		return HttpResponse(status=200)
+	#else
+		#print("algo salio mal")
+		#return render(response,"/register")
