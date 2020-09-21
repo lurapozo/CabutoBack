@@ -18,9 +18,16 @@ FLUSH PRIVILEGES;
 6. ubicate en el proyecto y ejecuta el archivo manage.py para que se genere todas las tablas de la base de datos
 python .\manage.py migrate
 
-7. ejecuta el servidor con python
+7. crea un superusuario para django antes de correr el servidor
+python manage.py createsuperuser
+user:superadmin
+correo: NO COLOQUE NADA Y DE ENTER
+pass: superadmin2020
+
+8. ejecuta el servidor con python
 python .\manage.py runserver
 
+9.
 
 ***django admin***
 

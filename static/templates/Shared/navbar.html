@@ -1,0 +1,15 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/General/navbar.css' %}">
+<nav>
+    <div>
+        <img class="logo-header-img" src="{% static 'img/cabuto.png'%}">
+    </div>
+    <div class="nav-obj-container">
+        <!-- <img class="icon" src="{% static 'img/usuario_blanco.png' %}"> -->
+        <!-- <h4 class="bienvenido-title-h4">Bienvenido, {{ NOMBRE }}</h4> -->
+        <!-- <form action="/logout" method="POST"> -->
+        <!-- {% csrf_token %} -->
+        <button class="btn btn-logout">Cerrar Sesión</button>
+        <!-- </form> -->
+    </div>
+</nav>

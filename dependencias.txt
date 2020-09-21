@@ -3,3 +3,4 @@ pip install PyMySQL
 pip install django-cors-headers
 pip install cryptography  //cuando se quiere realizar la migracion de los modelos
 pip install requests
+pip install Pillow

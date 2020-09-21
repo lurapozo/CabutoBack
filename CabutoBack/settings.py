@@ -47,9 +47,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-#SESSION_COOKIE_SECURE = True
-#CSRF_COOKIE_SECURE = True
-#SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -65,10 +65,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'CabutoBack.urls'
 
+
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'static/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -90,13 +92,11 @@ WSGI_APPLICATION = 'CabutoBack.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'CabutoShop$marketdb',
-        'USER': 'CabutoShop',
-        'PASSWORD': 'market2020',
-        'HOST': 'CabutoShop.mysql.pythonanywhere-services.com',
-        'PORT': '3306'
-        
-        
+        'NAME': 'marketdb',
+        'USER': 'administrador',
+        'PASSWORD': 'admin123',
+        'HOST': 'localhost',
+        'PORT': '3306',
         }
 }
 
@@ -138,3 +138,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+# STATIC_ROOT = 'static'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = "media"
+
+STATICFILES_DIRS=[
+    os.path.join(BASE_DIR,'static')
+]
