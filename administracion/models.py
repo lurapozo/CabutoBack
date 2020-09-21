@@ -105,7 +105,8 @@ class Combo_Producto(models.Model) :
 	id_combo=models.ForeignKey(Combo, on_delete=models.SET_NULL, null=True)
 	id_producto=models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
 	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
-
+	def __str__(self):
+		return self.id_comboxproducto
 
 
 
@@ -116,6 +117,8 @@ class Carrito(models.Model):
 	id_cliente=models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True)
 	id_combo=models.ForeignKey(Combo, on_delete=models.SET_NULL, null=True)
 	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+	def __str__(self):
+		return self.id_carrito
 
 
 
@@ -125,4 +128,5 @@ class Detalle_Carrito(models.Model):
 	precio=models.FloatField()
 	id_producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
 	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
-
+	def __str__(self):
+		return self.id_detallexcarrito
