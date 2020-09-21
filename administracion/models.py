@@ -71,10 +71,6 @@ class Producto(models.Model):
 
 
 
-
-
-
-
 class Cliente(models.Model):
 	id_cliente = models.AutoField(primary_key=True)
 	nombre=models.CharField(max_length=100)
@@ -86,5 +82,47 @@ class Cliente(models.Model):
 	usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
 	def __str__(self):
 		return '%s %s' %(self.nombre, self.apellido)
-	
+
+
+class Combo(models.Model):
+	id_combo=models.AutoField(primary_key=True)
+	nombre=models.CharField(max_length=100)
+	imagen=models.ImageField()
+	precio_total=models.FloatField()
+	estado=models.CharField(max_length=100)
+	cantidad_disponible=models.IntegerField()
+	cantidad_despachada=models.IntegerField()
+	fecha_inicio=models.DateField()
+	fecha_fin=models.DateField()
+	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+	def __str__(self):
+		return self.nombre
+
+
+class Combo_Producto(models.Model) :
+	id_comboxproducto=models.AutoField(primary_key=True)
+	cantidad=models.IntegerField()
+	id_combo=models.ForeignKey(Combo, on_delete=models.SET_NULL, null=True)
+	id_producto=models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
+	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+
+
+
+
+class Carrito(models.Model):
+	id_carrito=models.AutoField(primary_key=True)
+	total=models.FloatField()
+	tiene_combo= models.BooleanField()
+	id_cliente=models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True)
+	id_combo=models.ForeignKey(Combo, on_delete=models.SET_NULL, null=True)
+	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+
+
+
+class Detalle_Carrito(models.Model):
+	id_detallexcarrito=models.AutoField(primary_key=True)
+	cantidad=models.IntegerField()
+	precio=models.FloatField()
+	id_producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
+	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
 
