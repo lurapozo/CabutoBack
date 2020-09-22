@@ -120,7 +120,7 @@ def registro(request):
 		cedula = response["cedula"]
 		email = response['email']
 		contra =response['contrasena']
-		contraR = response['confirma']
+		contraR = response['confirmar']
 		##if contraR != contra:
 		##	return return HttpResponse(status=400)
 		nombre = response['nombre']
@@ -130,11 +130,46 @@ def registro(request):
 		u2=Usuario.objects.filter().values()
 		c = Cliente(nombre=nombre,apellido=apellido,usuario=u)
 		c.save()
-		##return render(response,"http://localhost:8100//login")
-		return HttpResponse(status=200)
-	else:
-		print("algo salio mal")
-		return render(response,"/register")
+		response_data = {
+				'valid': 'OK'
+				}
+		return JsonResponse(response_data,safe=False)
+
+
+	response_data = {
+		'valid': 'NOT'
+		}
+	return JsonResponse(response_data,safe=False)
+	#else
+		#print("algo salio mal")
+		#return render(response,"/register")
+
+
+@csrf_exempt
+def login(request):
+
+	if request.method == 'POST':
+		print("estoy en django, metodo registro ")
+		response = json.loads(request.body)
+		print(response)
+		email = response['correo']
+		contra =response['contrasena']
+		users = Usuario.objects.filter()
+		print(users)
+		for u in users :
+			c = u.correo
+			cn = u.contrasena
+			if c == email and cn == contra:
+				response_data = {
+				'valid': 'OK'
+				}
+				return JsonResponse(response_data,safe=False)
+
+
+	response_data = {
+		'valid': 'NOT'
+		}
+	return JsonResponse(response_data,safe=False)
 
 
 def getEmpresas(request):
