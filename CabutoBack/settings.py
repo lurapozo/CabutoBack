@@ -36,7 +36,8 @@ CORS_ORIGIN_ALLOW_ALL=True
 # Application definition
 
 INSTALLED_APPS = [
-    'administracion.apps.AdministracionConfig',
+    'aplicaciones.administracion',
+    'aplicaciones.movil',
         'corsheaders',
 
     'django.contrib.admin',

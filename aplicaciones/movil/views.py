@@ -11,10 +11,6 @@ from .models import *
 
 # Create your views here.
 
-def inicio(request):
-	return render(request, 'Login/login.html')
-
-
 def getProducto(request):
 	if request.method == 'GET':
 		res = []
@@ -170,20 +166,3 @@ def login(request):
 		'valid': 'NOT'
 		}
 	return JsonResponse(response_data,safe=False)
-
-
-def getEmpresas(request):
-	if request.method=='GET':
-		res=[]
-		
-		empresas=Empresa.objects.all()
-		for emp in empresas:
-			dicc={"id":emp.id_empresa,"nombre":emp.nombre,"descripcion":emp.descripcion,"razon_social":emp.razon_social,"ruc_cedula":emp.ruc_cedula}
-			res.append(dicc)
-		return JsonResponse(res,safe=False)
-	return HttpResponse(status=400)
-
-
-def admin_rol(request):
-	paquete = []
-	return render(request, "roles/admin_rol.html", paquete)

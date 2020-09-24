@@ -15,11 +15,22 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from administracion.views import *
+from aplicaciones.administracion.views import *
+from aplicaciones.movil.views import *
 
+# por defecto va a la parte del administracion
+# urlpatterns = [
+#     path('admin/', admin.site.urls),
+#     path('',include('aplicaciones.administracion.urls')),
+#     path('administracion/',include('aplicaciones.administracion.urls')),
+#     path('movil/',include('aplicaciones.movil.urls')),   
+# ]
+
+
+# por defecto va a la parte del movil
 urlpatterns = [
     path('admin/', admin.site.urls),
-	path('', inicio, name='login')
-
-
+    path('',include('aplicaciones.movil.urls')),
+    path('administracion/',include('aplicaciones.administracion.urls')),
+    path('movil/',include('aplicaciones.movil.urls')),   
 ]
