@@ -1,15 +1,94 @@
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'css/General/navbar.css' %}">
+<link rel="stylesheet" href="{% static 'css/Shared/navbar.css' %}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+<style>
+nav {
+    width: 100%;
+	height: 120px;
+	display: inline-flex;
+    background: linear-gradient(to right, #FFA801, #FE3A00)
+}
+
+.logo-container{
+    text-align: left;
+}
+
+.logo-header-img {
+    padding: 0% 0% 0% 0%;
+    width: 20%;
+    height: 60%;
+    vertical-align: middle;
+}
+
+.nav-obj-container{
+    text-align: right;
+    vertical-align: middle;
+    display: flex;
+
+}
+
+.notification-container{
+    text-align: center;
+    vertical-align: middle;
+
+}
+
+.message-container{
+    text-align: center;
+    vertical-align: middle;
+
+}
+
+.logout-container{
+    text-align: center;
+    vertical-align: middle;
+
+}
+
+.notifications-img{
+    text-align: center;
+    width: 15%;
+    height: 25%;
+    vertical-align: middle;
+}
+
+.message-img{
+    text-align: center;
+    width: 20%;
+    height: 25%;
+    vertical-align: middle;
+}
+
+.logout-link{
+    color: white;
+    font-weight: bold;
+}
+</style>
 <nav>
-    <div>
+    <div class="logo-container col-md-8">
         <img class="logo-header-img" src="{% static 'img/cabuto.png'%}">
     </div>
-    <div class="nav-obj-container">
+    <div class="nav-obj-container col-md-4">
         <!-- <img class="icon" src="{% static 'img/usuario_blanco.png' %}"> -->
         <!-- <h4 class="bienvenido-title-h4">Bienvenido, {{ NOMBRE }}</h4> -->
         <!-- <form action="/logout" method="POST"> -->
         <!-- {% csrf_token %} -->
-        <button class="btn btn-logout">Cerrar Sesión</button>
+        <div class="notification-container col-md-4">
+            <a href="#">
+                <img class="notifications-img" src="{% static 'img/iconos_administrador/notificaciones.png' %}">
+            </a>
+        </div>
+        <div class="message-container col-md-4">
+            <a href="#">
+                <img class="message-img" src="{% static 'img/iconos_administrador/mensajería.png' %}">
+            </a>
+        </div>
+        <div class="logout-container col-md-4">
+            <a href="">
+                <span class="logout-link">Cerrar Sesión</span>
+            </a>
+        </div>
         <!-- </form> -->
     </div>
 </nav>
