@@ -8,6 +8,7 @@ import json
 import random
 from django.core import serializers
 from .models import *
+from aplicaciones.administracion.models import *
 
 # Create your views here.
 
