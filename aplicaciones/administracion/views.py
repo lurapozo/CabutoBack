@@ -14,6 +14,11 @@ from .models import *
 def inicio(request):
 	return render(request, 'Login/login.html')
 
+def principalSuperAdmin(request):
+	return render(request,'Principal/SuperAdmin_Principal.html')
+
+def principalAdmin(request):
+	return render(request,'Principal/Admin_Principal.html')
 
 def getEmpresas(request):
 	if request.method=='GET':
