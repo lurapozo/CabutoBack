@@ -20,6 +20,9 @@ def principalSuperAdmin(request):
 def principalAdmin(request):
 	return render(request,'Principal/Admin_Principal.html')
 
+def empresas(request):
+	return render(request,'Empresa/index.html')
+
 def getEmpresas(request):
 	if request.method=='GET':
 		res=[]

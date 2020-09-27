@@ -6,6 +6,6 @@ urlpatterns = [
 	path('', inicio),
 	path('principalSuperAdmin/',principalSuperAdmin),
 	path('principalAdmin/',principalAdmin),
-	path('empresas/', getEmpresas),
+	path('principalSuperAdmin/empresas/', empresas),
 	path('roles/',admin_rol),
 ]
