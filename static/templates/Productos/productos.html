@@ -1,10 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% load static %}
+{% include 'Shared/sidebar.html' %}
+{% include 'Shared/navbar.html' %}
+<style>
+    h2 {
+        padding: 5% 0% 5% 5%;
+    }
+    .img-borrar{
+      width: 1rem;
+    }
 
-</body>
-</html>
+    .img-producto{
+      width: 3.5rem;
+    }
+</style>
+<div class="row">
+  <div class="col-md-12">
+    <h2>Productos</h2>
+    <button class="btn-agregar" onclick="abrir_agregar_producto('{% include 'Productos/añadir_productos.html' %}')">Agregar</button>
+    <table class="table">
+      <thead>
+        <tr>
+          <th> </th>
+          <th>Nombre</th>
+          <th>Precio Unitario</th>
+          <th>Cantidad Disponible</th>
+          <th> </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for data in datos %}
+          <tr>
+            <td><img class="img-producto" src={{data.image.url}}></td>
+            <td>{{data.nombre}}</td>
+            <td>$ {{data.precio}}</td>
+            <!--<td>{{data.image}}</td>-->
+            <td>300</td>
+            <td><img class="img-borrar" src="{% static 'img/iconos_administrador/borrar.png' %}"></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="agregar" role="dialog">
+</div>
+
+
+<script type="text/javascript">
+  var $ = JQuery.noConflict();
+  function abrir_agregar_producto(url){
+    $('#agregar').load(url, function(){
+      $(this).modal('show');
+    });
+  }
+</script>
+<!--<h2>Productos</h2>
+<button class="btn-agregar">Agregar</button>
+<table class="product-table">
+  <tr>
+    <th></th>
+    <th>Nombre</th>
+    <th>Precio Unitario</th>
+    <th>Cantidad Disponible</th>
+    <th></th>
+  </tr>
+  <tr>
+    <th>Mike (lastimado)</th>
+    <td colspan="3">0 km</td>
+    <td>4 km</td>
+  </tr>
+  <tr>
+    <th>Susan</th>
+    <td>23 km</td>
+    <td>18 km</td>
+    <td>19 km</td>
+    <td>15 km</td>
+  </tr>
+</table>-->

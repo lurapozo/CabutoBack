@@ -10,6 +10,7 @@ urlpatterns = [
 	path('producto/precioMayor', getProductoPrecioMayor),
 	path('registro/', registro),
     path('login/',login),
+
 ]
 
 
