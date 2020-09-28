@@ -16,7 +16,7 @@
 <div class="row">
   <div class="col-md-12">
     <h2>Productos</h2>
-    <button class="btn-agregar" onclick="abrir_agregar_producto('{% include 'Productos/añadir_productos.html' %}')">Agregar</button>
+    <button class="btn btn-sucess" data-toggle="modal" onclick="Productos/añadir_producto.html">Agregar</button>
     <table class="table">
       <thead>
         <tr>
@@ -43,18 +43,12 @@
   </div>
 </div>
 
-<div class="modal fade" id="agregar" role="dialog">
+<div class="modal" id="añadir" role="dialog">
 </div>
 
 
-<script type="text/javascript">
-  var $ = JQuery.noConflict();
-  function abrir_agregar_producto(url){
-    $('#agregar').load(url, function(){
-      $(this).modal('show');
-    });
-  }
-</script>
+<script type="text/javascript" src="{% static 'js/formulario.js' %}"></script>
+
 <!--<h2>Productos</h2>
 <button class="btn-agregar">Agregar</button>
 <table class="product-table">

@@ -61,7 +61,8 @@ def agregar_producto(request):
 		#for p in data_products:
 			#dicc={"id":p.id_producto, "nombre":p.nombre, "descripcion":p.descripcion, "precio":p.precio, "imagen":p.image, "categoria":p.id_categoria}
 			#res.append(dicc)
-		return JsonResponse(res, safe=False)
+		#return JsonResponse(res, safe=False)
+		return render(request, "Productos/añadir_productos.html", {"data": data_category})
 	if request.method=='GET':
 		return render(request, "Productos/añadir_productos.html",{"data":data_category})
 	return HttpResponse(status=400)
