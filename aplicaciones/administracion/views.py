@@ -1,6 +1,7 @@
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.fields.files import ImageFieldFile
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, logout
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -10,18 +11,30 @@ import json
 import random
 from django.core import serializers
 from .models import *
+from django.db.models import Q
 
 # Create your views here.
 
+## REDIRECCIONAR ##
 def inicio(request):
 	return render(request, 'Login/login.html')
 
+
+
+# MENU PRINCIPAL SUPER ADMIN  ##
 def principalSuperAdmin(request):
 	return render(request,'Principal/SuperAdmin_Principal.html')
 
+
+
+
+
+# MENU PRINCIPAL ADMIN  ##
 def principalAdmin(request):
 	return render(request,'Principal/Admin_Principal.html')
 
+
+## EMPRESAS ##
 def empresas(request):
 	return render(request,'Empresa/index.html')
 
@@ -37,10 +50,13 @@ def getEmpresas(request):
 	return HttpResponse(status=400)
 
 
+## ROLES ##
 def admin_rol(request):
 	paquete = []
 	return render(request, "roles/admin_rol.html", paquete)
 
+
+## PRODUCTOS ##
 def producto_page(request):
 	if request.method=='GET':
 		data_products=Producto.objects.all()
@@ -67,6 +83,8 @@ def agregar_producto(request):
 		return render(request, "Productos/añadir_productos.html",{"data":data_category})
 	return HttpResponse(status=400)
 
+
+## CATEGORIAS ##
 def get_categoria(request):
 	if request.method=='GET':
 		data_category=Categoria.objects.all()

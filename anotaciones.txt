@@ -27,10 +27,13 @@ pass: superadmin2020
 8. ejecuta el servidor con python
 python .\manage.py runserver
 
-9.
+
 
 ***django admin***
 
 http://localhost:8000/admin/
 user:superadmin
 pass: superadmin2020
+
+
+cambio de prueba 1

@@ -2,6 +2,8 @@
 
 
 <style>
+
+
     .tool-container {
         display: flex;
         justify-content: left;
@@ -36,6 +38,7 @@
     .logo-header-img {
         width: 9rem;
         margin-top: 1rem;
+        margin-left: -2rem;
     }
     
     .notifications-img {
@@ -60,15 +63,15 @@
         background: linear-gradient(to right, #FFA801, #FE3A00);
     }
 </style>
-<nav id="nav-custom">
+<nav id="nav-custom" class="ml-auto">
     <div id="simple-container">
         <div class="form-row col-12 col-md-12">
-            <div class="col-0 col-md-0 form-group tool-container">
+            <div class="col-0 col-sm-0 col-md-0 form-group tool-container">
                 <button type="button" id="sidebarCollapse" class="btn btn-outline-light btn-menu d-inline-block  ml-auto">
                     <i class="fas fa-align-left"></i>
                 </button>
             </div>
-            <div class="col-5 col-md-8 form-group logo-container">
+            <div class="col-4 col-sm-2 col-md-4 col-lg-6 col-xl-7 form-group logo-container">
                 <img class="logo-header-img" src="{% static 'img/cabuto.png'%}">
             </div>
 
@@ -78,7 +81,7 @@
                 </a>
             </div>
 
-            <div class="col-2 col-md-1 form-group message-container">
+            <div class="col-2 col-sm-2 col-md-2 col-lg-2 form-group message-container">
                 <a href="#">
                     <img class="message-img" src="{% static 'img/iconos_administrador/mensajería.png' %}">
                 </a>
