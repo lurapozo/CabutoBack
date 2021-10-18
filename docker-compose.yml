@@ -1,0 +1,20 @@
+version: "3.9"
+   
+services:
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=marketdb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=A124356*/
+  web:
+    build: .
+
+    volumes:
+      - .:/code
+    ports:
+      - "80:80"
+    depends_on:
+      - db

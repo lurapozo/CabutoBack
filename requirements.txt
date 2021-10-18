@@ -1,1 +1,13 @@
 Django~=3.0.8
+pymysql
+django-cors-headers
+docker-py
+dockerpty
+PyYAML
+psycopg2-binary>=2.8
+djangorestframework
+django-storages==1.9.1
+django-url-filter==0.3.15
+pillow
+requests
+psycopg2==2.8.6

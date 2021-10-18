@@ -6,8 +6,8 @@ urlpatterns = [
 	path('', inicio, name='redireccionar'),
 
 	#AUTH
-	path('/login', login, name='login'),
-	path('/logout', logout, name='logout'),
+	path('login/', login, name='login'),
+	path('logout/', logout, name='logout'),
 
 	#MENU PRINCIPAL
 	path('principalSuperAdmin/',principalSuperAdmin, name='principalSuperAdmin'),

@@ -39,8 +39,7 @@ CORS_ORIGIN_ALLOW_ALL=True
 INSTALLED_APPS = [
     'aplicaciones.administracion',
     'aplicaciones.movil',
-        'corsheaders',
-
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -91,7 +90,7 @@ WSGI_APPLICATION = 'CabutoBack.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'marketdb',
@@ -100,6 +99,17 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '3306',
         }
+} """
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'marketdb',
+        'USER': 'postgres',
+        'PASSWORD': 'A124356*/',
+        'HOST': 'db',
+        'PORT': 5432,
+    }
 }
 
 
@@ -147,3 +157,5 @@ MEDIA_ROOT = "media"
 STATICFILES_DIRS=[
     os.path.join(BASE_DIR,'static')
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
