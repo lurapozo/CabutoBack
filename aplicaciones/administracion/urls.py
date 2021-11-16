@@ -1,26 +1,69 @@
 from django.urls import path
 from .views import *
+from django.conf.urls import url
 
-
-urlpatterns = [	
-	path('', inicio, name='redireccionar'),
-
-	#AUTH
-	path('/login', login, name='login'),
-	path('/logout', logout, name='logout'),
-
-	#MENU PRINCIPAL
-	path('principalSuperAdmin/',principalSuperAdmin, name='principalSuperAdmin'),
+urlpatterns = [
+	path('', principal),
+	url(r'^login/',inicio,name='login'),
+	#path('login/', inicio),
+	url(r'^logout/',cerrar,name='logout'),
+	path('principalSuperAdmin/',principalSuperAdmin),
 	path('principalAdmin/',principalAdmin,name='principalAdmin'),
+	path('pagos/', pagosPedido_page),
+	path('tc/', tc),
+	path('usuarios/', usuario_page),
+	path('clientes/', cliente_page),
+	path('pedidos/', pedido_page),
+	path('notificaciones/', notificacion_page),
+	path('pedidosEspera/', pedidosEspera_page),
+	path('devoluciones/', devueltos_page),
+	path('entregas/', get_entregas),
+	path('ventas/', get_ventas),
+	path('web_push/', register_wp_notifications, name='register_wp_notifications'),
+	url(r'^notificaciones/add_notificaciones/', agregar_notificacion, name="add_notificaciones"),
+	url(r'^notificaciones/ver_notificacion/(?P<id_notificacion>\d+)', ver_notificacion, name="ver_notificacion"),
+	url(r'^notificaciones/enviar_notificacion/(?P<id_notificacion>\d+)', enviar_notificacion, name="enviar_notificacion"),
+	url(r'^notificaciones/editar_notificacion/(?P<id_notificacion>\d+)', editar_notificacion, name="editar_notificacion"),
+	url(r'^notificaciones/eliminar_notificacion/(?P<id_notificacion>\d+)', eliminar_notificacion, name="eliminar_notificacion"),
+	path('establecimientos/',establecimiento_page),
+	url(r'^establecimientos/add_establecimientos/', agregar_establecimiento, name="add_establecimientos"),
+	url(r'^establecimientos/horario/(?P<id_establecimiento>\d+)', horario_page, name="ver_horario"),
+	path('empleados/', empleado_page),
+	path('principalSuperAdmin/empresas/', empresas),
+	path('roles/',admin_rol),
+	path('politica/', agregar_politica),
+	path('productos/', producto_page, name="productos"),
 
-	#EMPRESAS
-	path('principalSuperAdmin/empresas/', empresas, name='ver_empresa'),
+    url(r'^usuarios/add_usuarios/', agregar_usuario, name="agregar_usuario"),
+	url(r'^usuarios/editar_usuario/(?P<id_usuario>\d+)', editar_usuario, name="editar_usuario"),
+	url(r'^productos/añadir_productos/', agregar_producto, name="añadir_productos"),
+	url(r'^productos/editar_producto/(?P<id_producto>\d+)', editar_producto, name="editar_producto"),
+	url(r'^productos/eliminar_producto/(?P<id_producto>\d+)', eliminar_producto, name="eliminar_producto"),
+	path('ofertas/',oferta_page),
+	url(r'^ofertas/añadir_ofertas/', agregar_ofertas, name="añadir_ofertas"),
+	url(r'^ofertas/editar_ofertas/(?P<id_oferta>\d+)', editar_ofertas, name="editar_ofertas"),
+	url(r'^ofertas/eliminar_ofertas/(?P<id_oferta>\d+)', eliminar_ofertas, name="eliminar_ofertas"),
+	path('redesSociales/',redes_page),
+	url(r'^redesSociales/add_redes/', agregar_red, name="add_redes"),
+	url(r'^redesSociales/ver_red/(?P<id_red>\d+)', ver_red, name="ver_red"),
+	url(r'^redesSociales/editar_red/(?P<id_red>\d+)', editar_red, name="editar_red"),
+	url(r'^redesSociales/eliminar_redes/(?P<id_red>\d+)', eliminar_red, name="eliminar_red"),
+	path('coberturaEnvio/',cobertura_page),
+	url(r'coberturaEnvio/add_zona/', agregar_cobertura, name="add_zona"),
+	url(r'^coberturaEnvio/ver_zona/(?P<id_zona>\d+)', ver_cobertura, name="ver_zona"),
+	url(r'^coberturaEnvio/editar_zona/(?P<id_zona>\d+)', editar_cobertura, name="editar_zona"),
+	url(r'^coberturaEnvio/eliminar_zona/(?P<id_zona>\d+)', eliminar_cobertura, name="eliminar_zona"),
+	url(r'^coberturaEnvio/inactivar_zona/(?P<id_zona>\d+)', estado_cobertura, name="inactivar_zona"),
+	url(r'^calificacion/(?P<id_pedido>\d+)', get_calificacion, name="calificacion"),
+	url(r'^buscar_pedido/(?P<id_pedido>\d+)', get_pedido, name="buscar_pedido"),
+	url(r'^detalle_pedido/(?P<id_pedido>\d+)', detalle_pedido, name="detalle_pedido"),
+	url(r'^pedidosEspera/confirmar_pedido/(?P<id_pedido>\d+)', confirmar_pedido, name="confirmar_pedido"),
+	path('cupones/',cupon_page),
+	url(r'cupones/add_cupon/', add_cupon, name="add_cupon"),
+	url(r'^cupones/editar_cupon/(?P<id_cupon>\d+)', editar_cupon, name="editar_cupon"),
+	url(r'^cupones/eliminar_cupon/(?P<id_cupon>\d+)', eliminar_cupon, name="eliminar_cupon"),
+	#path('combos/',combo_page),
 
-	#ROLES
-	path('roles/',admin_rol,name='ver_roles'),
 
 
-	#PRODUCTOS
-	path('productos/', producto_page,name='ver_productos'),
-	path('añadir_productos/', agregar_producto,name='crear_producto')
 ]

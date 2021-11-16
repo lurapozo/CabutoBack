@@ -1,7 +1,0 @@
-//dependencias a instalar antes de correr el programa
-pip install Django==2.1.7
-pip install PyMySQL
-pip install django-cors-headers
-pip install cryptography  //cuando se quiere realizar la migracion de los modelos
-pip install requests
-pip install Pillow

@@ -1,144 +1,36 @@
-{% load static %} {% include 'Shared/header.html' %} {% include 'Shared/navbar.html' %}
-{% include 'Shared/sidebar_superadmin.html' %} {% include 'Shared/footer.html' %}
+{% load static %} {% include 'Shared/header.html' %} {% include 'Shared/navbar.html' %} {% include 'Shared/sidebar_superadmin.html' %}
 <style>
-    /* / RESPONSIVE
-   ========================================================================= / */
-
-    /* / DISEÑO POR DEFAULT
-   ------------------------------------------------------------------------- / */
-
+    .sub-container {
+        margin-left: 27rem;
+        margin-top: 5rem;
+    }
+    
     .title-form-container {
         color: #0F195E;
     }
-
-    .has-search .form-control-feedback {
-        position: absolute;
-        z-index: 2;
-        display: block;
-        line-height: 2.375rem;
-        text-align: center;
-        pointer-events: none;
+    
+    .cajaTexto {
         color: #87868A;
-        width: 36rem;
-        height: 1.5rem;
-        margin-top: 0.6rem;
-    }
-
-    input.form-control {
-        width: 20rem;
         background-color: #D8D9DD;
-        height: 3rem;
-    }
-
-    .btn-nuevo{
-        height: 3rem;
-        width: 10rem;
-        color: white;
-        background-color: #2153FF;
         border: none;
-        -moz-border-radius: 35px 35px 35px 35px;
-        -webkit-border-radius: 5px 5px 5px 5px;
-        background: rgba(41, 91, 255, 1);
-        background: -moz-linear-gradient(left, rgba(41, 91, 255, 1) 0%, rgba(41, 91, 255, 1) 6%, rgba(16, 26, 96, 1) 80%, rgba(16, 26, 96, 1) 100%);
-        background: -webkit-gradient(left top, right top, color-stop(0%, rgba(41, 91, 255, 1)), color-stop(6%, rgba(41, 91, 255, 1)), color-stop(80%, rgba(16, 26, 96, 1)), color-stop(100%, rgba(16, 26, 96, 1)));
-        background: -webkit-linear-gradient(left, rgba(41, 91, 255, 1) 0%, rgba(41, 91, 255, 1) 6%, rgba(16, 26, 96, 1) 80%, rgba(16, 26, 96, 1) 100%);
-        background: -o-linear-gradient(left, rgba(41, 91, 255, 1) 0%, rgba(41, 91, 255, 1) 6%, rgba(16, 26, 96, 1) 80%, rgba(16, 26, 96, 1) 100%);
-        background: -ms-linear-gradient(left, rgba(41, 91, 255, 1) 0%, rgba(41, 91, 255, 1) 6%, rgba(16, 26, 96, 1) 80%, rgba(16, 26, 96, 1) 100%);
-        background: linear-gradient(to right, rgba(41, 91, 255, 1) 0%, rgba(41, 91, 255, 1) 6%, rgba(16, 26, 96, 1) 80%, rgba(16, 26, 96, 1) 100%);
-        filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#295bff', endColorstr='#101a60', GradientType=1);
-    }
-
-    /* @media (orientation: landscape) {} // posicion horizontal de la pantalla*/
-    /* @media (orientation: portrait) {} // posicion vertical de la pantalla */
-
-    /* / MOVILES
-   ------------------------------------------------------------------------- / */
-
-    @media (min-width: 320px) {
-        .title-form-container {
-            color: #0F195E;
-            padding-top: 2rem;
-        }
-
-        .sub-container {
-            margin: 0%;
-        }
-
-    }
-
-
-
-    @media (min-width: 480px) {
-        .title-form-container {
-            color: #0F195E;
-            padding-top: 2rem;
-        }
-
-        .sub-container {
-            margin: 0%;
-        }
-
-    }
-
-    /* / TABLETS
-   ------------------------------------------------------------------------- / */
-    @media (min-width: 768px) {
-        .title-form-container {
-            color: #0F195E;
-            padding-top: 2rem;
-        }
-
-        .sub-container {
-            margin: 0%;
-        }
-    }
-
-
-    /* / LAPTOPS Y PC
-   ------------------------------------------------------------------------- / */
-
-
-
-    @media (min-width: 920px) {
-        .sub-container {
-            margin-left: 10rem;
-            margin-top: 4rem;
-        }
-    }
-
-    @media (min-width: 1024px) {
-        .sub-container {
-            margin-left: 23rem;
-            margin-top: 4rem;
-            padding-right: 15rem;
-        }
-        .contTexto{
-            float: right;
-        }
-
+        -moz-border-radius: 10px 10px 10px 10px;
+        -webkit-border-radius: 8px 8px 8px 8px;
+        height: 3rem;
+        width: 28rem;
+        padding-left: 2rem;
+        font-size: large;
     }
 </style>
-
 <div class="main-container">
-    <div class="sub-container col-12">
-        <div class="title-form-container col-2">
+    <div class="sub-container">
+        <div class="title-form-container">
             <h1 class="title-form-h1">EMPRESAS</h1>
         </div>
-        <div class="form-row col-12 col-md-12">
-
-            <!-- columna de la tabla caja de texto  buscar-->
-            <div class="col-12 col-sm-12 col-md-8 col-lg-8 col-xl-8 form-group">
-                <div class="form-group has-search  contTexto">
-                    <span class="fa fa-search form-control-feedback"></span>
-                    <input type="text" class="form-control" placeholder="Buscar">
-                </div>
+        <div class="form-row col-md-12">
+            <div class="col-md-4 form-group contTexto">
+                <i class="fa fa-search" aria-hidden="true"></i>
+                <input id="id_password" type="password" class="cajaTexto form-control" placeholder="Buscar">
             </div>
-            <!-- columna del boton nuevo -->
-            <div class="col-12 col-sm-12 col-md-4 col-lg-4 col-xl-4 form-group ">
-                <button class="btn-nuevo">Nuevo Usuario</button>
-            </div>
-
-
         </div>
 
     </div>

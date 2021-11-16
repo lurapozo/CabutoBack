@@ -1,10 +1,77 @@
 {% load static %}
-{% include 'Shared/sidebar.html' %}
+<style>
+    .upload-container .img-subir-preview{
+        height: 9rem;
+        display: none;
+    }
 
-<div class="modal-dialog modal-lg" role="document">
+    .upload-container .img-default{
+        width: 2rem;
+        height: 2rem;
+        margin-top: 4rem;
+    }
+
+    .upload-container{
+	    height:10rem;
+	    width: 17rem;
+	    text-align:center;
+	    background-color:#EDEEF0;
+	    border-radius: 10px;
+    }
+
+    .input{
+   	    background-color:#D8D9DD;
+        border-radius: 8px;
+    }
+
+    .modal-footer{
+	    text-align:center;
+	    display: block;
+    }
+
+    .btn-warning{
+        background-color: #87868A;
+    }
+
+    .btn-sucess{
+        background: linear-gradient(to right, #2153FF, #0F195E);
+    }
+
+    .btn{
+        color: white;
+        width: 9rem;
+    }
+
+    textarea[name="descripcion"]{
+        height: 10rem;
+    }
+
+    h2{
+        color: #0F195E;
+        font-family: calibri;
+        font-weight: bold;
+    }
+
+    select{
+        width: 10rem;
+    }
+
+    .lbl{
+        text-align: center;
+        width: 100%;
+    }
+
+    .modal-content{
+        width: 40rem;
+        margin: auto;
+    }
+
+</style>
+
+<div id="popup" class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Agregar Producto</h2>
+            <h2 class="modal-title">AGREGAR PRODUCTO</h2>
                 <button class="close" type="button" data-dismiss="modal" aria-label="close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -15,34 +82,43 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="input-container ">
-					        <h4>Imagen</h4>
-					        <input type="file" class="form-control input" name="image" required>
-				        </div>
+                            <div class="upload-container center-block">
+					            <label class="btn btn-default btn-sm center-block btn-file lbl">
+                                    <input type="file" style="display: none;" accept=".jpg, .png, .jpeg, .svg" id="input-image" class="form-control input" onchange="loadImage(event)" name="image" required>
+                                    <img class="img-subir-preview center-block" id="img-preview">
+                                    <img class="img-default" id="img-default" src="{% static 'img/iconos_administrador/agregar_imagen.png' %}">
+                                </label>
+                            </div>
+                        </div>
+                        <br>
                         <div class="input-container">
-					        <h4>Nombre del Producto</h4>
+					        <label>Nombre del Producto</label>
 					        <input type="text" class="form-control input" name="nombre" required>
 				        </div>
+                        <br>
 				        <div class="input-container">
-					        <h4>Precio</h4>
+					        <label>Precio</label>
                             <input type="number" step="0.001" class="form-control input" name="precio" required>
 				        </div>
                     </div>
                     <div class="col-md-6">
 				        <div class="input-container">
-					        <h4>Categoría</h4>
-					                <!--<input type="text" class="form-control input" name="id_categoria">-->
-                            <select name="item_id" required>
+					        <label>Categoría</label>
+                            <br>
+                            <select name="id_categoria" required>
                             {% for entry in data %}
-                                <option class="input" value="{{ entry.id_categoria }}" name="id_categoria">{{ entry.nombre }}</option>
+                                <option class="input" value="{{ entry.nombre }}" name="id_categoria">{{ entry.nombre }}</option>
                             {% endfor %}
                             </select>
 				        </div>
-				               <!-- <div class="input-container">
-					                <h4>Cantidad del Stock</h4>
-					                <input type="number" class="form-control input" name="Stock">
-				                </div>-->
+                        <br>
                         <div class="input-container">
-					        <h4>Descripción</h4>
+                            <label>Cantidad del Stock</label>
+					        <input type="number" class="form-control input" name="stock_disponible" required>
+				        </div>
+                        <br>
+                        <div class="input-container">
+					        <label>Descripción</label>
 					        <textarea class="form-control input" name="descripcion" required></textarea>
 				        </div>
                     </div>
@@ -55,4 +131,29 @@
         </form>
     </div>
 </div>
-<!--<script type="text/javascript" src="{% static 'js/formulario.js' %}"></script>-->
+<script>
+    var inputImage=document.getElementById("input-image");
+    var previewImage=document.getElementById("img-preview");
+    var previewDefault=document.getElementById("img-default");
+
+    inputImage.addEventListener("change", function(){
+        var file = this.files[0];
+        if (file){
+            var reader= new FileReader();
+
+            previewDefault.style.display="none";
+            previewImage.style.display="block";
+            previewImage.style.margin="auto";
+
+            reader.addEventListener("load", function(){
+                previewImage.setAttribute("src", this.result);
+
+            });
+            reader.readAsDataURL(file);
+        }
+        else{
+            previewDefault.style.display=null;
+            previewImage.style.display=null;
+        }
+    });
+</script>

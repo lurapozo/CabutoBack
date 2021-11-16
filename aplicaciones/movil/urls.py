@@ -1,18 +1,43 @@
 from django.urls import path
 from .views import *
 
-urlpatterns = [	
-    path('', login),	
-	path('producto/', getProducto),
-	path('producto/orderAsc', getProductoAaZ),
-	path('producto/orderDesc',getProductoZaA),
-	path('producto/precioMenor', getProductoPrecioMenor),
-	path('producto/precioMayor', getProductoPrecioMayor),
-	path('registro/', registro),
+urlpatterns = [
+    path('', login),
+    path('inicio/', getInicio),
+    path('categorias/', getCategoria),
+    path('producto/', getProducto),
+    path('producto/orderAsc', getProductoAaZ),
+    path('producto/orderDesc',getProductoZaA),
+    path('producto/precioMenor', getProductoPrecioMenor),
+    path('producto/precioMayor', getProductoPrecioMayor),
+    path('establecimiento/', getEstablecimiento),
+    path('notificacion/', getNotificacion),
+    path('cliente/', getCliente),
+    path('historial/', getHistorial),
+    path('guardarPedido/',guardarPedido),
+    path('cancelarPedido/',borrarPedido),
+    path('pagarPedido/',pagarPedido),
+    path('devolverPedido/',devolverPedido),
+    path('calificarPedido/',calificarPedido),
+    path('cobertura/', getCobertura),
+    path('guardarDireccion/',guardarDireccion),
+    path('direccion/',getDireccion),
+    path('editarCliente/', modCliente),
+    path('registro/', registro),
     path('login/',login),
-
+    path('cambioContra/',cambioContra),
+    path('dispositivo/',registrarDispositivo),
+    path('carrito/', getCarrito),
+    path('cantidadesCarrito/',modCantidades),
+    path('horario/',getHorario),
+    path('ofertasData/', getOferta),
+    path('politicaData/', politica),
+    path('contacto/', getContacto),
+    path('reclamo/', envioReclamo),
+    #path('actualizaCantidad/',actulizarCantidad),
+    path('quitar/',quitar),
+    path('cupones/', getCupones),
+    path('notificaciones/',getNotificaciones),
+    path('actualizarNotificacion/',actualizarNotificacion),
+    path('addCupon/',addCupon),
 ]
-
-
-
-

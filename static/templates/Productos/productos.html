@@ -1,22 +1,243 @@
 {% load static %}
+{% include 'Shared/header.html' %}
 {% include 'Shared/sidebar.html' %}
 {% include 'Shared/navbar.html' %}
+<script type="text/javascript" src="{% static 'js/formulario.js' %}"></script>
 <style>
-    h2 {
-        padding: 5% 0% 5% 5%;
+    h3 {
+        padding-top: 4rem;
+        padding-left: 5%;
+        font-weight: bold;
+        color: #0F195E;
+        margin: auto;
     }
     .img-borrar{
-      width: 1rem;
+      width: 0.7rem;
+    }
+
+    .img-editar{
+      width: 0.7rem;
+    }
+
+    .edit{
+      width: 2rem !important;
+    }
+
+    .erase{
+      width: 2rem !important;
     }
 
     .img-producto{
       width: 3.5rem;
     }
+
+    table{
+        margin-right: 5rem;
+    }
+
+    thead{
+        color:white;
+        background-color: #FE3A00;
+        font-family: calibri;
+        text-align: center;
+    }
+
+    table th:first-child{
+        border-radius:10px 0 0 10px;
+    }
+
+    table th:last-child{
+        border-radius:0 10px 10px 0;
+    }
+
+    .btn-agregar{
+        color: white;
+        font-weight: bolder;
+        font-size: 10px;
+        width: 9rem;
+        height: 2.5rem;
+        background: linear-gradient(to right, #2153FF, #0F195E);
+        float: right !important;
+        margin-left: 2rem;
+    }
+    #buscar{
+        background: url("{% static 'img/iconos_administrador/buscar.png' %}") no-repeat scroll #D8D9DD;
+        padding-right: 30px;
+        margin:20px;
+    }
+.total-clientes{
+        width: 90%;
+        border-top: 3px solid #0F195E;
+        padding-top: 10px;
+        margin-top: 2rem;
+        color: #444242;
+    }
+    .total-clientes span:first-child{
+        font-weight: bold;
+        padding-right: 25px;
+        padding-left: 35%;
+        color: #0F195E;
+    }
+
+
+    td {
+        font-family: calibri;
+        vertical-align:middle !important;
+        text-align: center;
+    }
+
+    .pagination li:first-child a,
+    .pagination li:last-child a,
+    .pagination li:first-child span,
+    .pagination li:last-child span{
+        color: #0f195e;
+        font-size: 13px;
+    }
+
+    .pagination{
+        justify-content: center;
+        margin-top:10px;
+    }
+    .boton1{
+        margin: auto;
+        text-align: center;
+        background: linear-gradient(to right, #2153FF, #0F195E);
+        color: white;
+        font-weight: bolder;
+        font-size: 10px;
+        width: 9rem;
+        height: 2.5rem;
+    }
+    .boton1 a{
+        display:flex;
+        justify-content: center;
+        align-items:center;
+    }
+
+    .pagination .active{
+        width: 1.6rem;
+        background: #0f195e;
+        color: white;
+        text-align: center;
+        border-radius: 0.5rem;
+        margin: 0px 20px;
+        height: 1.5rem;
+        font-weight: bolder;
+        font-size: 14px;
+        padding-top: 2px;
+    }
+
+    .body-products{
+        margin: auto;
+    }
+
+    .row-products{
+        margin-right: 0px !important;
+        margin-left: 0px !important;
+    }
+    .contenedor-filtro{
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+    }
+    .contenedor-searchbar{
+        display: flex;
+        align-items: center;
+        border-radius: 5px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    .contenedor-productos{
+        margin:auto;
+        padding: 20px 10px;
+        border-radius:15px;
+        min-width: min-content;
+        max-width: 70%;
+    }
+    .switch > input{
+        opacity: 0;
+    }
+    .switch > div {
+      width: 60px;
+      height: 30px;
+      background: #9A9A9A;
+      z-index: 0;
+      cursor: pointer;
+      position: relative;
+      border-radius: 50px;
+      line-height: 40px;
+      text-align: right;
+      padding: 0 10px;
+      color: rgba(0,0,0,.5);
+      transition: all 250ms;
+    }
+
+    .switch > input:checked + div {
+      background: lime;
+      text-align: left;
+    }
+
+    .switch > div:before {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        left: 4px;
+        top: 3px;
+        height: 24px;
+        width: 24px;
+        background: white;
+        border-radius: 50%;
+        transition: all 200ms;
+    }
+
+    .switch > input:checked + div:before {
+      content: '';
+      position: absolute;
+      left: 32px;
+      border-radius: 50%;
+    }
+
 </style>
-<div class="row">
-  <div class="col-md-12">
-    <h2>Productos</h2>
-    <button class="btn btn-sucess" data-toggle="modal" onclick="Productos/añadir_producto.html">Agregar</button>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var input = document.getElementById("buscar");
+        input.value="";
+        input.addEventListener("keyup", function(event) {
+          if (event.keyCode === 13) {
+           location = '?busqueda='+input.value;
+          }
+        });
+    });
+    function cambiarEstado(id){
+        console.log(id)
+        $.ajax({
+            beforeSend: function(){
+                $('.ajax-loader').css("visibility", "visible");
+            },
+            url: "eliminar_producto/"+id,
+            success: function(data) {
+                var modalDiv = $("#modal-div");
+                modalDiv.html(data.html);
+                $("#myModal").modal();
+            },
+            complete: function(){
+                $('.ajax-loader').css("visibility", "hidden");
+            }
+        });
+    }
+</script>
+<div class="row row-products">
+  <div class="col-12 center body-products">
+    <h3>PRODUCTOS</h3>
+    <div class="row contenedor-filtro">
+        <div class="contenedor-searchbar">
+            <input type='text' class="form-control" id='buscar' placeholder="Buscar">
+            <div class = "boton1"><a class="btn btn-sucess btn-agregar" data-toggle="modal" data-target="#añadir">NUEVO PRODUCTO </a></div>
+        </div>
+    </div>
+<!--      <a class="btn btn-lg add" href="añadir_productos/"><button class="btn btn-sucess btn-modal" data-toggle="modal">Agregar</button></a>-->
+<div class="contenedor-productos">
+    {% if datos %}
     <table class="table">
       <thead>
         <tr>
@@ -24,51 +245,70 @@
           <th>Nombre</th>
           <th>Precio Unitario</th>
           <th>Cantidad Disponible</th>
+          <th>Estado</th>
           <th> </th>
         </tr>
       </thead>
       <tbody>
         {% for data in datos %}
           <tr>
-            <td><img class="img-producto" src={{data.image.url}}></td>
-            <td>{{data.nombre}}</td>
-            <td>$ {{data.precio}}</td>
+
+            <td><a class="btn btn-lg" href="editar_producto/{{ data.id_producto.id_producto }}/?page={{ datos.number }}"><img class="img-producto" src={{data.id_producto.photo_url}}></a></td>
+            <td>{{data.id_producto.nombre}}</td>
+            <td>$ {{data.id_producto.precio}}</td>
             <!--<td>{{data.image}}</td>-->
-            <td>300</td>
-            <td><img class="img-borrar" src="{% static 'img/iconos_administrador/borrar.png' %}"></td>
+            <td>{{data.stock_disponible}}</td>
+            <td>
+                <label class="switch">
+                {% if data.id_producto.estado == "A" %}
+                    <input type="checkbox" class="checkbox" onclick="cambiarEstado({{data.id_producto.id_producto}})" checked/>
+                {% else %}
+                    <input type="checkbox" class="checkbox" onclick="cambiarEstado({{data.id_producto.id_producto}})"/>
+                {% endif %}
+                    <div class=""></div>
+                </label>
+            </td>
+            <td>
+                <a class="btn btn-sm edit" href="editar_producto/{{ data.id_producto.id_producto }}/?page={{ datos.number }}"><img class="img-editar" src="{% static 'img/iconos_administrador/editar.png' %}"></a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
+    <div class="total-clientes">
+        <span>Total Productos: </span><span>{{datos.paginator.count}}</span>
+    </div>
+    {% else %}
+        <h2 style="display: table;">No existen datos para presentar</h2>
+    {% endif %}
+    </div>
+   {% if datos.has_other_pages %}
+      <ul class="pagination">
+        {% if datos.has_previous %}
+            {% if buscar == None %}
+                <li><a href="./?page={{ datos.previous_page_number }}">Anterior</a></li>
+            {% else %}
+                <li><a href="./?page={{ datos.previous_page_number }}">Anterior</a></li>
+            {% endif %}
+        {% else %}
+          <li class="disabled"><span>Anterior</span></li>
+        {% endif %}
+        <li class="active"><span>{{ datos.number }} <span class="sr-only">(current)</span></span></li>
+        {% if datos.has_next %}
+            {% if buscar == None %}
+                <li><a href="./?page={{ datos.next_page_number }}">Siguiente</a></li>
+            {% else %}
+                <li><a href="./?page={{ datos.next_page_number }}">Siguiente</a></li>
+            {% endif %}
+        {% else %}
+          <li class="disabled"><span>Siguiente</span></li>
+        {% endif %}
+      </ul>
+    {% endif %}
   </div>
 </div>
 
-<div class="modal" id="añadir" role="dialog">
+<div class="modal fade" id="añadir" role="dialog">
+   {% include 'Productos/añadir_productos.html' %}
 </div>
-
-
-<script type="text/javascript" src="{% static 'js/formulario.js' %}"></script>
-
-<!--<h2>Productos</h2>
-<button class="btn-agregar">Agregar</button>
-<table class="product-table">
-  <tr>
-    <th></th>
-    <th>Nombre</th>
-    <th>Precio Unitario</th>
-    <th>Cantidad Disponible</th>
-    <th></th>
-  </tr>
-  <tr>
-    <th>Mike (lastimado)</th>
-    <td colspan="3">0 km</td>
-    <td>4 km</td>
-  </tr>
-  <tr>
-    <th>Susan</th>
-    <td>23 km</td>
-    <td>18 km</td>
-    <td>19 km</td>
-    <td>15 km</td>
-  </tr>
-</table>-->
+<div id="modal-div"></div>
