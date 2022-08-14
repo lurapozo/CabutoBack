@@ -66,6 +66,12 @@
         margin: auto;
     }
 
+    #the-count {
+        float: right;
+        padding: 0.1rem 0 0 0;
+        font-size: 0.875rem;
+    }
+
 </style>
 
 <div id="popup" class="modal-dialog modal-lg" role="document">
@@ -93,7 +99,7 @@
                         <br>
                         <div class="input-container">
 					        <label>Nombre del Producto</label>
-					        <input type="text" class="form-control input" name="nombre" required>
+					        <input type="text" class="form-control input" name="nombre" maxlength="100" required>
 				        </div>
                         <br>
 				        <div class="input-container">
@@ -119,7 +125,11 @@
                         <br>
                         <div class="input-container">
 					        <label>Descripción</label>
-					        <textarea class="form-control input" name="descripcion" required></textarea>
+					        <textarea class="form-control input" name="descripcion" maxlength="300" required></textarea>
+                            <div id="the-count">
+                                <span id="current">0</span>
+                                <span id="maximum">/ 300</span>
+                            </div>
 				        </div>
                     </div>
                 </div>
@@ -155,5 +165,42 @@
             previewDefault.style.display=null;
             previewImage.style.display=null;
         }
+    });
+    $('textarea').keyup(function () {
+
+    var characterCount = $(this).val().length,
+        current = $('#current'),
+        maximum = $('#maximum'),
+        theCount = $('#the-count');
+
+    current.text(characterCount);
+
+
+    //Colores
+    if (characterCount < 70) {
+        current.css('color', '#666');
+    }
+    if (characterCount > 70 && characterCount < 90) {
+        current.css('color', '#6d5555');
+    }
+    if (characterCount > 100 && characterCount < 150) {
+        current.css('color', '#793535');
+    }
+    if (characterCount > 150 && characterCount < 200) {
+        current.css('color', '#841c1c');
+    }
+    if (characterCount > 200 && characterCount < 250) {
+        current.css('color', '#8f0001');
+    }
+
+    if (characterCount >= 250) {
+        maximum.css('color', '#8f0001');
+        current.css('color', '#8f0001');
+        theCount.css('font-weight', 'bold');
+    } else {
+        maximum.css('color', '#666');
+        theCount.css('font-weight', 'normal');
+    }
+
     });
 </script>
