@@ -103,7 +103,7 @@ class Categoria(models.Model):
 class Producto(models.Model):
 	id_producto = models.AutoField(primary_key=True)
 	nombre=models.CharField(max_length=100)
-	descripcion=models.CharField(max_length=100)
+	descripcion=models.CharField(max_length=300)
 	precio=models.FloatField()
 	image=models.ImageField()
 	estado=models.CharField(max_length=1,default = "A")

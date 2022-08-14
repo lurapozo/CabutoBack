@@ -59,6 +59,12 @@
         width: 100%;
     }
 
+    #the-count {
+        float: right;
+        padding: 0.1rem 0 0 0;
+        font-size: 0.875rem;
+    }
+
 </style>
 <div id="popup" class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -115,7 +121,11 @@
                         <br>
                         <div class="input-container1">
 					        <label>Descripción</label>
-					        <textarea class="form-control input" name="descripcion1"  required>{{datos_mostrar.id_producto.descripcion}}</textarea>
+					        <textarea class="form-control input" name="descripcion1" maxlength="300"  required>{{datos_mostrar.id_producto.descripcion}}</textarea>
+                            <div id="the-count">
+                                <span id="current">0</span>
+                                <span id="maximum">/ 300</span>
+                            </div>
 				        </div>
                     </div>
                 </div>
@@ -148,6 +158,44 @@
             });
             reader1.readAsDataURL(file1);
         }
+
+    });
+
+    $('textarea').keyup(function () {
+
+    var characterCount = $(this).val().length,
+        current = $('#current'),
+        maximum = $('#maximum'),
+        theCount = $('#the-count');
+
+    current.text(characterCount);
+
+
+    //Colores
+    if (characterCount < 70) {
+        current.css('color', '#666');
+    }
+    if (characterCount > 70 && characterCount < 90) {
+        current.css('color', '#6d5555');
+    }
+    if (characterCount > 100 && characterCount < 150) {
+        current.css('color', '#793535');
+    }
+    if (characterCount > 150 && characterCount < 200) {
+        current.css('color', '#841c1c');
+    }
+    if (characterCount > 200 && characterCount < 250) {
+        current.css('color', '#8f0001');
+    }
+
+    if (characterCount >= 250) {
+        maximum.css('color', '#8f0001');
+        current.css('color', '#8f0001');
+        theCount.css('font-weight', 'bold');
+    } else {
+        maximum.css('color', '#666');
+        theCount.css('font-weight', 'normal');
+    }
 
     });
 
