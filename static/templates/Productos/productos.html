@@ -298,7 +298,7 @@
             {% if buscar == None %}
                 <li><a href="./?page={{ datos.next_page_number }}">Siguiente</a></li>
             {% else %}
-                <li><a href="./?page={{ datos.next_page_number }}">Siguiente</a></li>
+                <li><a href="./?page={{ datos.next_page_number }}&busqueda={{buscar}}">Siguiente</a></li>
             {% endif %}
         {% else %}
           <li class="disabled"><span>Siguiente</span></li>
