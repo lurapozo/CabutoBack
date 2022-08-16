@@ -155,7 +155,7 @@ def producto_page(request):
             data_productsxestab=data_productsxestab.filter(id_producto__nombre__icontains=busqueda)
         print(str(data_productsxestab.query))
         page = request.GET.get('page', 1)
-        paginator = Paginator(data_productsxestab, 5)
+        paginator = Paginator(data_productsxestab, 15)
         try:
             productosxestablecimiento = paginator.page(page)
         except PageNotAnInteger:
