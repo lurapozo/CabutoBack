@@ -94,6 +94,11 @@
         font-size: 13px;
     }
 
+    .pagination li a{
+        color: #0f195e;
+        font-size: 13px;
+    }
+
     .pagination{
         justify-content: center;
         margin-top:10px;
@@ -282,29 +287,43 @@
         <h2 style="display: table;">No existen datos para presentar</h2>
     {% endif %}
     </div>
-   {% if datos.has_other_pages %}
-      <ul class="pagination">
-        {% if datos.has_previous %}
-            {% if buscar == None %}
-                <li><a href="./?page={{ datos.previous_page_number }}">Anterior</a></li>
-            {% else %}
-                <li><a href="./?page={{ datos.previous_page_number }}&busqueda={{buscar}}">Anterior</a></li>
-            {% endif %}
-        {% else %}
-          <li class="disabled"><span>Anterior</span></li>
-        {% endif %}
-        <li class="active"><span>{{ datos.number }} <span class="sr-only">(current)</span></span></li>
-        {% if datos.has_next %}
-            {% if buscar == None %}
-                <li><a href="./?page={{ datos.next_page_number }}">Siguiente</a></li>
-            {% else %}
-                <li><a href="./?page={{ datos.next_page_number }}&busqueda={{buscar}}">Siguiente</a></li>
-            {% endif %}
-        {% else %}
-          <li class="disabled"><span>Siguiente</span></li>
-        {% endif %}
-      </ul>
-    {% endif %}
+    {% if datos.has_other_pages %}
+    <ul class="pagination">
+      {% if datos.has_previous %}
+          {% if buscar == None %}
+              <li ><a href="./?page={{ datos.previous_page_number }}">Anterior</a></li>
+              {% if datos.number|add:"-10" > 0 %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"-10" }}"><span style="color: #ffffff">{{datos.number|add:"-10"}}</span></a></li>
+              {% endif %}
+              {% if datos.number|add:"-5" > 0 %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"-5" }}"><span style="color: #ffffff">{{datos.number|add:"-5"}}</span></a></li>
+                  {% endif %}
+          {% else %}
+              <li><a href="./?page=1&busqueda={{buscar}}">Primera</a></li>
+              <li><a href="./?page={{ datos.previous_page_number }}&busqueda={{buscar}}">Anterior</a></li>
+          {% endif %}
+      {% else %}
+        <li class="disabled" ><span hidden>Primera</span></li>
+        <li class="disabled" ><span hidden>Anterior</span></li>
+      {% endif %}
+      <li class="active" style="background: #52545f;"><span>{{ datos.number }} <span class="sr-only">(current)</span></span></li>
+      {% if datos.has_next %}
+          {% if buscar == None %}
+              {% if datos.paginator.num_pages > datos.number|add:"5" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"5" }}"><span style="color: #ffffff">{{datos.number|add:"5"}}</span></a></li>
+              {% endif %}
+              {% if datos.paginator.num_pages > datos.number|add:"10" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"10" }}"><span style="color: #ffffff">{{datos.number|add:"10"}}</span></a></li>
+              {% endif %}
+              <li><a href="./?page={{ datos.next_page_number }}">Siguiente</a></li>
+          {% else %}
+              <li><a href="./?page={{ datos.next_page_number }}&busqueda={{buscar}}">Siguiente</a></li>
+          {% endif %}
+      {% else %}
+        <li class="disabled" ><span hidden>Siguiente</span></li>
+      {% endif %}
+    </ul>
+  {% endif %}
   </div>
 </div>
 
