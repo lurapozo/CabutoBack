@@ -334,98 +334,129 @@ def editar_usuario(request,id_usuario):
 
 @login_required(login_url='/login/')
 def pedido_page(request):
-	if request.method=='GET':
-	    orden=request.GET.get("filtro")
-	    print(orden)
-	    desde=request.GET.get("from")
-	    hasta=request.GET.get("to")
-	    data_clientes=Pedido.objects.order_by("-id_pedido")
-	    if request.GET.get("from")!=None and request.GET.get("to")!=None:
-	        data_clientes=data_clientes.filter(fecha__range=[desde, hasta]).order_by("-id_pedido")
-	    elif request.GET.get("from")!=None:
-	        data_clientes= data_clientes.filter(fecha__gte=desde).order_by("-id_pedido")
-	    elif request.GET.get("to")!=None:
-	        data_clientes= data_clientes.filter(fecha__lte=hasta).order_by("-id_pedido")
-	    else:
-	        data_clientes= data_clientes.filter(fecha__gte = datetime.now().replace(hour=0,minute=0,second=0))
-	    if orden != None:
-	        if orden == 'fecha':
-	            data_clientes=data_clientes.order_by('fecha',"id_pedido")
-	        elif orden == 'total':
-	            data_clientes=data_clientes.order_by('-total',"-id_pedido")
-	        elif orden == 'cliente':
-	            data_clientes=data_clientes.order_by('cliente__nombre','cliente__apellido',"-id_pedido")
-	    todos=data_clientes.select_related()
-	    if(todos.count()!=0):
-	        total=round(todos.aggregate(suma=Sum('total'))["suma"],2)
-	    else:
-	       total=0
-	    recibidos=data_clientes.select_related().filter(estado="Recibido")
-	    if(recibidos.count()!=0):
-	        total1=round(recibidos.aggregate(suma=Sum('total'))["suma"],2)
-	    else:
-	       total1=0
-	    enviados=data_clientes.select_related().filter(estado="Enviado")
-	    if(enviados.count()!=0):
-	        total2=round(enviados.aggregate(suma=Sum('total'))["suma"],2)
-	    else:
-	       total2=0
-	    entregados=data_clientes.select_related().filter(estado="Entregado")
-	    if(entregados.count()!=0):
-	        total3=round(entregados.aggregate(suma=Sum('total'))["suma"],2)
-	    else:
-	       total3=0
-	    devueltos=data_clientes.select_related().filter(estado="Anulado")
-	    if(devueltos.count()!=0):
-	        total4=round(devueltos.aggregate(suma=Sum('total'))["suma"],2)
-	    else:
-	       total4=0
-	    pagina="THome"
-	    page = request.GET.get('page', 1)
-	    page1 = request.GET.get('page1', 1)
-	    if request.GET.get('page1') != None:
-	        pagina="tMenu1"
-	    page2 = request.GET.get('page2', 1)
-	    if request.GET.get('page2') != None:
-	        pagina="tMenu2"
-	    page3 = request.GET.get('page3', 1)
-	    if request.GET.get('page3') != None:
-	        pagina="tMenu3"
-	    page4 = request.GET.get('page4', 1)
-	    if request.GET.get('page4') != None:
-	        pagina="tMenu4"
-	    paginator = Paginator(todos, 5)
-	    paginator1 = Paginator(recibidos, 5)
-	    paginator2 = Paginator(enviados, 5)
-	    paginator3 = Paginator(entregados, 5)
-	    paginator4 = Paginator(devueltos, 5)
-	    try:
-	    	pedidos = paginator.page(page)
-	    	recibidos = paginator1.page(page1)
-	    	enviados = paginator2.page(page2)
-	    	entregados = paginator3.page(page3)
-	    	devueltos = paginator4.page(page4)
-	    except PageNotAnInteger:
-	    	pedidos = paginator.page(1)
-	    	recibidos = paginator1.page(1)
-	    	enviados = paginator2.page(1)
-	    	entregados = paginator3.page(1)
-	    	devueltos = paginator4.page(1)
-	    except EmptyPage:
-	    	pedidos = paginator.page(paginator.num_pages)
-	    	recibidos = paginator1.page(paginator1.num_pages)
-	    	enviados = paginator2.page(paginator2.num_pages)
-	    	entregados = paginator3.page(paginator3.num_pages)
-	    	devueltos = paginator4.page(paginator4.num_pages)
-	    diccionario={
-	       "datos":pedidos,"recibidos":recibidos,
-	       "enviados":enviados,"entregados":entregados,
-	       "devueltos":devueltos,"filtro":orden,
-	       "desde":desde,"hasta":hasta,
-	       "tab":pagina,"total":total,
-	       "total1":total1,"total2":total2,"total3":total3,"total4":total4}
-	    return render(request, "Pedidos/pedidos.html",diccionario)
-	return HttpResponse(status=400)
+    if request.method=='GET':
+        orden=request.GET.get("filtro")
+        print(orden)
+        desde=request.GET.get("from")
+        hasta=request.GET.get("to")
+        data_clientes=Pedido.objects.all().order_by("id_pedido")
+        
+        '''if request.GET.get("from")!=None and request.GET.get("to")!=None:
+            data_clientes=data_clientes.filter(fecha__range=[desde, hasta]).order_by("id_pedido")
+        elif request.GET.get("from")!=None:
+            data_clientes= data_clientes.filter(fecha__gte=desde).order_by("id_pedido")
+        elif request.GET.get("to")!=None:
+            data_clientes= data_clientes.filter(fecha__lte=hasta).order_by("id_pedido")
+        else:
+            data_clientes= data_clientes.filter(fecha__gte = datetime.now().replace(hour=0,minute=0,second=0))'''
+
+        if orden != None:
+            if orden == 'fecha':
+                data_clientes=data_clientes.order_by('fecha',"id_pedido")
+            elif orden == 'total':
+                data_clientes=data_clientes.order_by('-total',"id_pedido")
+            elif orden == 'cliente':
+                data_clientes=data_clientes.order_by('cliente__nombre','cliente__apellido',"id_pedido")
+        todos=data_clientes.select_related()
+
+        print('hola')
+        print(Pedido.objects.all())
+        print(todos)
+        print(data_clientes)
+        print('mundo')
+        if(todos.count()!=0):
+            total=round(todos.aggregate(suma=Sum('total'))["suma"],2)
+        else:
+            total=0
+        espera=data_clientes.select_related().filter(estado__in=['Enviado','Recibido'])
+        
+        if orden != None:
+            if orden == 'fecha':
+                espera=espera.order_by("-estado",'fecha',"id_pedido")
+            elif orden == 'total':
+                espera=espera.order_by("-estado",'-total',"id_pedido")
+            elif orden == 'cliente':
+                espera=espera.order_by("-estado",'cliente__nombre','cliente__apellido',"id_pedido")
+        else:
+            espera=espera.order_by("-estado","-id_pedido")
+        
+        if(espera.count()!=0):
+            total0=round(espera.aggregate(suma=Sum('total'))["suma"],2)
+        else:
+           total0=0
+        recibidos=data_clientes.select_related().filter(estado="Recibido")
+        if(recibidos.count()!=0):
+            total1=round(recibidos.aggregate(suma=Sum('total'))["suma"],2)
+        else:
+           total1=0
+        enviados=data_clientes.select_related().filter(estado="Enviado")
+        if(enviados.count()!=0):
+            total2=round(enviados.aggregate(suma=Sum('total'))["suma"],2)
+        else:
+           total2=0
+        entregados=data_clientes.select_related().filter(estado="Entregado")
+        if(entregados.count()!=0):
+            total3=round(entregados.aggregate(suma=Sum('total'))["suma"],2)
+        else:
+           total3=0
+        devueltos=data_clientes.select_related().filter(estado="Anulado")
+        if(devueltos.count()!=0):
+            total4=round(devueltos.aggregate(suma=Sum('total'))["suma"],2)
+        else:
+           total4=0
+        pagina="THome"
+        page = request.GET.get('page', 1)
+        page0 = request.GET.get('page0', 1)
+        if request.GET.get('page0') != None:
+            pagina="tMenu0"
+        page1 = request.GET.get('page1', 1)
+        if request.GET.get('page1') != None:
+            pagina="tMenu1"
+        page2 = request.GET.get('page2', 1)
+        if request.GET.get('page2') != None:
+            pagina="tMenu2"
+        page3 = request.GET.get('page3', 1)
+        if request.GET.get('page3') != None:
+            pagina="tMenu3"
+        page4 = request.GET.get('page4', 1)
+        if request.GET.get('page4') != None:
+            pagina="tMenu4"
+        paginator = Paginator(todos, 15)
+        paginator0 = Paginator(espera, 1000000)
+        paginator1 = Paginator(recibidos, 15)
+        paginator2 = Paginator(enviados, 15)
+        paginator3 = Paginator(entregados, 15)
+        paginator4 = Paginator(devueltos, 15)
+        try:
+            pedidos = paginator.page(page)
+            espera = paginator0.page(page0)
+            recibidos = paginator1.page(page1)
+            enviados = paginator2.page(page2)
+            entregados = paginator3.page(page3)
+            devueltos = paginator4.page(page4)
+        except PageNotAnInteger:
+            pedidos = paginator.page(1)
+            espera = paginator0.page(1)
+            recibidos = paginator1.page(1)
+            enviados = paginator2.page(1)
+            entregados = paginator3.page(1)
+            devueltos = paginator4.page(1)
+        except EmptyPage:
+            pedidos = paginator.page(paginator.num_pages)
+            espera = paginator0.page(paginator0.num_pages)
+            recibidos = paginator1.page(paginator1.num_pages)
+            enviados = paginator2.page(paginator2.num_pages)
+            entregados = paginator3.page(paginator3.num_pages)
+            devueltos = paginator4.page(paginator4.num_pages)
+        diccionario={
+           "datos":pedidos, "espera":espera, "recibidos":recibidos,
+           "enviados":enviados,"entregados":entregados,
+           "devueltos":devueltos,"filtro":orden,
+           "desde":desde,"hasta":hasta,
+           "tab":pagina,"total":total,
+           "total0":total0,"total1":total1,"total2":total2,"total3":total3,"total4":total4}
+        return render(request, "Pedidos/pedidos.html",diccionario)
+    return HttpResponse(status=400)
 
 @login_required(login_url='/login/')
 def pedidosEspera_page(request):
@@ -565,7 +596,7 @@ def confirmar_pedido(request, id_pedido):
 	    devices.send_message(mensaje, extra=data)
 	pedido.save()
 	pedido.save()
-	return redirect("/pedidosEspera")
+	return redirect("/pedidos")
 
 @login_required(login_url='/login/')
 def pagosPedido_page(request):
