@@ -11,6 +11,22 @@
         color: #0F195E;
         margin: auto;
     }
+
+    .telefono-pedido img{
+        height: 15px;
+        margin-top: 2px;
+    }
+
+    .imgejem{
+        height: 15px;
+
+        margin-right: 13px;
+    }
+
+    .img-ver {
+        width: 1.3rem;
+    }
+
     .img-borrar{
       width: 0.7rem;
     }
@@ -212,6 +228,22 @@
            location = '?busqueda='+input.value;
           }
         });
+        var modalDiv = $("#modal-div2");
+        $(".open-modal").on("click", function () {
+            $.ajax({
+                beforeSend: function () {
+                    $('.ajax-loader').css("visibility", "visible");
+                },
+                url: $(this).attr("data-url"),
+                success: function (data) {
+                    modalDiv.html(data);
+                    $("#myModal2").modal();
+                },
+                complete: function () {
+                    $('.ajax-loader').css("visibility", "hidden");
+                }
+            });
+        });
     });
     function cambiarEstado(id){
         console.log(id)
@@ -230,12 +262,54 @@
             }
         });
     }
+
+
+    const select = document.querySelector(".establecimiento");
+    const options = document.querySelectorAll(".establecimiento option");
+
+    // 1
+    select.addEventListener("change", function() {
+      const url = this.options[this.selectedIndex].dataset.url;
+      if(url) {
+        localStorage.setItem("url", url);
+        location.href = url;
+      }
+    });
+
+    // 2
+    if(localStorage.getItem("url")) {
+      for(const option of options) {
+        const url = option.dataset.url;
+        if(url === localStorage.getItem("url")) {
+          option.setAttribute("selected", "");
+          break;
+        }
+      }
+    }
 </script>
 <div class="row row-products">
   <div class="col-12 center body-products">
+
     <h3>PRODUCTOS</h3>
     <div class="row contenedor-filtro">
+        <div>
+            Minimarket Cabuto: <img class= "imgejem" src="{% static 'img/iconos_administrador/orange-dot.png' %}">
+            Licoreria: <img class= "imgejem" src="{% static 'img/iconos_administrador/black-dot.png' %}">
+        </div>
+
         <div class="contenedor-searchbar">
+            <label> Establecimiento: </label>
+            <select name="establecimiento" onchange="location = '?estable='+this.value;">
+                <option value='0'>Todos</option>
+                {% for data in estab %}
+                    {% if data.id_establecimiento == estable %}
+                        <option value={{data.id_establecimiento}} selected>{{data.nombre}}</option>
+                    {% else %}
+                        <option value={{data.id_establecimiento}}>{{data.nombre}}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+
             <input type='text' class="form-control" id='buscar' placeholder="Buscar">
             <div class = "boton1"><a class="btn btn-sucess btn-agregar" data-toggle="modal" data-target="#añadir">NUEVO PRODUCTO </a></div>
         </div>
@@ -251,34 +325,92 @@
           <th>Precio Unitario</th>
           <th>Cantidad Disponible</th>
           <th>Estado</th>
+          <th>Establecimientos</th>
           <th> </th>
         </tr>
       </thead>
       <tbody>
-        {% for data in datos %}
-          <tr>
+        {% if mode == 1 %}
+            {% for productoTemp in datos %}
+                <tr>
+                    <td>
+                        <a class="btn btn-lg" href="editar_producto/{{ productoTemp.id_producto.id_producto }}/?page={{ datos.number }}">
+                            <img class="img-producto" src={{productoTemp.id_producto.photo_url}}>
+                        </a>
+                    </td>
+                    <td>{{productoTemp.id_producto.nombre}}</td>
+                    <td>$ {{productoTemp.id_producto.precio}}</td>
+                        <!--<td>{{productoTemp.image}}</td>-->
+                    <td>{{productoTemp.stock_disponible}}</td>
+                    <td>
+                        <label class="switch">
+                            {% if productoTemp.id_producto.estado == "A" %}
+                                <input type="checkbox" class="checkbox" onclick="cambiarEstado({{productoTemp.id_producto.id_producto}})" checked />
+                            {% else %}
+                                <input type="checkbox" class="checkbox" onclick="cambiarEstado({{productoTemp.id_producto.id_producto}})" />
+                            {% endif %}
+                            <div class=""></div>
+                        </label>
+                    </td>
+                    <td>
+                        <div class="input-container1"><div class="telefono-pedido">
+                            {% for datxstab in datosXestab %}
+                                {% if datxstab.id_producto.id_producto == productoTemp.id_producto.id_producto %}
 
-            <td><a class="btn btn-lg" href="editar_producto/{{ data.id_producto.id_producto }}/?page={{ datos.number }}"><img class="img-producto" src={{data.id_producto.photo_url}}></a></td>
-            <td>{{data.id_producto.nombre}}</td>
-            <td>$ {{data.id_producto.precio}}</td>
-            <!--<td>{{data.image}}</td>-->
-            <td>{{data.stock_disponible}}</td>
-            <td>
-                <label class="switch">
-                {% if data.id_producto.estado == "A" %}
-                    <input type="checkbox" class="checkbox" onclick="cambiarEstado({{data.id_producto.id_producto}})" checked/>
-                {% else %}
-                    <input type="checkbox" class="checkbox" onclick="cambiarEstado({{data.id_producto.id_producto}})"/>
-                {% endif %}
-                    <div class=""></div>
-                </label>
-            </td>
-            <td>
-                <a class="btn btn-sm edit" href="editar_producto/{{ data.id_producto.id_producto }}/?page={{ datos.number }}"><img class="img-editar" src="{% static 'img/iconos_administrador/editar.png' %}"></a>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
+                                    {% if datxstab.id_establecimiento.id_establecimiento == 1 %}
+                                        <img src="{% static 'img/iconos_administrador/orange-dot.png' %}">
+                                    {% elif datxstab.id_establecimiento.id_establecimiento == 2 %}
+                                        <img src="{% static 'img/iconos_administrador/black-dot.png' %}">
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </div></div>
+                    </td>
+                    <td>
+                        <a class="btn btn-sm edit" href="editar_producto/{{ productoTemp.id_producto.id_producto }}/?page={{ datos.number }}">
+                        <img class="img-editar" src="{% static 'img/iconos_administrador/editar.png' %}"></a>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            {% for productoTemp in datos %}
+                <tr>
+                    <td><a class="btn btn-lg" href="editar_producto/{{ productoTemp.id_producto }}/?page={{ datos.number }}"><img class="img-producto" src={{productoTemp.photo_url}}></a></td>
+                    <td>{{productoTemp.nombre}}</td>
+                    <td>$ {{productoTemp.precio}}</td>
+                    <td>{{productoTemp.stock_disponible}}</td>
+                    <td>
+                        <label class="switch">
+                            {% if productoTemp.estado == "A" %}
+                                <input type="checkbox" class="checkbox" onclick="cambiarEstado({{productoTemp.id_producto}})" checked />
+                            {% else %}
+                                <input type="checkbox" class="checkbox" onclick="cambiarEstado({{productoTemp.id_producto}})" />
+                            {% endif %}
+                            <div class=""></div>
+                        </label>
+                    </td>
+                    <td>
+                        <div class="input-container1"><div class="telefono-pedido">
+                            {% for datxstab in datosXestab %}
+                                {% if datxstab.id_producto.id_producto == productoTemp.id_producto %}
+
+                                    {% if datxstab.id_establecimiento.id_establecimiento == 1 %}
+                                        <img src="{% static 'img/iconos_administrador/orange-dot.png' %}">
+                                    {% elif datxstab.id_establecimiento.id_establecimiento == 2 %}
+                                        <img src="{% static 'img/iconos_administrador/black-dot.png' %}">
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </div></div>
+                    </td>
+                    <td>
+                        <a class="btn btn-sm edit" href="editar_producto/{{ productoTemp.id_producto }}/?page={{ datos.number }}">
+                        <img class="img-editar" src="{% static 'img/iconos_administrador/editar.png' %}"></a>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+    </tbody>
     </table>
     <div class="total-clientes">
         <span>Total Productos: </span><span>{{datos.paginator.count}}</span>
@@ -290,7 +422,40 @@
     {% if datos.has_other_pages %}
     <ul class="pagination">
       {% if datos.has_previous %}
-          {% if buscar == None %}
+          {% if buscar == None and estableBusqueda == None %}
+              <li><a href="./?page={{ datos.previous_page_number }}">Anterior</a></li>
+              {% if 0 < datos.number|add:"-10" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"-10" }}"><span style="color: #ffffff">{{datos.number|add:"-10"}}</span></a></li>
+              {% endif %}
+              {% if 0 < datos.number|add:"-5" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"-5" }}"><span style="color: #ffffff">{{datos.number|add:"-5"}}</span></a></li>
+              {% endif %}
+
+
+          {% elif estableBusqueda == None %}
+              <li><a href="./?page={{ datos.previous_page_number }}&busqueda={{buscar}}">Anterior</a></li>
+              {% if 0 < datos.number|add:"-10" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"-10" }}&busqueda={{buscar}}"><span style="color: #ffffff">{{datos.number|add:"-10"}}</span></a></li>
+              {% endif %}
+              {% if 0 < datos.number|add:"-5" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"-5" }}&busqueda={{buscar}}"><span style="color: #ffffff">{{datos.number|add:"-5"}}</span></a></li>
+              {% endif %}
+
+
+          {% elif buscar == None %}
+              <li><a href="./?page={{ datos.previous_page_number }}&estable={{estableBusqueda}}">Anterior</a></li>
+              {% if 0 < datos.number|add:"-10" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"-10" }}&estable={{estableBusqueda}}"><span style="color: #ffffff">{{datos.number|add:"-10"}}</span></a></li>
+              {% endif %}
+              {% if 0 < datos.number|add:"-5" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"-5" }}&estable={{estableBusqueda}}"><span style="color: #ffffff">{{datos.number|add:"-5"}}</span></a></li>
+              {% endif %}
+
+
+          {% else %}
+              <li><a href="./?page={{ datos.previous_page_number }}&busqueda={{buscar}}&estable={{estableBusqueda}}">Anterior</a></li>
+          {% endif %}
+          <!--{% if buscar == None %}
               <li ><a href="./?page={{ datos.previous_page_number }}">Anterior</a></li>
               {% if datos.number|add:"-10" > 0 %}
                   <li class="active"><a href="./?page={{ datos.number|add:"-10" }}"><span style="color: #ffffff">{{datos.number|add:"-10"}}</span></a></li>
@@ -301,14 +466,14 @@
           {% else %}
               <li><a href="./?page=1&busqueda={{buscar}}">Primera</a></li>
               <li><a href="./?page={{ datos.previous_page_number }}&busqueda={{buscar}}">Anterior</a></li>
-          {% endif %}
+          {% endif %}-->
       {% else %}
         <li class="disabled" ><span hidden>Primera</span></li>
         <li class="disabled" ><span hidden>Anterior</span></li>
       {% endif %}
       <li class="active" style="background: #52545f;"><span>{{ datos.number }} <span class="sr-only">(current)</span></span></li>
       {% if datos.has_next %}
-          {% if buscar == None %}
+          {% if buscar == None and estableBusqueda == None %}
               {% if datos.paginator.num_pages > datos.number|add:"5" %}
                   <li class="active"><a href="./?page={{ datos.number|add:"5" }}"><span style="color: #ffffff">{{datos.number|add:"5"}}</span></a></li>
               {% endif %}
@@ -316,9 +481,26 @@
                   <li class="active"><a href="./?page={{ datos.number|add:"10" }}"><span style="color: #ffffff">{{datos.number|add:"10"}}</span></a></li>
               {% endif %}
               <li><a href="./?page={{ datos.next_page_number }}">Siguiente</a></li>
-          {% else %}
+          {% elif estableBusqueda == None %}
+              {% if datos.paginator.num_pages > datos.number|add:"5" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"5" }}&busqueda={{buscar}}"><span style="color: #ffffff">{{datos.number|add:"5"}}</span></a></li>
+              {% endif %}
+              {% if datos.paginator.num_pages > datos.number|add:"10" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"10" }}&busqueda={{buscar}}"><span style="color: #ffffff">{{datos.number|add:"10"}}</span></a></li>
+              {% endif %}
               <li><a href="./?page={{ datos.next_page_number }}&busqueda={{buscar}}">Siguiente</a></li>
+          {% elif buscar == None %}
+              {% if datos.paginator.num_pages > datos.number|add:"5" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"5" }}&estable={{estableBusqueda}}"><span style="color: #ffffff">{{datos.number|add:"5"}}</span></a></li>
+              {% endif %}
+              {% if datos.paginator.num_pages > datos.number|add:"10" %}
+                  <li class="active"><a href="./?page={{ datos.number|add:"10" }}&estable={{estableBusqueda}}"><span style="color: #ffffff">{{datos.number|add:"10"}}</span></a></li>
+              {% endif %}
+              <li><a href="./?page={{ datos.next_page_number }}&estable={{estableBusqueda}}">Siguiente</a></li>
+          {% else %}
+              <li><a href="./?page={{ datos.next_page_number }}&busqueda={{buscar}}&estable={{estableBusqueda}}">Siguiente</a></li>
           {% endif %}
+
       {% else %}
         <li class="disabled" ><span hidden>Siguiente</span></li>
       {% endif %}
@@ -331,3 +513,4 @@
    {% include 'Productos/añadir_productos.html' %}
 </div>
 <div id="modal-div"></div>
+<div id="modal-div2"></div>

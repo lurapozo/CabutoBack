@@ -200,6 +200,13 @@
     <h3 class="row">OFERTAS</h3>
     <div class="row contenedor-filtro">
         <div class="contenedor-searchbar">
+            <select name="establecimiento" onchange="location = '?estable='+this.value;">
+                <option>--- Establecimiento: ---</option>
+                <option value=0>Todos</option>
+                {% for data in estab %}
+                    <option value={{data.id_establecimiento}}>{{data.nombre}}</option>
+                {% endfor %}
+            </select>
             <input type='text' class="form-control" id='buscar' placeholder="Buscar">
             <div class = "boton1"><a class="btn btn-sucess" id="nuevo-btn" href="añadir_ofertas/">NUEVA OFERTA </a></div>
         </div>
@@ -212,12 +219,14 @@
                 <tr>
                 <th> </th>
                 <th>Nombre</th>
-                <th>Descripcion</th>
+                <th>Descripción</th>
+                <th>Establecimiento</th>
                 <th>Precio sin oferta</th>
                 <th>Precio Oferta</th>
                 <th>Cantidad Disponible</th>
                 <th>Estado</th>
                 <th> </th>
+                <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -226,6 +235,7 @@
                     <td><a class="btn btn-lg" href="editar_ofertas/{{ data.id_oferta}}"><img class="img-producto" src={{data.photo_url}}></a></td>
                     <td>{{data.nombre}}</td>
                     <td>{{data.descripcion}}</td>
+                    <td>{{data.id_establecimiento}}</td>
                     <td>{{data.precioAntes}}</td>
                     <td>{{data.precio}}</td>
                     <td>{{data.cantidad}}</td>
@@ -242,6 +252,11 @@
                     <td>
                         <div class = "iconos">
                         <a class="btn btn-sm edit" href="editar_ofertas/{{ data.id_oferta }}"><img class="img-editar" src="{% static 'img/iconos_administrador/editar.png' %}"></a>
+                        </div>
+                    </td>
+                    <td>
+                        <div class = "iconos">
+                             <a class="btn btn-sm" href="eliminar_ofertas/{{data.id_oferta}}" onclick="return confirm('¿Está seguro que desea eliminar este elemento?');"><img class="img-borrar" src="{% static 'img/iconos_administrador/borrar.png' %}"></a>
                         </div>
                     </td>
                     </tr>

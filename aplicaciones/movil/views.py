@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.auth import authenticate, login, logout
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import EmailMessage, EmailMultiAlternatives, BadHeaderError, send_mail
 from email.mime.image import MIMEImage
 from django.conf import settings
@@ -24,6 +25,78 @@ import re
 
 # Create your views here.
 
+
+
+#aqui  es donde agrego un elemento al mysql
+@csrf_exempt
+def addCodigoAuth(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        print(response)
+        ntoken=response["token"]
+        nauth=response["cvc"]
+
+        try:
+            existe = Cardauth.objects.filter(token=ntoken)
+            total = existe.count()
+            if total==0:
+                ncard=Cardauth(token=ntoken,auth=nauth)
+                ncard.save()
+                response_data = {
+                    'valid':'OK'
+                }
+                return JsonResponse(response_data,safe=False)
+        except Cardauth.DoesNotExist:
+            ncard=Cardauth(token=ntoken,auth=nauth)
+            ncard.save()
+            response_data = {
+                'valid':'OK'
+            }
+            return JsonResponse(response_data,safe=False)
+
+    response_data = {
+        'valid': 'NO'
+    }
+    return JsonResponse(response_data,safe=False)
+
+
+
+#aqui es donde lo busco desde el mysql
+@csrf_exempt
+def getCodigoAuth(request):
+    if request.method == 'GET':
+        valor = request.GET.get("token")
+        print(valor)
+        if valor!=None:
+            cards= Cardauth.objects.get(token=valor)
+            return JsonResponse(cards.auth,safe=False)
+    return HttpResponse(status=400)
+
+#aqui el codigo es borrado cuando se elimina una tarjeta
+@csrf_exempt
+def delCodigoAuth(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        ntoken=response["token"]
+        print(ntoken)
+        try:
+            record = Cardauth.objects.filter(token=ntoken)
+            record.delete()
+            response_data = {
+                'valid':'OK'
+            }
+            return JsonResponse(response_data,safe=False)
+        except:
+            response_data = {
+                'valid':'NO'
+            }
+            return JsonResponse(response_data,safe=False)
+
+    response_data = {
+        'valid':'NO'
+    }
+    return JsonResponse(response_data,safe=False)
+#fin de codigo autenticacion de codigo cvc
 
 @csrf_exempt
 def getOferta(request):
@@ -75,68 +148,104 @@ def getProducto(request):
 
     return HttpResponse(status=400)
 
-def getProductoAaZ(request):
+@csrf_exempt
+def getProductoParcial(request, page):
+    if request.method == 'GET':
+        res = []
+        print(request.GET.get("nombre"))
+
+
+        if request.GET.get("nombre")!=None:
+            res = []
+            valor = request.GET.get("nombre")
+            print("lo que recibe mi get :v ay diosito que reaccione",valor, str(valor))
+            producto= Producto.objects.filter(nombre__icontains=str(valor)).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma")
+            for product in producto:
+                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                diccionario={"id":product.id_producto,"id_unico":id, "nombre":product.nombre,"descripcion":product.descripcion,
+                "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                res.append(diccionario)
+            return JsonResponse(res,safe=False)
+        else:
+            arrProducto= Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("suma", "id_producto")
+            paginator = Paginator(arrProducto, per_page = 10)
+            page_object = paginator.get_page(page)
+            for product in page_object:
+                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
+                "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                res.append(diccionario)
+
+            return JsonResponse(res,safe=False)
+
+    if request.method == 'POST':
+        return addCarrito(request)
+
+    return HttpResponse(status=400)
+
+
+def getProductoAaZ(request, page):
     if request.method=='GET':
         res=[]
-        producto=Producto.objects.filter().exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('nombre')
-        for product in producto:
+        arrProducto=Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('nombre')
+        paginator = Paginator(arrProducto, per_page = 10)
+        page_object = paginator.get_page(page)
+        for product in page_object:
             id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
             diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
             "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
             res.append(diccionario)
-        print("hay un get")
-        print(res)
+
+        return JsonResponse(res,safe=False)
+    if request.method == 'POST':
+        return addCarrito(request)
+
+    return HttpResponse(status=400)
+
+
+def getProductoZaA(request, page):
+    if request.method=='GET':
+        res=[]
+        arrProducto=Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('-nombre')
+        paginator = Paginator(arrProducto, per_page = 10)
+        page_object = paginator.get_page(page)
+        for product in page_object:
+            id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+            diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
+            "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+            res.append(diccionario)
         return JsonResponse(res,safe=False)
     if request.method == 'POST':
         return addCarrito(request)
     return HttpResponse(status=400)
 
-
-def getProductoZaA(request):
+def getProductoPrecioMenor(request, page):
     if request.method=='GET':
         res=[]
-        producto=Producto.objects.filter().exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('-nombre')
-        for product in producto:
+        arrProducto=Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('-precio')
+        paginator = Paginator(arrProducto, per_page = 10)
+        page_object = paginator.get_page(page)
+        for product in page_object:
             id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
             diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
             "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
             res.append(diccionario)
-            #res[product.id_producto]={"nombre":product.nombre,"precio":product.precio, "estado":product.estado}
-        print("hay un get")
-        print(res)
         return JsonResponse(res,safe=False)
     if request.method == 'POST':
         return addCarrito(request)
     return HttpResponse(status=400)
 
-def getProductoPrecioMenor(request):
+def getProductoPrecioMayor(request, page):
     if request.method=='GET':
         res=[]
-        producto=Producto.objects.filter().exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('-precio')
-        for product in producto:
+        arrProducto=Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('precio')
+        paginator = Paginator(arrProducto, per_page = 10)
+        page_object = paginator.get_page(page)
+        for product in page_object:
             id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
             diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
             "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
             res.append(diccionario)
-            #res[product.id_producto]={"nombre":product.nombre,"precio":product.precio, "estado":product.estado}
-        print("hay un get")
-        print(res)
-        return JsonResponse(res,safe=False)
-    if request.method == 'POST':
-        return addCarrito(request)
-    return HttpResponse(status=400)
-
-def getProductoPrecioMayor(request):
-    if request.method=='GET':
-        res=[]
-        producto=Producto.objects.filter().exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('precio')
-        for product in producto:
-            id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-            diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
-            "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-            res.append(diccionario)
-        print("hay un get")
-        print(res)
         return JsonResponse(res,safe=False)
     if request.method == 'POST':
         return addCarrito(request)
@@ -169,7 +278,7 @@ def getCategoria(request):
         if request.GET.get("id")!=None:
             valor=request.GET.get("id")
             categoria= Categoria.objects.filter(nombre=valor).first()
-            productos=Producto.objects.select_related().filter(id_categoria=categoria)
+            productos=Producto.objects.select_related().filter(id_categoria=categoria).exclude(estado="I")
             for product in productos:
                 id="P"+product.nombre.replace(" ","_")+"_"+str(product.id_producto)
                 diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
@@ -261,7 +370,9 @@ def borrarPedido(request):
             if transaccion != None:
                 msj= "Se ha reversado el pago de su pedido con valor de $"+str(total)+"\n"+"Id transacción: "+ str(transaccion.transaccion)
                 try:
-                    send_mail('Transacción reversada',msj,'cabutosoftware1@gmail.com',[user.usuario.correo],fail_silently=False,html_message= '<html><body>'+msj+'</body></html>')
+                    email = EmailMessage('Transacción reversada', msj, to=[user.usuario.correo])
+                    email.send()
+                    #send_mail('Transacción reversada',msj,'cabutosoftware1@gmail.com',[user.usuario.correo],fail_silently=False,html_message= '<html><body>'+msj+'</body></html>')
                 except:
                     print("Error al enviar correo")
             pedido.estado="Anulado"
@@ -307,6 +418,24 @@ def pagarPedido(request):
                 'valid': 'ok'
             }
             return JsonResponse(res,safe=False)
+
+        if not pedido.pagado:
+            total=round(pedido.total,2)
+            msj= "Se ha realizado la compra de su pedido con valor de $"+str(total)+"\n"
+            try:
+                html = render_to_string("Correos/pagoEfectivo.html",{"data":pedido}).strip()
+                msg = EmailMultiAlternatives('Pedido pagado', html, 'cabutosoftware1@gmail.com', [user.correo])
+                msg.content_subtype = 'html'
+                msg.mixed_subtype = 'related'
+                msg.send()
+            except Exception as e:
+                print("Error al enviar correo")
+                print("type error: " + str(e))
+            res = {
+                'valid': 'ok'
+            }
+            return JsonResponse(res,safe=False)
+
         else:
             res = {
                 'valid': 'not'
@@ -386,7 +515,10 @@ def guardarPedido(request):
             detalle_oferta=Carrito_Oferta.objects.filter(id_carrito=carrito)
             detalle_combo=Carrito_Combo.objects.filter(id_carrito=carrito)
             detalle_cupon=Carrito_Cupones.objects.filter(id_carrito=carrito)
-            detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon)
+            detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
+            detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
+            #dtm=Carrito_Tarjeta_Monto.objects.get(id_carrito=carrito)
+            detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto)
             res = {
             'valid': 'ok',
             'pedido': pedido.id_pedido
@@ -407,7 +539,7 @@ def guardarPedido(request):
         except Exception as e:
             print("type error: " + str(e))
             res = {
-            'valid': 'not'
+            'valid': 'not',
             }
             return JsonResponse(res,safe=False)
 
@@ -491,6 +623,7 @@ def modCliente(request):
         id=request.POST.get('id', None)
         nombre= request.POST.get("nombre",None)
         apellido=request.POST.get("apellido",None)
+        cedula=request.POST.get("cedula", None)
         telefono=request.POST.get("telefono",None)
         direccion=request.POST.get("direccion",None)
         fechaNac=request.POST.get("fechaNac",None)
@@ -503,13 +636,14 @@ def modCliente(request):
             user.telefono=telefono
             user.fecha_Nac=fechaNac
             user.direccion=direccion
+            user.usuario.cedula=cedula
             if(imagen!=None):
                 user.usuario.foto.delete()
                 user.usuario.foto=imagen
-                user.usuario.save()
+            user.usuario.save()
             user.save()
             res = {
-            'imagen': user.usuario.photo_url,
+
             'valid': 'ok'
             }
             return JsonResponse(res,safe=False)
@@ -560,6 +694,21 @@ def getCliente(request):
     return HttpResponse(status=400)
 
 @csrf_exempt
+def getClienteCorreo(request):
+    if request.method == "POST":
+        response = json.loads(request.body)
+        correo = response["correo"]
+
+        clientefilter = Cliente.objects.filter(usuario__correo=correo)
+        if clientefilter:
+            cliente = Cliente.objects.get(usuario__correo=correo)
+            stringi=cliente.nombre+" "+cliente.apellido
+            response_data = {'valid': 'OK', 'valor':str(correo), 'receptor':stringi}
+            return JsonResponse(response_data,safe=False)
+        response_data = {'valid': 'NO', 'valor':str(correo)}
+        return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
 def registro(request):
     if request.method == 'POST':
         print("estoy en django, metodo registro ")
@@ -576,17 +725,18 @@ def registro(request):
             cr = u2.correo
             cn = u2.contrasena
             cd = u2.cedula
+
             if cr == email:
                 response_data = {
                 'valid': 'EMAIL'
                 }
                 return JsonResponse(response_data,safe=False)
-            if cedula == cd:
+            '''if cedula!=" " and cedula == cd:
                 print("cedula repetida")
                 response = {
                     'valid': 'CED'
                     }
-                return JsonResponse(response,safe=False)
+                return JsonResponse(response,safe=False)'''
         msj2 = 'Bienvenido a Cabutos, es un placer que se una a nosotros'
         u =Usuario(cedula=cedula,correo=email,contrasena=contra)
         print("usuario ",u)
@@ -707,7 +857,9 @@ def envioReclamo(request):
         reclamo.save()
         try:
             print(reclamo.photo_url)
-            send_mail('Nueva Sugerencia/Reclamo',msj,'cabutosoftware1@gmail.com',['sarahi.ksp@gmail.com'],fail_silently=False,html_message= '<html><body><img src="'+reclamo.photo_url+'"></img><p>'+msj+'</p></body></html>')
+            email = EmailMessage('Nueva Sugerencia/Reclamo', msj, to=['cabutosoftware1@gmail.com'])
+            email.send()
+            #send_mail('Nueva Sugerencia/Reclamo',msj,'cabutosoftware1@gmail.com',['cabutosoftware1@gmail.com'],fail_silently=True,html_message= '<html><body><img src="'+reclamo.photo_url+'"></img><p>'+msj+'</p></body></html>')
         except e:
             print("Error al enviar correo")
             print(e)
@@ -730,7 +882,9 @@ def cambioContra(request):
             if user.correo == response:
                 print("Si existe el correo")
                 print(n)
-                send_mail('Correo enviado: Cambio de contraseña',msj,'cabutosoftware1@gmail.com',[user.correo],fail_silently=False,html_message= '<html><body>'+msj+'</body></html>')
+                email = EmailMessage('Correo enviado: Cambio de contraseña', msj, to=[user.correo])
+                email.send()
+                #send_mail('Correo enviado: Cambio de contraseña',msj,'cabutosoftware1@gmail.com',[user.correo],fail_silently=False,html_message= '<html><body>'+msj+'</body></html>')
                 user.contrasena = n
                 print(user.contrasena)
                 user.save()
@@ -980,13 +1134,58 @@ def getCarrito(request):
                 detalle_oferta=Carrito_Oferta.objects.filter(id_carrito=carrito)
                 detalle_combo=Carrito_Combo.objects.filter(id_carrito=carrito)
                 detalle_cupon=Carrito_Cupones.objects.filter(id_carrito=carrito)
+                detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
+                detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
                 total_oferta = detalle_oferta.count()
                 total_producto = detalle_producto.count()
                 total_cupon = detalle_cupon.count()
+                total_tarjeta_monto = detalle_tarjeta_monto.count()
+                total_tarjeta_producto = detalle_tarjeta_producto.count()
                 total_combo = detalle_combo.count()
-                total=total_oferta+total_producto+total_cupon+total_combo
+                total=total_oferta+0+total_cupon+total_combo+total_tarjeta_monto+total_tarjeta_producto
+                productoNecesario = False
+                esValidoProducto= True
+                totalNecesarioMonto=0.0
+                restaMonto=0.0
+                if total_cupon > 0:
+                    for cup in detalle_cupon:
+                        if cup.id_cupon.tipo =='P':
+                            if total_producto > 0:
+                                estaEnCarrito=False
+                                cuponesProductos= Cupones_Producto.objects.get(id_cupon=cup.id_cupon.id_cupon)
+                                productoTemp = Producto.objects.get(id_producto = cuponesProductos.id_producto.id_producto)
+                                #productoNecesario = productoTemp.nombre
+                                for prod in detalle_producto:
+                                    if productoTemp.id_producto == prod.id_producto.id_producto:
+                                        if prod.cantidad >= cuponesProductos.cantidad:
+                                            estaEnCarrito=True
+                                #if not estaEnCarrito:
+                                productoNecesario = productoTemp.id_producto
+                                esValidoProducto= "Se necesita " + str(cuponesProductos.cantidad) + " " + str(productoTemp.nombre) + " para canjear el cupón"
+                                #else:
+                                #esValidoProducto= True
+                            else:
+                                esValidoProducto=total_producto
+                        if cup.id_cupon.tipo =='M':
+                            cuponesMonto= Cupones_Monto.objects.get(id_cupon=cup.id_cupon.id_cupon)
+                            if cuponesMonto.monto > totalNecesarioMonto:
+                                totalNecesarioMonto = cuponesMonto.monto
+
+                        #cuponesMonto= Cupones.objects.filter(id_cupon=e.id_cupon,tipo='M')
+                if total_tarjeta_monto > 0:
+                    for tarjeta in detalle_tarjeta_monto:
+                        tarjeta_monto= Tarjeta_Monto.objects.get(id_tarjeta=tarjeta.id_tarjeta.id_tarjeta)
+                        restaMonto=restaMonto+tarjeta_monto.monto
+
+                if total_tarjeta_producto > 0:
+                    for tarjeta in detalle_tarjeta_producto:
+                        tarjeta_producto= Tarjeta_Producto.objects.get(id_tarjeta=tarjeta.id_tarjeta.id_tarjeta)
+
                 res=[{"total":total,"productos":getProductoxCarrito(detalle_producto),"ofertas":getOfertaxCarrito(detalle_oferta),
-                "combos":getComboxCarrito(detalle_combo),"cupon":getCuponxCarrito(detalle_cupon),"id":carrito.id_carrito}]
+                "combos":getComboxCarrito(detalle_combo),"cupon":getCuponxCarrito(detalle_cupon),
+                "tarjeta":getTarjetaMontoxCarrito(detalle_tarjeta_monto),"tarjeta2":getTarjetaProductoxCarrito(detalle_tarjeta_producto),
+                "id":carrito.id_carrito,"esValidoProducto":esValidoProducto,"totalNecesarioMonto":totalNecesarioMonto,
+                "productoNecesario":productoNecesario, "restaMonto":restaMonto}]
                 print(res)
                 return JsonResponse(res,safe=False)
             except Detalle_Carrito.DoesNotExist or Carrito_Oferta.DoesNotExist or Carrito_Combo.DoesNotExist:
@@ -1011,6 +1210,28 @@ def getCarrito(request):
             return JsonResponse(response_data,safe=False)
 
     return HttpResponse(status=400)
+
+@csrf_exempt
+def checkCupones(request):
+    if request.method == "POST":
+        response = json.loads(request.body)
+
+        id_cupon = response["id_cupon"]
+        id_cliente = response["id_cliente"]
+        codigos= Codigo.objects.filter(codigo=str(code)).exclude(estado='I')
+        if codigos:
+            codigo = Codigo.objects.get(codigo=str(code))
+            cliente = Cliente.objects.get(id_cliente=id_cliente)
+            codigosclientes= Codigo_Cliente.objects.filter(id_codigo=codigo, id_cliente=cliente)
+            if codigosclientes:
+                response_data = {'valid': 'talvez',}
+                return JsonResponse(response_data,safe=False)
+            codigoXusuario=Codigo_Cliente(id_codigo=codigo,id_cliente=cliente)
+            codigoXusuario.save()
+            response_data = {'valid': 'OK',}
+            return JsonResponse(response_data,safe=False)
+        response_data = {'valid': 'NO', 'valor':str(code)}
+        return JsonResponse(response_data,safe=False)
 
 @csrf_exempt
 def modCantidades(request):
@@ -1169,6 +1390,46 @@ def getCuponxCarrito(detalle_cupon):
         res.append(dicc)
         return dicc
 
+def getTarjetaMontoxCarrito(detalle_tarjeta_monto):
+    res=[]
+    try:
+        for tarjeta in detalle_tarjeta_monto:
+            if tarjeta.id_tarjeta != None:
+                id="Tarjeta_Monto_"+str(tarjeta.id_tarjeta.id_tarjeta)
+                diccionario={"id_tarjeta":tarjeta.id_tarjeta.id_tarjeta,"id_unico":id,"imagen_tarjeta":"https://cdn-icons-png.flaticon.com/512/3663/3663716.png","cantidad_tarjeta":"1",
+                            "monto_tarjeta":tarjeta.id_tarjeta.monto,
+                            "subtotal_tarjeta":tarjeta.precio}
+                res.append(diccionario)
+            else:
+                tarjeta.delete()
+        return res
+    except Carrito_Oferta.DoesNotExist:
+    #else:
+        print("No existe carrito Tarjeta")
+        dicc={}
+        res.append(dicc)
+        return dicc
+
+def getTarjetaProductoxCarrito(detalle_tarjeta_producto):
+    res=[]
+    try:
+        for tarjeta in detalle_tarjeta_producto:
+            if tarjeta.id_tarjeta != None:
+                id="Tarjeta_Monto_"+str(tarjeta.id_tarjeta.id_tarjeta)
+                diccionario={"id_tarjeta":tarjeta.id_tarjeta.id_tarjeta,"id_unico":id,"imagen_tarjeta":"https://cdn-icons-png.flaticon.com/512/3663/3663716.png","cantidad_tarjeta":"1",
+                            "monto_tarjeta":0,
+                            "subtotal_tarjeta":0}
+                res.append(diccionario)
+            else:
+                tarjeta.delete()
+        return res
+    except Carrito_Oferta.DoesNotExist:
+    #else:
+        print("No existe carrito Tarjeta")
+        dicc={}
+        res.append(dicc)
+        return dicc
+
 def lecturaOferta(nombre,oxfs):
     for oxf in oxfs:
         if str(oxf.id_oferta.nombre) == nombre:
@@ -1260,9 +1521,11 @@ def quitar(request):
         #detalle_combo = Detalle_Combo.objects.get(id_carrito=carrito.id_carrito)
         detalle_carrito = Detalle_Carrito.objects.filter(id_carrito=carrito)
         detalle_cupon = Carrito_Cupones.objects.filter(id_carrito=carrito)
+        detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
         total_oferta = detalle_oferta.count()
         total_producto = detalle_carrito.count()
         total_cupon = detalle_cupon.count()
+        total_tarjeta_monto = detalle_tarjeta_monto.count()
         print("Este es mi usuario",usuario)
         print("Este es mi cliente",cliente)
         print("Este es mi carrito",carrito)
@@ -1296,9 +1559,18 @@ def quitar(request):
                         'valid':'OK'
                         }
                     return JsonResponse(response_data,safe=False)
+        if total_tarjeta_monto != 0:
+            for tarjeta in detalle_tarjeta_monto:
+                if str(tarjeta.id_tarjeta.id_tarjeta) == str(nombre):
+                    print("lo que necesito es una tarjeta de monto")
+                    tarjeta.delete()
+                    response_data = {
+                        'valid':'OK'
+                        }
+                    return JsonResponse(response_data,safe=False)
         else:
             response_data = {
-                'valid': 'NOT'
+                'valid': 'NOT', "nombre":nombre
                 }
             return JsonResponse(response_data,safe=False)
     return HttpResponse(status=400)
@@ -1309,11 +1581,11 @@ def getCupones(request):
     if request.method == 'GET':
         print("estoy dentro del getCupones")
         res = []
-        cupones = Cupones.objects.filter(cantidad__gt=0).exclude(estado="I")
+        cupones = Cupones.objects.filter(cantidad__gt=0, estado="A")
         for cupon in cupones:
             print(cupon.photo_url)
             diccionario = {"id":cupon.id_cupon,"nombre":cupon.nombre,"descripcion":cupon.descripcion,"cantidad":cupon.cantidad,
-            "imagen":cupon.photo_url,"establecimiento":cupon.id_establecimiento.nombre}
+            "imagen":cupon.photo_url}
             res.append(diccionario)
             print("Esto es lo que voy a enviar",res)
         return JsonResponse(res,safe=False)
@@ -1321,6 +1593,26 @@ def getCupones(request):
     #if request.method == 'POST':
         #return addCupon(request)
     #return HttpResponse(status=400)
+
+@csrf_exempt
+def getCuponesPersonales(request, id):
+    if request.method == 'GET':
+        print("estoy dentro del getCupones")
+        res = []
+        cupones = Cupones.objects.filter(cantidad__gt=0, estado="A")
+        for cupon in cupones:
+            print(cupon.photo_url)
+            diccionario = {"id":cupon.id_cupon,"nombre":cupon.nombre,"descripcion":cupon.descripcion,"cantidad":cupon.cantidad,
+            "imagen":cupon.photo_url}
+            res.append(diccionario)
+            print("Esto es lo que voy a enviar",res)
+        cuponesCodigo = Codigo_Cliente.objects.filter(id_cliente = id).exclude(estado='I')
+        for cupon in cuponesCodigo:
+            diccionario = {"id":cupon.id_codigo.id_codigo,"nombre":cupon.id_codigo.codigo,"descripcion":cupon.id_codigo.descripcion,"cantidad":cupon.id_codigo.cantidad,
+            "imagen":cupon.id_codigo.photo_url}
+            res.append(diccionario)
+        return JsonResponse(res,safe=False)
+    return HttpResponse(status=400)
 
 
 @csrf_exempt
@@ -1334,6 +1626,19 @@ def getNotificaciones(request):
             res.append(diccionario)
         return JsonResponse(res,safe=False)
     return HttpResponse(status=400)
+
+@csrf_exempt
+def getNotificacionUnica(request, titulo):
+    if request.method == 'GET':
+        res = []
+        notificacions= Notificacion.objects.filter(asunto = titulo)
+        for notificacion in notificacions:
+            diccionario={"id":notificacion.id_notificacion,"asunto":notificacion.asunto,"mensaje":notificacion.mensaje,
+            "fecha":notificacion.registro,"imagen":notificacion.photo_url}
+            res.append(diccionario)
+        return JsonResponse(res,safe=False)
+    return HttpResponse(status=400)
+
 
 @csrf_exempt
 def actualizarNotificacion(request):
@@ -1446,6 +1751,13 @@ def lecturaCupon(nombre,oxfs):
             return True
     return False
 
+def lecturaTarjeta(id_tarjeta,oxfs):
+    print(oxfs)
+    for oxf in oxfs:
+        if oxf.id_tarjeta.id_tarjeta == id_tarjeta:
+            return True
+    return False
+
 def cambiarCantidadCupon(nombre,cantidad,oxfs):
     for oxf in oxfs:
         print(oxf.id_cupon.nombre)
@@ -1457,10 +1769,12 @@ def cambiarCantidadCupon(nombre,cantidad,oxfs):
             return True
     return False
 
-def detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon):
+def detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto):
     total_oferta = detalle_oferta.count()
     total_producto = detalle_producto.count()
     total_cupon = detalle_cupon.count()
+    total_tarjeta_monto = detalle_tarjeta_monto.count()
+    total_tarjeta_producto = detalle_tarjeta_producto.count()
     total_combo = detalle_combo.count()
     if total_producto > 0:
         for producto in detalle_producto:
@@ -1488,6 +1802,7 @@ def detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,d
                 ofertaxpedido=Oferta_Pedido(cantidad=ofer.cantidad,precio=oferta.precio,oferta=oferta.id_oferta,pedido=pedido)
                 ofertaxpedido.save()
                 oferta.delete()
+
     if total_cupon > 0:
         for cupons in detalle_cupon:
             cu=cupons.id_cupon
@@ -1495,6 +1810,12 @@ def detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,d
                 cu.cantidad=cu.cantidad-cupons.cantidad
                 cu.save()
                 cuponxpedido=Cupon_Pedido(cantidad=cupons.cantidad,precio=cupons.precio,cupon=cupons.id_cupon,pedido=pedido)
+                codigo=Codigo.objects.filter(id_cupon=cu)
+                if codigo:
+                    code=Codigo.objects.get(id_cupon=cu)
+                    codigoXcliente=Codigo_Cliente.objects.get(id_codigo=code, id_cliente=pedido.cliente_id)
+                    codigoXcliente.estado='I'
+                    codigoXcliente.save()
                 cuponxpedido.save()
                 cupons.delete()
             elif(cu.cantidad>0):
@@ -1503,6 +1824,37 @@ def detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,d
                 cuponxpedido=Cupon_Pedido(cantidad=cu.cantidad,precio=cupons.precio,cupon=cupons.id_cupon,pedido=pedido)
                 cuponxpedido.save()
                 cupons.delete()
+
+    if total_tarjeta_monto > 0:
+        for tarjet in detalle_tarjeta_monto:
+            #tarjetaxpedido=Tarjeta_Monto_Pedido(precio=tarjet.id_tarjeta.monto,tarjeta=tarjet.id_tarjeta,pedido=pedido)
+            #tarjetaxpedido.save()
+            tarXcliente=Tarjeta_Monto_Cliente.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta, id_cliente=pedido.cliente_id)
+            tarXcliente.estado='I'
+            tarXcliente.save()
+            tarjet.delete()
+
+    if total_tarjeta_producto > 0:
+        for tarjet in detalle_tarjeta_producto:
+            detalle_tarjeta_producto_producto=Tarjeta_Producto_Producto.objects.filter(id_tarjeta=tarjet.id_tarjeta)
+            for tarproducto in detalle_tarjeta_producto_producto:
+                pro=Producto.objects.filter(id_producto=tarproducto.id_producto.id_producto).annotate(suma=Sum('establecimiento_producto__stock_disponible')).first()
+                if(pro.suma-producto.cantidad>=0):
+                    productoxpedido=Producto_Pedido(cantidad=producto.cantidad,precio=producto.precio,producto=tarproducto.id_producto,pedido=pedido)
+                    productoxpedido.save()
+                    tarproducto.delete()
+                elif(pro.suma>0):
+                    productoxpedido=Producto_Pedido(cantidad=pro.suma,precio=producto.precio,producto=tarproducto.id_producto,pedido=pedido)
+                    productoxpedido.save()
+                    tarproducto.delete()
+            #tarjetaxpedido=Tarjeta_Monto_Pedido(precio=tarjet.id_tarjeta.monto,tarjeta=tarjet.id_tarjeta,pedido=pedido)
+            #tarjetaxpedido.save()
+            tarXcliente=Tarjeta_Producto_Cliente.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta, id_cliente=pedido.cliente_id)
+            tarXcliente.estado='I'
+            tarXcliente.save()
+            tarjet.delete()
+
+
 
     if total_combo > 0:
         for combo in detalle_combo:
@@ -1522,5 +1874,338 @@ def detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,d
 
 
 
+@csrf_exempt
+def quitar_usuario(request):
+    print(request)
+    if request.method == "POST":
+        res = json.loads(request.body)
+        correo = res["correo"]
 
 
+        usuario=Usuario.objects.get(correo=correo)
+        cliente=Cliente.objects.get(usuario=usuario)
+
+        carrito=Carrito.objects.get(id_cliente=cliente)
+
+        detalle_oferta= Carrito_Oferta.objects.filter(id_carrito=carrito.id_carrito)
+        detalle_carrito = Detalle_Carrito.objects.filter(id_carrito=carrito)
+        detalle_cupon = Carrito_Cupones.objects.filter(id_carrito=carrito)
+
+        total_oferta = detalle_oferta.count()
+        total_producto = detalle_carrito.count()
+        total_cupon = detalle_cupon.count()
+
+        if total_producto !=0:
+            for producto in detalle_carrito:
+                producto.delete()
+
+        if total_oferta != 0:
+            for oferta in detalle_oferta:
+                oferta.delete()
+
+        if total_cupon != 0:
+            for cupons in detalle_cupon:
+                cupons.delete()
+
+        try:
+            carrito.delete()
+            cliente.delete()
+            usuario.delete()
+        except:
+            response_data = {'valid': 'NO',}
+            return JsonResponse(response_data,safe=False)
+        else:
+            response_data = {'valid': 'OK',}
+            return JsonResponse(response_data,safe=False)
+
+    response_data = {'valid': 'NO',}
+    return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def getCodigos(request):
+    if request.method == "POST":
+        response = json.loads(request.body)
+        code = response["codigo"]
+        id_cliente = response["id_cliente"]
+        codigos= Codigo.objects.filter(codigo=str(code)).exclude(estado='I')
+        if codigos:
+            codigo = Codigo.objects.get(codigo=str(code))
+            cliente = Cliente.objects.get(id_cliente=id_cliente)
+            codigosclientes= Codigo_Cliente.objects.filter(id_codigo=codigo, id_cliente=cliente)
+            if codigosclientes:
+                response_data = {'valid': 'talvez',}
+                return JsonResponse(response_data,safe=False)
+            codigoXusuario=Codigo_Cliente(id_codigo=codigo,id_cliente=cliente)
+            codigoXusuario.save()
+            response_data = {'valid': 'OK',}
+            return JsonResponse(response_data,safe=False)
+        response_data = {'valid': 'NO', 'valor':str(code)}
+        return JsonResponse(response_data,safe=False)
+    codigos= Codigo.objects.all().exclude(estado='I')
+    res=[]
+    for codigo in codigos:
+        id=codigo.codigo.replace(" ","_")+"_"+str(codigo.id_codigo)
+
+        diccionario={"id":codigo.id_codigo,"codigo":codigo.codigo,"descripcion":codigo.descripcion,
+        "tipo":codigo.tipo,"fecha_inicio":codigo.fecha_inicio,"fecha_fin":codigo.fecha_fin}
+        res.append(diccionario)
+    return JsonResponse(res,safe=False)
+
+@csrf_exempt
+def getCodigosString(request,codigostr):
+        codigos= Codigo.objects.filter(codigo=codigostr).exclude(estado='I')
+        if codigos:
+            response_data = {'valid': 'OK',}
+            return JsonResponse(response_data,safe=False)
+        response_data = {'valid': 'NO',}
+        return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def getTarjetasRegalo(request, id):
+    if request.method == 'GET':
+        print("estoy dentro del getTarjetasRegalo")
+        res = []
+        tarjetas = Tarjeta_Monto_Cliente.objects.filter(id_cliente = id).exclude(estado="I")
+        for tarjeta in tarjetas:
+            diccionario = {"id":tarjeta.id_tarjeta.id_tarjeta,"emisor":tarjeta.id_tarjeta.id_cliente.nombre,"descripcion":tarjeta.id_tarjeta.descripcion,"monto":tarjeta.id_tarjeta.monto}
+            res.append(diccionario)
+        return JsonResponse(res,safe=False)
+    return HttpResponse(status=400)
+
+@csrf_exempt
+def getTarjetasRegaloP(request, id):
+    if request.method == 'GET':
+        print("estoy dentro del getTarjetasRegaloP")
+        res = []
+        tarjetas = Tarjeta_Producto_Cliente.objects.filter(id_cliente = id).exclude(estado="I")
+        for tarjeta in tarjetas:
+            tarjetaprod=Tarjeta_Producto.objects.get(id_tarjeta = tarjeta.id_tarjeta.id_tarjeta)
+            productos=Tarjeta_Producto_Producto.objects.filter(id_tarjeta = tarjetaprod)
+            listaprod=""
+            for producto in productos:
+                listaprod=listaprod+producto.id_producto.nombre+" x"+str(producto.cantidad)+" - "
+            diccionario = {"id":tarjeta.id_tarjeta.id_tarjeta,"emisor":tarjeta.id_tarjeta.id_cliente.nombre,"descripcion":tarjeta.id_tarjeta.descripcion,"listaprod":listaprod}
+            res.append(diccionario)
+        return JsonResponse(res,safe=False)
+    return HttpResponse(status=400)
+
+@csrf_exempt
+def crearTarjetaRegaloMonto(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        total=response["total"]
+        emisor=response["id_cliente"]
+        receptor=response["receptor"]
+        descripcion=response["descripcion"]
+
+        clienteEmisor = Cliente.objects.get(id_cliente=int(emisor))
+        clienteReceptor = Cliente.objects.get(usuario__correo=receptor)
+
+        tarjetaMonto=Tarjeta_Monto(id_cliente=clienteEmisor, monto=float(total),descripcion=descripcion)
+        tarjetaMonto.save()
+        tarjetaMontoCliente=Tarjeta_Monto_Cliente(id_cliente=clienteReceptor, id_tarjeta=tarjetaMonto)
+        tarjetaMontoCliente.save()
+        response_data = {'valid': 'OK',}
+        return JsonResponse(response_data,safe=False)
+    response_data = {'valid': 'NO',}
+    return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def crearTarjetaRegaloproducto(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        emisor=response["id_cliente"]
+        receptor=response["receptor"]
+        descripcion=response["descripcion"]
+        carrito=response["carrito"]
+        detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
+        clienteEmisor = Cliente.objects.get(id_cliente=int(emisor))
+        clienteReceptor = Cliente.objects.get(usuario__correo=receptor)
+        tarjetaProducto=Tarjeta_Producto(id_cliente=clienteEmisor, descripcion=descripcion)
+        tarjetaProducto.save()
+        tarjetaProductoCliente=Tarjeta_Producto_Cliente(id_cliente=clienteReceptor, id_tarjeta=tarjetaProducto)
+        tarjetaProductoCliente.save()
+
+        for producto in detalle_producto:
+            '''pro=Producto.objects.filter(id_producto=producto.id_producto.id_producto).annotate(suma=Sum('establecimiento_producto__stock_disponible')).first()
+            if(pro.suma-producto.cantidad>=0):
+                productoxpedido=Producto_Pedido(cantidad=producto.cantidad,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
+                productoxpedido.save()
+                producto.delete()
+            elif(pro.suma>0):
+                productoxpedido=Producto_Pedido(cantidad=pro.suma,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
+                productoxpedido.save()
+                producto.delete()'''
+            tarjetaProductoProducto=Tarjeta_Producto_Producto(id_tarjeta=tarjetaProducto, id_producto=producto.id_producto, cantidad=producto.cantidad)
+            tarjetaProductoProducto.save()
+            producto.delete()
+
+        response_data = {'valid': 'OK',}
+        return JsonResponse(response_data,safe=False)
+    response_data = {'valid': 'NO',}
+    return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def addTarjetaRegaloMonto(request):
+    if request.method == "POST":
+        response = json.loads(request.body)
+        tarjeta=Tarjeta_Monto.objects.get(id_tarjeta=response["id_tarjeta"])
+        cantidad = int(response["cantidad"])
+        mail = response["correo"]
+        id_tarjeta = response["id_tarjeta"]
+        cliente=Cliente.objects.select_related("usuario").filter(usuario__correo=mail).first()
+        try:
+            carrito=Carrito.objects.get(id_cliente=cliente)
+            try:
+                carritoDetalle = Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
+                total = carritoDetalle.count()
+                if total == 0:
+                    subtotal=tarjeta.monto*int(cantidad)
+                    detalle_tarjeta = Carrito_Tarjeta_Monto(id_carrito=carrito,id_tarjeta=tarjeta,precio=-subtotal)
+                    detalle_tarjeta.save()
+                    response_data = {
+                        'valid':'OK'
+                    }
+                    return JsonResponse(response_data,safe=False)
+                else:
+                    if lecturaTarjeta(tarjeta.id_tarjeta,carritoDetalle) == True:
+                        response_data = {
+                                'valid': 'IN'
+                        }
+                        return JsonResponse(response_data,safe=False)
+                    else:
+                        subtotal = tarjeta.monto*int(cantidad)
+                        detalle_tarjeta = Carrito_Tarjeta_Monto(id_carrito=carrito,id_tarjeta=tarjeta,precio=-subtotal)
+                        detalle_tarjeta.save()
+                        response_data={
+                            'valid':'OK'
+                        }
+                        return JsonResponse(response_data,safe=False)
+            except Detalle_Carrito.DoesNotExist:
+                subtotal=tarjeta.monto*int(cantidad)
+                detalle_tarjeta = Carrito_Tarjeta_Monto(id_carrito=carrito,id_tarjeta=tarjeta,precios=-subtotal)
+                detalle_tarjeta.save()
+                response_data = {
+                  'valid': 'OK'
+                }
+                return JsonResponse(response_data,safe=False)
+        except Carrito.DoesNotExist:
+            carrito_new=Carrito(id_cliente=cliente)
+            carrito_new.save()
+            subtotal=tarjeta.monto*int(cantidad)
+            detalle_tarjeta_new=Carrito_Tarjeta_Monto(id_carrito=carrito_new,id_tarjeta=tarjeta,precio=-subtotal)
+            detalle_tarjeta_new.save()
+            response_data = {
+              'valid': 'OK'
+            }
+            return JsonResponse(response_data,safe=False)
+
+    response_data = {
+        'valid': 'NOT'
+    }
+    return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def addTarjetaRegaloproducto(request):
+    if request.method == "POST":
+        response = json.loads(request.body)
+        tarjeta=Tarjeta_Producto.objects.get(id_tarjeta=response["id_tarjeta"])
+        cantidad = int(response["cantidad"])
+        mail = response["correo"]
+        id_tarjeta = response["id_tarjeta"]
+        cliente=Cliente.objects.select_related("usuario").filter(usuario__correo=mail).first()
+        try:
+            carrito=Carrito.objects.get(id_cliente=cliente)
+            try:
+                carritoDetalle = Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
+                total = carritoDetalle.count()
+                if total == 0:
+                    detalle_tarjeta = Carrito_Tarjeta_Producto(id_carrito=carrito,id_tarjeta=tarjeta)
+                    detalle_tarjeta.save()
+                    response_data = {
+                        'valid':'OK'
+                    }
+                    return JsonResponse(response_data,safe=False)
+                else:
+                    if lecturaTarjeta(tarjeta.id_tarjeta,carritoDetalle) == True:
+                        response_data = {
+                                'valid': 'IN'
+                        }
+                        return JsonResponse(response_data,safe=False)
+                    else:
+                        detalle_tarjeta = Carrito_Tarjeta_Producto(id_carrito=carrito,id_tarjeta=tarjeta)
+                        detalle_tarjeta.save()
+                        response_data={
+                            'valid':'OK'
+                        }
+                        return JsonResponse(response_data,safe=False)
+            except Detalle_Carrito.DoesNotExist:
+                detalle_tarjeta = Carrito_Tarjeta_Producto(id_carrito=carrito,id_tarjeta=tarjeta)
+                detalle_tarjeta.save()
+                response_data = {
+                  'valid': 'OK'
+                }
+                return JsonResponse(response_data,safe=False)
+        except Carrito.DoesNotExist:
+            carrito_new=Carrito(id_cliente=cliente)
+            carrito_new.save()
+            detalle_tarjeta_new=Carrito_Tarjeta_Producto(id_carrito=carrito_new,id_tarjeta=tarjeta)
+            detalle_tarjeta_new.save()
+            response_data = {
+              'valid': 'OK'
+            }
+            return JsonResponse(response_data,safe=False)
+
+    response_data = {
+        'valid': 'NOT'
+    }
+    return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def eliminarCarrito(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        carT=response["carrito"]
+        try:
+            carrito=Carrito.objects.filter(id_carrito=carT).first()
+            detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
+            detalle_oferta=Carrito_Oferta.objects.filter(id_carrito=carrito)
+            detalle_combo=Carrito_Combo.objects.filter(id_carrito=carrito)
+            detalle_cupon=Carrito_Cupones.objects.filter(id_carrito=carrito)
+            detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
+            eliminarCarrito2(carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto)
+            res = {
+            'valid': 'ok',
+            'LAlIFE': carrito.id_carrito
+            }
+
+            return JsonResponse(res,safe=False)
+        except Exception as e:
+            print("type error: " + str(e))
+            res = {
+            'valid': 'not',
+            'LAlIFE': a
+            }
+            return JsonResponse(res,safe=False)
+
+def eliminarCarrito2(carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto):
+    total_oferta = detalle_oferta.count()
+    total_producto = detalle_producto.count()
+    total_cupon = detalle_cupon.count()
+    total_tarjeta_monto = detalle_tarjeta_monto.count()
+    total_combo = detalle_combo.count()
+    if total_producto > 0:
+        for producto in detalle_producto:
+            producto.delete()
+    if total_oferta > 0:
+        for oferta in detalle_oferta:
+            oferta.delete()
+    if total_cupon > 0:
+        for cupons in detalle_cupon:
+            cupons.delete()
+    if total_tarjeta_monto > 0:
+        for tarjet in detalle_tarjeta_monto:
+            tarjet.delete()
+    if total_combo > 0:
+        for combo in detalle_combo:
+            combo.delete()

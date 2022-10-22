@@ -123,11 +123,6 @@
                 complete: function(){
                     $('.ajax-loader').css("visibility", "hidden");
                 },
-                error: function (data) {
-                    console.log('An error occurred.');
-                    var modalDiv = $("#modal-div");
-                    modalDiv.html(data.responseText);
-                },
             });
         });
         $('.notificaciones-link').click(function() {
@@ -191,6 +186,15 @@
 			        <textarea class="form-control input" name="mensaje" required></textarea>
 		        </div>
 		        <br>
+                <div class="input-container1">
+                    <label>Establecimiento</label>
+                    <br>
+                    <select name="id_establecimiento4" id="id_establecimiento4" required>
+                    {% for entry in estab %}
+                        <option class="input" value={{entry.id_establecimiento}} name="id_establecimiento4" >{{entry.nombre}}</option>
+                    {% endfor %}
+                    </select>
+                </div>
             </div>
             <div class="col-md-6 contenedor-imagen">
                 <div class="imagen">

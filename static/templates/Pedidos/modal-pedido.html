@@ -211,10 +211,12 @@
                     <div class="campos">
                         <label class="left">Dirección: </label>
                         {% if data.direccion %}
-                        <label class="right">
-                            {{data.direccion.direccion}}
-                            <a class="direccion" data-toggle="modal" data-target="#modalDireccion" onclick='ubicacion("{{data.direccion.direccion}}",{{data.direccion.latitud}},{{data.direccion.longitud}})'>Ver mapa</a>
-                        </label>
+                            <label class="right">
+                                {{data.direccion.direccion}}
+                                <a class="direccion" data-toggle="modal" data-target="#modalDireccion" onclick='ubicacion("{{data.direccion.direccion}}",{{data.direccion.latitud}},{{data.direccion.longitud}})'>Ver mapa</a>
+                            </label>
+                            <label class="left">Detalles: </label>
+                            <label class="right">{{data.direccion.descripcion}}</label>
                         {% else %}
                             <label class="right">
                                 {{data.establecimiento.direccion}}
@@ -296,6 +298,8 @@
                 <button class="btn btn-cancelar" id="limpiarCampos-btn" type="button" data-dismiss="modal">Cancelar</button>
                 <button class="btn btn-sucess" id="guardar-btn" onclick="confirmar({{data.id_pedido}},'{{data.estado}}')">
                     {% if data.estado == "Recibido" %}
+                        Despachar
+                    {% elif data.estado == "Proceso" %}
                         Enviar
                     {% else %}
                         Entregar

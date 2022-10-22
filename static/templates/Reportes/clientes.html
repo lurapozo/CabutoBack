@@ -71,6 +71,10 @@
         width: 40%;
     }
 
+    .img-ver{
+        width: 1.3rem;
+    }
+
     .contenedor-filtro{
         width: 100%;
         display: flex;
@@ -90,6 +94,11 @@
         background: #D8D9DD;
     }
     #buscar{
+        width:10rem;
+        height: 2.5rem;
+        margin: auto 0px auto 10px;
+    }
+    #buscarIcon{
         width:1rem;
         height: 1rem;
         margin: auto 0px auto 10px;
@@ -133,9 +142,37 @@
         color: #0f195e;
         font-size: 13px;
     }
+    .buscar{
+        margin-bottom= 10px;
+    }
 </style>
+
 <script type="text/javascript">
+
     $(document).ready(function() {
+        var input = document.getElementById("buscar");
+        input.value="";
+        input.addEventListener("keyup", function(event) {
+          if (event.keyCode === 13) {
+           location = '?busqueda='+input.value;
+          }
+        });
+        var modalDiv = $("#modal-div2");
+        $(".open-modal").on("click", function () {
+            $.ajax({
+                beforeSend: function () {
+                    $('.ajax-loader').css("visibility", "visible");
+                },
+                url: $(this).attr("data-url"),
+                success: function (data) {
+                    modalDiv.html(data);
+                    $("#myModal2").modal();
+                },
+                complete: function () {
+                    $('.ajax-loader').css("visibility", "hidden");
+                }
+            });
+        });
         $('.selectpicker').selectpicker();
         var now = new Date();
         var month = (now.getMonth() + 1);
@@ -157,8 +194,7 @@
             var input = document.getElementById("fromDate");
             input.setAttribute("max", this.value);
         }
-        $('#fromDate').val("{{desde}}");
-        $('#toDate').val("{{hasta}}");
+
         $('#filtro').val("{{filtro}}");
         $('.selectpicker').selectpicker('refresh')
     });
@@ -192,52 +228,56 @@
 <div class="col-12">
   <div class="col-md-12">
     <div class="row">
-        <h3 class="col-md-6">CLIENTES REGISTRADOS</h3>
+        <h3 class="col-md-6">CLIENTES</h3>
         <div class="col-md-6">
             <div class="row contenedor-filtro">
-                <h6 class="texto-filtro">Filtrar por:</h6>
-                <select id="filtro" class="selectpicker" onchange="location = '?filtro='+this.value;" data-style="btn-new">
-                <option value="fecha">Fecha</option>
-                <option value="nCompra">Numero de compras</option>
-                <option value="vCompra">Valor de compras</option>
-                </select>
+                <div class="col-md-6">
+                <form method="get">
+                  <h6 class="texto-filtro">Buscar por:</h6>
+                  <input type='text' class="form-control busqueda" name='nombre' placeholder="Nombre">
+                  <input type='text' class="form-control busqueda" name='apellido' placeholder="Apellido">
+                  <button type="submit">Buscar </button>
+                </form>
+                </div>
             </div>
-            <div class="row contenedor-fecha">
+            <!--<div class="row contenedor-fecha">
                 <h6 class="texto-filtro">Desde:</h6>
                 <input type='date' class="form-control" id='fromDate' />
                 <h6 class="texto-filtro">Hasta:</h6>
                 <input type='date' class="form-control" id='toDate' />
-                <img id="buscar" onclick="buscarClientes()" src="{% static 'img/iconos_administrador/buscar_azul.png' %}">
-            </div>
+                <img id="buscarIcon" onclick="buscarClientes()" src="{% static 'img/iconos_administrador/buscar_azul.png' %}">
+            </div>-->
         </div>
     </div>
     <div class="contenedor-clientes">
         <table class="table clientes">
       <thead>
         <tr>
-          <th>Cédula</th>
           <th>Nombre</th>
+          <th>Teléfono</th>
+          <th>Correo</th>
           <th>Fecha de registro</th>
-          <th>N° de compras</th>
-          <th>Valor de compras</th>
-          <th>Forma de pago</th>
-          <th>Observaciones</th>
+          <th>Imagen</th>
+          <th> </th>
         </tr>
       </thead>
       <tbody>
         {% for data in datos %}
           <tr>
-            <td>{{data.usuario.cedula}}</td>
             <td>{{data.nombre}} {{data.apellido}}</td>
-            <td>{{data.usuario.registro|date:"d/m/Y"}}</td>
-            <td>{{data.tot}}</td>
-            {% if data.suma != None %}
-                <td>${{data.suma |floatformat:2}}</td>
+            {% if data.telefono != 'NONE' %}
+              <td>{{data.telefono}}</td>
             {% else %}
-                <td>$0</td>
+              <td>N/A</td>
             {% endif %}
-            <td>{{data.metodo_pago}}</td>
-            <td>N/A</td>
+            <td>{{data.usuario.correo}}</td>
+            <td>{{data.usuario.registro|date:"d/m/Y"}}</td>
+            <td>
+                <img src={{data.usuario.photo_url}} height="100">
+            </td>
+            <td>
+                <a class="btn btn-sm open-modal" href="ver_cliente/{{data.id_cliente}}"><img class="img-ver" src="{% static 'img/iconos_administrador/ver.png' %}"></a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>

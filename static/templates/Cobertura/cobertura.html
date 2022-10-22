@@ -100,7 +100,21 @@
         justify-content: center;
         align-items:center;
     }
-
+    .boton2 .btn{
+        margin: auto;
+        text-align: center;
+        background: linear-gradient(to right, #2153FF, #0F195E);
+        color: white;
+        font-weight: bolder;
+        font-size: 1rem;
+        width: 9rem;
+        height: 2.5rem;
+    }
+    .boton2 a{
+        display:flex;
+        justify-content: center;
+        align-items:center;
+    }
     .pagination li:first-child a,
     .pagination li:last-child a,
     .pagination li:first-child span,
@@ -205,6 +219,13 @@
     <h3 class="row">COBERTURA DE ENTREGAS</h3>
     <div class="row contenedor-filtro">
         <div class="contenedor-searchbar">
+            <select name="establecimiento3" onchange="location = '?estable='+this.value;">
+                <option>--- Establecimiento: ---</option>
+                <option value=0>Todos</option>
+                {% for data in estab %}
+                    <option value={{data.id_establecimiento}}>{{data.nombre}}</option>
+                {% endfor %}
+            </select>
             <input type='text' class="form-control" id='buscar' placeholder="Buscar">
             <div class = "boton1"><a class="btn btn-sucess" id="nuevo-btn" href="add_zona/">NUEVA COBERTURA </a></div>
         </div>
@@ -223,6 +244,30 @@
                 </tr>
             </thead>
             <tbody>
+                {% if mode == 1 %}
+                {% for data in datos %}
+                    <tr>
+                    <td>{{data.id_zona.nombre}}</td>
+                    <td>${{data.id_zona.envio}}</td>
+                    <td>{{data.id_zona.get_estado_display}}</td>
+                    <td>
+                        <label class="switch"  onclick="cambiarEstado({{data.id_zona.id_zona}})" >
+                        {% if data.id_zona.estado == "A" %}
+                            <input type="checkbox" class="checkbox" checked/>
+                        {% else %}
+                            <input type="checkbox" class="checkbox"/>
+                        {% endif %}
+                            <div class=""></div>
+                        </label>
+                    </td>
+                    <td>
+                        <a class="btn btn-sm open-modal" data-url="ver_zona/{{data.id_zona.id_zona}}"><img class="img-ver" src="{% static 'img/iconos_administrador/ver.png' %}"></a>
+                        <a class="btn btn-sm open-modal" data-url="editar_zona/{{data.id_zona.id_zona}}"><img class="img-editar" src="{% static 'img/iconos_administrador/editar.png' %}"></a>
+                        <a class="btn btn-sm" href="eliminar_zona/{{data.id_zona.id_zona}}" onclick="return confirm('¿Está seguro que desea eliminar este elemento?');"><img class="img-borrar" src="{% static 'img/iconos_administrador/borrar.png' %}"></a>
+                    </td>
+                    </tr>
+                {% endfor %}
+                {% else %}
                 {% for data in datos %}
                     <tr>
                     <td>{{data.nombre}}</td>
@@ -245,6 +290,7 @@
                     </td>
                     </tr>
                 {% endfor %}
+                {% endif %}
             </tbody>
         </table>
         <div class="total-clientes">
@@ -277,6 +323,7 @@
         {% endif %}
       </ul>
     {% endif %}
+    <div class = "boton2"><a class="btn btn-sucess" id="nuevo-btn" href="ver_coberturatotal/">Cobertura Total</a></div>
   </div>
 </div>
 

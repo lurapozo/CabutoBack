@@ -108,6 +108,7 @@ class Producto(models.Model):
 	image=models.ImageField()
 	estado=models.CharField(max_length=1,default = "A")
 	id_categoria=models.ForeignKey(Categoria,on_delete=models.SET_NULL, null=True)
+	stock_disponible=models.IntegerField()
 	def __str__(self):
 		return self.nombre
 
@@ -146,7 +147,7 @@ class ZonaEnvio(models.Model):
     id_zona=models.AutoField(primary_key=True)
     nombre=models.CharField(max_length=100)
     color=models.CharField(max_length=50)
-    zona=models.CharField(max_length=300)
+    zona=models.CharField(max_length=3000)
     envio=models.FloatField()
     estado= models.CharField(max_length=1,choices=EstadoZona,default='A',)
 
@@ -155,6 +156,7 @@ class Pedido(models.Model):
         ('Enviado', 'Enviado'),
         ('Entregado', 'Entregado'),
         ('Recibido', 'Recibido'),
+        ('Proceso', 'Proceso'),
         ('Devuelto', 'Devuelto'),
         ('Anulado', 'Anulado'),
     )
@@ -184,6 +186,21 @@ class CalificacionPedido(models.Model):
     calificacion=models.IntegerField(default=5)
     justificacion=models.CharField(max_length=500)
     pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
+
+class Repartidor(models.Model):
+	id_repartidor=models.AutoField(primary_key=True)
+	nombre=models.CharField(max_length=120)
+	apellido=models.CharField(max_length=120)
+	telefono=models.CharField(max_length=120)
+	token=models.CharField(max_length=120)
+	estado=models.CharField(max_length=120)
+
+class Repartidor_Pedido(models.Model):
+	id_repedido = models.AutoField(primary_key=True)
+	id_repartidor = models.ForeignKey(Repartidor,on_delete=models.SET_NULL, null=True)
+	id_pedido = models.ForeignKey(Pedido,on_delete=models.SET_NULL, null=True)
+	hora_inicio = models.DateTimeField(default=now)
+	hora_fin = models.DateTimeField(default=now)
 
 class Combo(models.Model):
 	id_combo=models.AutoField(primary_key=True)
@@ -266,6 +283,7 @@ class Notificacion(models.Model):
     registro = models.DateTimeField(auto_now_add=True)
     tipo=models.CharField(max_length=100)
     estado=models.CharField(max_length=500,default="NOT")
+    id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
     def __str__(self):
         return self.asunto
 
@@ -313,6 +331,7 @@ class Cupones(models.Model):
     nombre=models.CharField(max_length=100)
     descripcion=models.CharField(max_length=100)
     estado=models.CharField(max_length=1,default = "A")
+    tipo=models.CharField(max_length=1,default = "M")
     cantidad=models.IntegerField()
     precio = models.FloatField(default=0)
     fecha_inicio=models.DateField()
@@ -327,6 +346,25 @@ class Cupones(models.Model):
     def photo_url(self):
         if self.image and hasattr(self.image, 'url'):
             return self.image.url
+
+class Cupones_Monto(models.Model):
+    id_cuponesmonto = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=20)
+    monto = models.FloatField()
+    id_cupon = models.ForeignKey(Cupones,on_delete=models.SET_NULL, null=True)
+
+class Cupones_Producto(models.Model):
+    id_cuponesproducto = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=20)
+    id_cupon = models.ForeignKey(Cupones,on_delete=models.SET_NULL, null=True)
+    id_producto = models.ForeignKey(Producto,on_delete=models.SET_NULL, null=True)
+    cantidad=models.IntegerField(default = 1)
+
+class Cupones_Cliente(models.Model):
+    id_cuponxcliente =  models.AutoField(primary_key=True)
+    id_cupon = models.ForeignKey(Cupones,on_delete=models.SET_NULL, null=True)
+    id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+    estado=models.CharField(max_length=1,default = "A")
 
 class Carrito_Cupones(models.Model):
 	id_carritoxcupones=models.AutoField(primary_key=True)
@@ -362,3 +400,126 @@ class Cupon_Pedido(models.Model):
     precio = models.FloatField()
     cupon = models.ForeignKey(Cupones, on_delete=models.SET_NULL, null=True)
     pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
+
+class Cardauth(models.Model):
+	id_cardauth =  models.AutoField(primary_key=True)
+	token = models.CharField(max_length=20)
+	auth = models.CharField(max_length=3)
+
+class Establecimiento_ZonaEnvio(models.Model):
+	id_estabxzona =  models.AutoField(primary_key=True)
+	id_establecimiento = models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
+	id_zona = models.ForeignKey(ZonaEnvio,on_delete=models.SET_NULL, null=True)
+
+class Tarjeta_Producto(models.Model):
+	id_tarjeta =  models.AutoField(primary_key=True)
+	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+	descripcion = models.CharField(max_length=100)
+
+class Tarjeta_Producto_Producto(models.Model):
+	id_tarjetaxproducto =  models.AutoField(primary_key=True)
+	id_producto = models.ForeignKey(Producto,on_delete=models.SET_NULL, null=True)
+	id_tarjeta = models.ForeignKey(Tarjeta_Producto,on_delete=models.SET_NULL, null=True)
+	cantidad=models.IntegerField()
+
+class Tarjeta_Producto_Cliente(models.Model):
+	id_tarjetaxcliente = models.AutoField(primary_key=True)
+	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+	id_tarjeta = models.ForeignKey(Tarjeta_Producto,on_delete=models.SET_NULL, null=True)
+	estado=models.CharField(max_length=1,default = "A")
+
+class Tarjeta_Monto(models.Model):
+	id_tarjeta =  models.AutoField(primary_key=True)
+	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+	monto = models.FloatField()
+	descripcion = models.CharField(max_length=100)
+
+class Tarjeta_Monto_Cliente(models.Model):
+	id_tarjetaxcliente = models.AutoField(primary_key=True)
+	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+	id_tarjeta = models.ForeignKey(Tarjeta_Monto,on_delete=models.SET_NULL, null=True)
+	estado=models.CharField(max_length=1,default = "A")
+
+class Carrito_Tarjeta_Monto(models.Model):
+	id_carritoxtarjeta=models.AutoField(primary_key=True)
+	precio=models.FloatField(default=0)
+	id_tarjeta = models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
+	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
+
+class Carrito_Tarjeta_Producto(models.Model):
+	id_carritoxtarjeta=models.AutoField(primary_key=True)
+	precio=models.FloatField(default=0)
+	id_tarjeta = models.ForeignKey(Tarjeta_Producto, on_delete=models.SET_NULL, null=True)
+	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
+
+class Tarjeta_Monto_Pedido(models.Model):
+    id_detalle = models.AutoField(primary_key=True)
+    precio = models.FloatField()
+    tarjeta = models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
+    pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
+
+class Codigo(models.Model):
+	id_codigo = models.AutoField(primary_key=True)
+	codigo = models.CharField(max_length=20)
+	descripcion=models.CharField(max_length=100)
+	fecha_inicio=models.DateField()
+	fecha_fin=models.DateField()
+	estado=models.CharField(max_length=1,default = "A")
+	tipo=models.CharField(max_length=1,default = "M")
+	precio=models.FloatField(default = 0)
+	cantidad=models.IntegerField(default = 0)
+	image = models.ImageField()
+	id_cupon=models.ForeignKey(Cupones, on_delete=models.SET_NULL, null=True)
+	id_tarjetamonto=models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
+	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+	def __str__(self):
+	    return self.codigo
+	@property
+	def photo_url(self):
+	    if self.image and hasattr(self.image, 'url'):
+	        return self.image.url
+
+class Codigo_Monto(models.Model):
+    id_codigomonto = models.AutoField(primary_key=True)
+    codigomonto = models.CharField(max_length=20)
+    monto = models.FloatField()
+    id_codigo = models.ForeignKey(Codigo,on_delete=models.SET_NULL, null=True)
+
+class Codigo_Producto(models.Model):
+    id_codigoproducto = models.AutoField(primary_key=True)
+    codigoproducto = models.CharField(max_length=20)
+    id_codigo = models.ForeignKey(Codigo,on_delete=models.SET_NULL, null=True)
+    id_producto = models.ForeignKey(Producto,on_delete=models.SET_NULL, null=True)
+    cantidad=models.IntegerField(default = 1)
+
+class Codigo_Cliente(models.Model):
+    id_codxcliente =  models.AutoField(primary_key=True)
+    id_codigo = models.ForeignKey(Codigo,on_delete=models.SET_NULL, null=True)
+    id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+    estado=models.CharField(max_length=1,default = "A")
+
+class Sorteo(models.Model):
+	id_sorteo = models.AutoField(primary_key=True)
+	nombre = models.CharField(max_length=20)
+	descripcion = models.CharField(max_length=100)
+	fecha_inicio=models.DateField()
+	fecha_fin=models.DateField()
+	numGanadores=models.IntegerField(default = 0)
+	maxGanadores=models.IntegerField()
+	image = models.ImageField()
+	def __str__(self):
+	    return self.nombre
+
+	@property
+	def photo_url(self):
+	    if self.image and hasattr(self.image, 'url'):
+	        return self.image.url
+
+
+class Sorteo_Usuario(models.Model):
+	id_sorteoxusuario =  models.AutoField(primary_key=True)
+	id_sorteo = models.ForeignKey(Sorteo,on_delete=models.SET_NULL, null=True)
+	id_usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL, null=True)
+
+
+

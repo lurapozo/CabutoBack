@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'kyj4iqj9cv+l0f^kln)5b&#o!5344vcq(o_794xg1b4uy0fmih'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 #ALLOWED_HOSTS = ['CabutoShop.pythonanywhere.com','127.0.0.1:8100']
 ALLOWED_HOSTS = ['*']
@@ -187,7 +187,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, '/home/CabutoShop/cabuto/media/')
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'cabutosoftware1@gmail.com'
-EMAIL_HOST_PASSWORD = 'CabutoSoftware1@'
+EMAIL_HOST_USER = 'cabutosecuador@gmail.com'
+EMAIL_HOST_PASSWORD = 'rkeoxfgpaqradyio'
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False

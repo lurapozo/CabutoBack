@@ -248,7 +248,7 @@
                 <br>
                 <div class="input-container">
 			        <label>Precio:</label>
-			        <input type="text" class="form-control input" name="envio" required>
+			        <input type="number" step="0.01" class="form-control input" name="envio" required>
 		        </div>
 		        <br>
 		        <div class="input-container">
@@ -256,6 +256,19 @@
 			        <input type="color" id="bgcolor" name="color" required>
 		        </div>
 		        <br>
+		        <div class="input-container">
+		        <label>Establecimientos:</label>
+		        <br>
+		        {% for entry in estab %}
+                    {% if datos_mostrar.id_establecimiento.id_establecimiento == entry.id_establecimiento %}
+                        <input class="input" type="checkbox" name='checkEstab' id='checkEstab' value={{entry.id_establecimiento}} checked>
+                        <label for={{entry.id_establecimiento}}>{{entry.nombre}}</label><br>
+                    {% else %}
+                        <input class="input" type="checkbox" name='checkEstab' id='checkEstab' value={{entry.id_establecimiento}}>
+                        <label for={{entry.id_establecimiento}}>{{entry.nombre}}</label><br>
+                    {% endif %}
+                {% endfor %}
+                </div>
             </div>
             <div class="col-md-6 contener-imagen">
                 <div class="input-container">

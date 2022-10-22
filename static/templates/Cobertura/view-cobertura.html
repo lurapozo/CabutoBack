@@ -248,6 +248,19 @@
 			        <input type="color" id="bgcolor" name="color" value="{{data.color}}" required disabled>
 		        </div>
 		        <br>
+		        <div class="input-container">
+                    <label>Establecimientos:</label>
+                    <br>
+                    {% for establecimiento in estab %}
+                        {% if establecimiento in arrPxZ%}
+                        {% for estabXzona in datos_mostrar %}
+                            {% if estabXzona.id_establecimiento.id_establecimiento == establecimiento.id_establecimiento %}
+                                <label>> {{establecimiento.nombre}}</label><br>
+                            {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
             <div class="col-md-8 contener-imagen">
                 <div class="input-container">

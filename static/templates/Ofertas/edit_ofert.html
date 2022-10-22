@@ -187,6 +187,18 @@
                         <div class = "col-md-6 stock">
                             <label>Cantidad</label>
 			                <input type="number" class="form-control input" value={{datos_mostrar.cantidad}} id = "stock" name="stock" required>
+                            <div class="input-container1">
+                                <label>Establecimiento</label>
+                                <select name="id_establecimiento1" id="id_establecimiento1" required>
+                                    {% for entry in estab %}
+                                        {% if datos_mostrar.id_establecimiento.id_establecimiento == entry.id_establecimiento %}
+                                            <option class="input" value={{entry.id_establecimiento}} name="id_establecimiento1" selected> {{entry.nombre}}</option>
+                                        {% else %}
+                                            <option class="input" value={{entry.id_establecimiento}} name="id_establecimiento1" >{{entry.nombre}}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
 
                     </div>
