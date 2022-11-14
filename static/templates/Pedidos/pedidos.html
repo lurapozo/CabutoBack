@@ -294,7 +294,9 @@
 <script type="text/javascript">
     $(document).ready(function() {
         var audio = document.getElementById("miAudio");
-        audio.volume = 0.75;
+        if(audio){
+           audio.volume = 0.75;
+        }
         var activeTab = "{{tab}}";
         if (activeTab != "") {
             $('#' + activeTab).click();
@@ -446,9 +448,7 @@
     }, 180000);
 </script>
 {% if recibidos %}
-
-    <!--<audio src="https://www.mboxdrive.com/Fit%20for%20an%20Autopsy%20-%20The%20Conqueror%20Lyric%20Video.mp3" id="miAudio" autoplay></audio>-->
-    <audio src="/media/audio/Fit_fo_an_Autopsy-The_Conqueror.mp3" id="miAudio" autoplay></audio>
+    <audio src="https://cabutoshop.pythonanywhere.com/media/audio/Fit_fo_an_Autopsy-The_Conqueror.mp3" id="miAudio" autoplay></audio>
 {% endif %}
 {% timezone "America/Guayaquil" %}
 <div class="col-12">

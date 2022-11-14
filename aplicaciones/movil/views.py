@@ -389,6 +389,54 @@ def borrarPedido(request):
             return JsonResponse(res,safe=False)
 
 @csrf_exempt
+def borrarPedido2(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        value=response["id"]
+        pedido=response["pedido"]
+        user=Cliente.objects.get(id_cliente=value)
+        pedido=Pedido.objects.filter(id_pedido=pedido).first()
+        if pedido.estado == "Recibido" or pedido.estado == "Regalo":
+            total=round(pedido.total,2)
+            transaccion = TransaccionPedido.objects.filter(pedido=pedido).first()
+            if transaccion != None:
+                msj= "Se ha reversado el pago de su pedido con valor de $"+str(total)+"\n"+"Id transacción: "+ str(transaccion.transaccion)
+                try:
+                    email = EmailMessage('Transacción reversada', msj, to=[user.usuario.correo])
+                    email.send()
+                    #send_mail('Transacción reversada',msj,'cabutosoftware1@gmail.com',[user.usuario.correo],fail_silently=False,html_message= '<html><body>'+msj+'</body></html>')
+                except:
+                    print("Error al enviar correo")
+            if pedido.estado == "Regalo":
+                detalle_tarjeta_monto=Tarjeta_Monto_Pedido.objects.filter(id_pedido=pedido)
+                detalle_tarjeta_producto=Tarjeta_Producto_Pedido.objects.filter(id_pedido=pedido)
+
+                total_tarjeta_monto = detalle_tarjeta_monto.count()
+                total_tarjeta_producto = detalle_tarjeta_producto.count()
+                if total_tarjeta_monto > 0:
+                    for tarjet in detalle_tarjeta_monto:
+                        tarXcliente=Tarjeta_Monto_Cliente.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta)
+                        tarXcliente.estado='I'
+                        tarXcliente.save()
+                if total_tarjeta_producto > 0:
+                    for tarjet in detalle_tarjeta_monto:
+                        tarXcliente=Tarjeta_Producto_Pedido.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta)
+                        tarXcliente.estado='I'
+                        tarXcliente.save()
+            pedido.estado="Anulado"
+            pedido.pagado=False
+            pedido.save()
+            res = {
+                'valid': 'ok'
+            }
+            return JsonResponse(res,safe=False)
+        else:
+            res = {
+                'valid': 'not'
+            }
+            return JsonResponse(res,safe=False)
+
+@csrf_exempt
 def pagarPedido(request):
     if request.method == 'POST':
         response = json.loads(request.body)
@@ -519,6 +567,69 @@ def guardarPedido(request):
             detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
             #dtm=Carrito_Tarjeta_Monto.objects.get(id_carrito=carrito)
             detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto)
+            res = {
+            'valid': 'ok',
+            'pedido': pedido.id_pedido
+            }
+            devices = WebPushDevice.objects.all()
+            data = json.dumps({
+                "title": f'¡Nuevo pedido!',
+                "message": f'Usuario {user.nombre} ha realizado un nuevo pedido.',
+                "vibrate": "[200, 100, 200, 100, 200, 100, 200]"
+            })
+            for device in devices:
+                try:
+                    device.send_message(message=data)
+                except WebPushError as e:
+                    print(e)
+                    device.delete()
+            return JsonResponse(res,safe=False)
+        except Exception as e:
+            print("type error: " + str(e))
+            res = {
+            'valid': 'not',
+            }
+            return JsonResponse(res,safe=False)
+
+@csrf_exempt
+def guardarPedido2(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        value=response["id"]
+        carrito=response["carrito"]
+        tipoEntrega=response["tipoEntrega"]
+        direccion=response["direccion"]
+        tipoPago=response["tipoPago"]
+        subtotal=response["subtotal"]
+        envio=response["envio"]
+        descuento=response["descuento"]
+        estadopedido=response["tarjetaRegalo"]
+        total=(subtotal-descuento+envio)
+        subtotal=round(subtotal/1.12,2)
+        iva=round(subtotal*0.12,2)
+        print(tipoEntrega)
+        if tipoEntrega=="Domicilio":
+            print(direccion)
+            direccion=DireccionEntrega.objects.get(id_direccion=direccion)
+            print(direccion)
+            establecimiento= Establecimiento.objects.get(id_establecimiento=1)
+        else:
+            establecimiento= Establecimiento.objects.get(id_establecimiento=direccion)
+            direccion=None
+        user=Cliente.objects.filter(id_cliente=value).first()
+        try:
+            pedido=Pedido(tipo_entrega=tipoEntrega,tipo_pago=tipoPago,subtotal=subtotal,iva=iva,descuento=descuento,
+            envio=envio,total=total,cliente=user,direccion=direccion,establecimiento=establecimiento,observacion="",fecha=timezone.now())
+            pedido.save()
+            carrito=Carrito.objects.filter(id_carrito=carrito).first()
+            detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
+            detalle_oferta=Carrito_Oferta.objects.filter(id_carrito=carrito)
+            detalle_combo=Carrito_Combo.objects.filter(id_carrito=carrito)
+            detalle_cupon=Carrito_Cupones.objects.filter(id_carrito=carrito)
+            detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
+            detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
+            #dtm=Carrito_Tarjeta_Monto.objects.get(id_carrito=carrito)
+            detallePedido2(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto)
             res = {
             'valid': 'ok',
             'pedido': pedido.id_pedido
@@ -1522,10 +1633,12 @@ def quitar(request):
         detalle_carrito = Detalle_Carrito.objects.filter(id_carrito=carrito)
         detalle_cupon = Carrito_Cupones.objects.filter(id_carrito=carrito)
         detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
+        detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
         total_oferta = detalle_oferta.count()
         total_producto = detalle_carrito.count()
         total_cupon = detalle_cupon.count()
         total_tarjeta_monto = detalle_tarjeta_monto.count()
+        total_tarjeta_producto = detalle_tarjeta_producto.count()
         print("Este es mi usuario",usuario)
         print("Este es mi cliente",cliente)
         print("Este es mi carrito",carrito)
@@ -1561,6 +1674,15 @@ def quitar(request):
                     return JsonResponse(response_data,safe=False)
         if total_tarjeta_monto != 0:
             for tarjeta in detalle_tarjeta_monto:
+                if str(tarjeta.id_tarjeta.id_tarjeta) == str(nombre):
+                    print("lo que necesito es una tarjeta de monto")
+                    tarjeta.delete()
+                    response_data = {
+                        'valid':'OK'
+                        }
+                    return JsonResponse(response_data,safe=False)
+        if total_tarjeta_producto != 0:
+            for tarjeta in detalle_tarjeta_producto:
                 if str(tarjeta.id_tarjeta.id_tarjeta) == str(nombre):
                     print("lo que necesito es una tarjeta de monto")
                     tarjeta.delete()
@@ -1854,8 +1976,6 @@ def detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,d
             tarXcliente.save()
             tarjet.delete()
 
-
-
     if total_combo > 0:
         for combo in detalle_combo:
             com=combo.id_combo
@@ -1872,7 +1992,107 @@ def detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,d
                 comboxpedido.save()
                 combo.delete()
 
+def detallePedido2(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto):
+    total_oferta = detalle_oferta.count()
+    total_producto = detalle_producto.count()
+    total_cupon = detalle_cupon.count()
+    total_tarjeta_monto = detalle_tarjeta_monto.count()
+    total_tarjeta_producto = detalle_tarjeta_producto.count()
+    total_combo = detalle_combo.count()
+    if total_producto > 0:
+        for producto in detalle_producto:
+            pro=Producto.objects.filter(id_producto=producto.id_producto.id_producto).annotate(suma=Sum('establecimiento_producto__stock_disponible')).first()
+            if(pro.suma-producto.cantidad>=0):
+                productoxpedido=Producto_Pedido(cantidad=producto.cantidad,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
+                productoxpedido.save()
+                producto.delete()
+            elif(pro.suma>0):
+                productoxpedido=Producto_Pedido(cantidad=pro.suma,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
+                productoxpedido.save()
+                producto.delete()
+    if total_oferta > 0:
+        for oferta in detalle_oferta:
+            ofer=oferta.id_oferta
+            if(ofer.cantidad-oferta.cantidad>=0):
+                ofer.cantidad=ofer.cantidad-oferta.cantidad
+                ofer.save()
+                ofertaxpedido=Oferta_Pedido(cantidad=oferta.cantidad,precio=oferta.precio,oferta=oferta.id_oferta,pedido=pedido)
+                ofertaxpedido.save()
+                oferta.delete()
+            elif(ofer.cantidad>0):
+                ofer.cantidad=0
+                ofer.save()
+                ofertaxpedido=Oferta_Pedido(cantidad=ofer.cantidad,precio=oferta.precio,oferta=oferta.id_oferta,pedido=pedido)
+                ofertaxpedido.save()
+                oferta.delete()
+    if total_cupon > 0:
+        for cupons in detalle_cupon:
+            cu=cupons.id_cupon
+            if(cu.cantidad-cupons.cantidad>=0):
+                cu.cantidad=cu.cantidad-cupons.cantidad
+                cu.save()
+                cuponxpedido=Cupon_Pedido(cantidad=cupons.cantidad,precio=cupons.precio,cupon=cupons.id_cupon,pedido=pedido)
+                codigo=Codigo.objects.filter(id_cupon=cu)
+                if codigo:
+                    code=Codigo.objects.get(id_cupon=cu)
+                    codigoXcliente=Codigo_Cliente.objects.get(id_codigo=code, id_cliente=pedido.cliente_id)
+                    codigoXcliente.estado='I'
+                    codigoXcliente.save()
+                cuponxpedido.save()
+                cupons.delete()
+            elif(cu.cantidad>0):
+                cu.cantidad=0
+                cu.save()
+                cuponxpedido=Cupon_Pedido(cantidad=cu.cantidad,precio=cupons.precio,cupon=cupons.id_cupon,pedido=pedido)
+                cuponxpedido.save()
+                cupons.delete()
+    if total_tarjeta_monto > 0:
+        for tarjet in detalle_tarjeta_monto:
+            tarXcliente=Tarjeta_Monto_Cliente.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta, id_cliente=pedido.cliente_id)
+            tarXcliente.estado='I'
+            tarXcliente.save()
+            tarjetaxpedido=Tarjeta_Monto.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta)
+            pedidoDeTarjeta= Pedido.objects.get(id_pedido=tarjetaxpedido.id_pedido.id_pedido)
+            pedidoDeTarjeta.estado='Reclamado'
+            pedidoDeTarjeta.save()
+            tarjet.delete()
+    if total_tarjeta_producto > 0:
+        for tarjet in detalle_tarjeta_producto:
+            detalle_tarjeta_producto_producto=Tarjeta_Producto_Producto.objects.filter(id_tarjeta=tarjet.id_tarjeta)
+            for tarproducto in detalle_tarjeta_producto_producto:
+                pro=Producto.objects.filter(id_producto=tarproducto.id_producto.id_producto).annotate(suma=Sum('establecimiento_producto__stock_disponible')).first()
+                if(pro.suma-producto.cantidad>=0):
+                    productoxpedido=Producto_Pedido(cantidad=producto.cantidad,precio=producto.precio,producto=tarproducto.id_producto,pedido=pedido)
+                    productoxpedido.save()
+                    tarproducto.delete()
+                elif(pro.suma>0):
+                    productoxpedido=Producto_Pedido(cantidad=pro.suma,precio=producto.precio,producto=tarproducto.id_producto,pedido=pedido)
+                    productoxpedido.save()
+                    tarproducto.delete()
+            tarXcliente=Tarjeta_Producto_Cliente.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta, id_cliente=pedido.cliente_id)
+            tarXcliente.estado='I'
+            tarXcliente.save()
 
+            tarjetaxpedido=Tarjeta_Producto.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta)
+            pedidoDeTarjeta= Pedido.objects.get(id_pedido=tarjetaxpedido.id_pedido.id_pedido)
+            pedidoDeTarjeta.estado='Reclamado'
+            pedidoDeTarjeta.save()
+            tarjet.delete()
+    if total_combo > 0:
+        for combo in detalle_combo:
+            com=combo.id_combo
+            if(com.cantidad-combo.cantidad>=0):
+                com.cantidad=com.cantidad-combo.cantidad
+                com.save()
+                comboxpedido=Combo_Pedido(cantidad=combo.cantidad,precio=combo.precio,combo=combo.id_combo,pedido=pedido)
+                comboxpedido.save()
+                combo.delete()
+            elif(cu.cantidad>0):
+                com.cantidad=0
+                com.save()
+                comboxpedido=Combo_Pedido(cantidad=combo.cantidad,precio=combo.precio,combo=combo.id_combo,pedido=pedido)
+                comboxpedido.save()
+                combo.delete()
 
 @csrf_exempt
 def quitar_usuario(request):

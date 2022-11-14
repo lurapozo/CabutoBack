@@ -415,6 +415,7 @@ class Tarjeta_Producto(models.Model):
 	id_tarjeta =  models.AutoField(primary_key=True)
 	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
 	descripcion = models.CharField(max_length=100)
+	id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
 
 class Tarjeta_Producto_Producto(models.Model):
 	id_tarjetaxproducto =  models.AutoField(primary_key=True)
@@ -433,6 +434,7 @@ class Tarjeta_Monto(models.Model):
 	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
 	monto = models.FloatField()
 	descripcion = models.CharField(max_length=100)
+	id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
 
 class Tarjeta_Monto_Cliente(models.Model):
 	id_tarjetaxcliente = models.AutoField(primary_key=True)
@@ -455,8 +457,13 @@ class Carrito_Tarjeta_Producto(models.Model):
 class Tarjeta_Monto_Pedido(models.Model):
     id_detalle = models.AutoField(primary_key=True)
     precio = models.FloatField()
-    tarjeta = models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
-    pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
+    id_tarjeta = models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
+    id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
+
+class Tarjeta_Producto_Pedido(models.Model):
+    id_detalle = models.AutoField(primary_key=True)
+    id_tarjeta = models.ForeignKey(Tarjeta_Producto, on_delete=models.SET_NULL, null=True)
+    id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
 
 class Codigo(models.Model):
 	id_codigo = models.AutoField(primary_key=True)
