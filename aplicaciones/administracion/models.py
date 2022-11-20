@@ -20,6 +20,7 @@ class Usuario(models.Model):
 	contrasena=models.CharField(max_length=64, editable=True)
 	foto=models.ImageField(default = " ")
 	registro = models.DateTimeField(auto_now_add=True)
+	codigo_unico=models.CharField(max_length=100)
 	def __str__(self):
 		return self.correo
 

@@ -820,6 +820,22 @@ def getClienteCorreo(request):
         return JsonResponse(response_data,safe=False)
 
 @csrf_exempt
+def getCodigo(request):
+    if request.method == 'GET':
+        if request.GET.get("id")!=None:
+            id_cliente = request.GET.get("id")       
+            cliente=Cliente.objects.select_related().filter(id_cliente=id_cliente).first()
+            usuario_id=cliente.usuario_id
+            usuario=Usuario.objects.select_related().filter(id_usuario=usuario_id).first()
+            codigo=usuario.codigo_unico
+            
+            #codigo_unico=Usuario.objects.filter(id_usuario=id_usuario)
+            #print(codigo)
+            
+            return JsonResponse(codigo,safe=False)
+    return HttpResponse(status=400)
+
+@csrf_exempt
 def registro(request):
     if request.method == 'POST':
         print("estoy en django, metodo registro ")
@@ -831,6 +847,26 @@ def registro(request):
         contra =response['contrasena']
         nombre = response['nombre']
         apellido = response['apellido']
+        #Creamos el codigo UNico
+        def crear_codigo():
+            claves=""
+            num=random.randint(100,999)
+            while len(claves)<4:
+                letra=random.choice(string.ascii_letters)
+                claves+=letra
+            prefijo= claves.upper()[:2]
+            sufijo= claves.upper()[2:]
+            codigo=prefijo+str(num)+sufijo
+            try:
+                usuario=Usuario.objects.get(codigo_unico=str(codigo))
+            except Usuario.DoesNotExist:
+                usuario = None
+            if((usuario) is None):
+                return codigo
+            else:
+                crear_codigo()
+        codigo=crear_codigo()
+        #Fin crear codigo unico
         users=Usuario.objects.filter()
         for u2 in users :
             cr = u2.correo
@@ -849,7 +885,7 @@ def registro(request):
                     }
                 return JsonResponse(response,safe=False)'''
         msj2 = 'Bienvenido a Cabutos, es un placer que se una a nosotros'
-        u =Usuario(cedula=cedula,correo=email,contrasena=contra)
+        u =Usuario(cedula=cedula,correo=email,contrasena=contra,codigo_unico=codigo)
         print("usuario ",u)
         u.save()
         c = Cliente(nombre=nombre,apellido=apellido,usuario=u)
