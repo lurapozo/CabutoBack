@@ -22,7 +22,7 @@ from django.core import serializers
 from .models import *
 from aplicaciones.administracion.models import *
 import re
-
+import string
 # Create your views here.
 
 
