@@ -1273,6 +1273,8 @@ def agregar_ofertas(request):
         price = request.POST.get('precio', None)
         imagen = request.FILES.get('image', None)
         establishment = request.POST.get('id_establecimiento4', None)
+        inicio=request.POST.get("from", None)
+        fin=request.POST.get("to", None)
         data_establecimeinto = Establecimiento.objects.get(pk=int(establishment))
         stock = request.POST.get('stock', None)
         notificacion = request.POST.get('notificacion', None)
@@ -1280,7 +1282,7 @@ def agregar_ofertas(request):
             n = oferta.nombre
             if name == n:
                 return render(request, "Ofertas/ofertas.html")
-        data = Oferta(nombre=name,descripcion=description,precioAntes=priceA,precio=price,cantidad=stock,image=imagen,id_establecimiento=data_establecimeinto)
+        data = Oferta(nombre=name,descripcion=description,precioAntes=priceA,precio=price,cantidad=stock,image=imagen,id_establecimiento=data_establecimeinto,fecha_inicio=inicio,fecha_fin=fin)
         data.save()
         try:
             if notificacion =='si':
@@ -1308,8 +1310,9 @@ def editar_ofertas(request,id_oferta):
     if request.method == 'GET':
         data_oferta = Oferta.objects.get(id_oferta=id_oferta)
         data_estab= Establecimiento.objects.all()
-        print(data_oferta)
-        return render(request, "Ofertas/edit_ofert.html", {"datos_mostrar": data_oferta, "estab":data_estab})
+        inicio=data_oferta.fecha_inicio.strftime("%Y-%m-%d")
+        fin=data_oferta.fecha_fin.strftime("%Y-%m-%d")
+        return render(request, "Ofertas/edit_ofert.html", {"datos_mostrar": data_oferta, "estab":data_estab,"inicio":inicio,"fin":fin})
     elif request.method == 'POST':
         update_ofertas(request,id_oferta)
         return redirect("/ofertas")
@@ -1320,6 +1323,8 @@ def editar_ofertas(request,id_oferta):
 def update_ofertas(request,id_oferta):
     if request.method == 'POST':
         data_oferta = Oferta.objects.get(id_oferta=id_oferta)
+        data_oferta.fecha_inicio=request.POST.get("from", None)
+        data_oferta.fecha_fin=request.POST.get("to", None)
         data_oferta.nombre = request.POST.get('nombre', None)
         data_oferta.descripcion = request.POST.get('descripcion', None)
         data_oferta.id_establecimiento=Establecimiento.objects.get(id_establecimiento=request.POST.get('id_establecimiento1', None))
@@ -1390,7 +1395,7 @@ def add_cupon(request):
         cuponmonto.save()
         try:
             if notificacion =='si':
-                notificacion = Notificacion(asunto=name, mensaje="Hay un nuevo cupon disponible! \n" + description, image=imagen, tipo="Notificacion de cupon atomatica")
+                notificacion = Notificacion(asunto=name, mensaje="Hay un nuevo cupón disponible! \n" + description, image=imagen, tipo="Notificacion de cupon atomatica")
                 notificacion.save()
                 if notificacion.photo_url != "":
                     data = {"title":notificacion.asunto, "icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "color":"#ff7c55", "titulo": notificacion.asunto, "mensaje": notificacion.mensaje, "priority":"high", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "notification_foreground": "true"}
@@ -1421,7 +1426,7 @@ def add_cupon2(request):
         stock = request.POST.get('cantidad', None)
         imagen = request.FILES.get('image', None)
         notificacion = request.POST.get('notificacion', None)
-        cupon = Cupones(nombre=name,descripcion=description,cantidad=stock,fecha_inicio=inicio,fecha_fin=fin,image=imagen,id_establecimiento=data_establecimiento)
+        cupon = Cupones(nombre=name,descripcion=description,cantidad=stock,fecha_inicio=inicio,fecha_fin=fin,image=imagen,id_establecimiento=data_establecimiento, tipo="P")
         cupon.save()
 
         cantidadComprar= request.POST.get('cantidadComprar', None)
@@ -1431,7 +1436,7 @@ def add_cupon2(request):
         cuponproducto.save()
         try:
             if notificacion =='si':
-                notificacion = Notificacion(asunto=name, mensaje="Hay un nuevo cupon disponible! \n" + description, image=imagen, tipo="Notificacion de cupon atomatica")
+                notificacion = Notificacion(asunto=name, mensaje="Hay un nuevo cupón disponible! \n" + description, image=imagen, tipo="Notificacion de cupon atomatica")
                 notificacion.save()
                 if notificacion.photo_url != "":
                     data = {"title":notificacion.asunto, "icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "color":"#ff7c55", "titulo": notificacion.asunto, "mensaje": notificacion.mensaje, "priority":"high", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
@@ -1494,17 +1499,16 @@ def editar_cupon(request, id_cupon):
 @login_required(login_url='/login/')
 def eliminar_cupon(request,id_cupon):
     data_cupon= Cupones.objects.get(id_cupon=id_cupon)
-    data_cupon.estado="I"
-    data_cupon.save()
+    tipo=data_cupon.tipo
+    if tipo == 'P':
+        Cupones_Producto.objects.filter(id_cupon=data_cupon).delete()
     codigos=Codigo.objects.filter(id_cupon=data_cupon)
     if codigos:
-        data_codigo=Codigo.objects.get(id_cupon=data_cupon)
-        data_codigo.estado="I"
-        data_codigo.save()
+        data_codigo=Codigo.objects.get(id_cupon=data_cupon).delete()
         relaciones=Codigo_Cliente.objects.filter(id_codigo=data_codigo)
         for element in relaciones:
-            element.estado="I"
-            element.save()
+            element.delete()
+    data_cupon.delete()
     return redirect("/cupones")
 
 @login_required(login_url='/login/')
