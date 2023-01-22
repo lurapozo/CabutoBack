@@ -23,6 +23,9 @@ from .models import *
 from aplicaciones.administracion.models import *
 import re
 import string
+
+notificacion_URL = "https://fcm.googleapis.com/fcm/send"
+notificacion_header = {"Authorization": "key=AAAAfK-HTLc:APA91bHkgzXZbzKIhpfreDv215qmTHJjhq1A2GPPm4R9Qc4VGjuTHkuYpsq6bike4TI7zraeehle2Uakv7CWfsp4zzjeKj8NBuOSNvmZigHnybD7a2CdITlJYfMJGjr0R2Gr_eks2CnE"}
 # Create your views here.
 
 
@@ -102,7 +105,8 @@ def delCodigoAuth(request):
 def getOferta(request):
     if request.method == 'GET':
         res = []
-        ofertas = Oferta.objects.filter().exclude(estado="I").order_by("-cantidad")
+        ofertas = Oferta.objects.filter(fecha_inicio__lte=datetime.today()).exclude(estado="I").order_by("-cantidad")
+        ofertas = ofertas.filter(fecha_fin__gte=datetime.today()).exclude(estado="I").order_by("-cantidad")
         for oferta in ofertas:
             id=oferta.nombre.replace(" ","_")+"_"+str(oferta.id_oferta)
             diccionario = {"id":oferta.id_oferta,"id_unico":id, "nombre":oferta.nombre,"descripcion":oferta.descripcion,
@@ -408,21 +412,21 @@ def borrarPedido2(request):
                 except:
                     print("Error al enviar correo")
             if pedido.estado == "Regalo":
-                detalle_tarjeta_monto=Tarjeta_Monto_Pedido.objects.filter(id_pedido=pedido)
-                detalle_tarjeta_producto=Tarjeta_Producto_Pedido.objects.filter(id_pedido=pedido)
+                detalle_tarjeta_monto=Tarjeta_Monto.objects.filter(id_pedido=pedido)
+                detalle_tarjeta_producto=Tarjeta_Producto.objects.filter(id_pedido=pedido)
 
                 total_tarjeta_monto = detalle_tarjeta_monto.count()
                 total_tarjeta_producto = detalle_tarjeta_producto.count()
                 if total_tarjeta_monto > 0:
                     for tarjet in detalle_tarjeta_monto:
-                        tarXcliente=Tarjeta_Monto_Cliente.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta)
-                        tarXcliente.estado='I'
-                        tarXcliente.save()
+                        tarXcliente=Tarjeta_Monto_Cliente.objects.get(id_tarjeta=tarjet.id_tarjeta)
+                        tarXcliente.delete()
+                        tarjet.delete()
                 if total_tarjeta_producto > 0:
                     for tarjet in detalle_tarjeta_monto:
-                        tarXcliente=Tarjeta_Producto_Pedido.objects.get(id_tarjeta=tarjet.id_tarjeta.id_tarjeta)
-                        tarXcliente.estado='I'
-                        tarXcliente.save()
+                        tarXcliente=Tarjeta_Producto_Pedido.objects.get(id_tarjeta=tarjet.id_tarjeta)
+                        tarXcliente.delete()
+                        tarjet.delete()
             pedido.estado="Anulado"
             pedido.pagado=False
             pedido.save()
@@ -596,7 +600,10 @@ def guardarPedido2(request):
     if request.method == 'POST':
         response = json.loads(request.body)
         value=response["id"]
-        carrito=response["carrito"]
+        try:
+            carrito=response["carrito"]
+        except:
+            clienteNuevo = Cliente.objects.get(id_cliente=int(value))
         tipoEntrega=response["tipoEntrega"]
         direccion=response["direccion"]
         tipoPago=response["tipoPago"]
@@ -604,6 +611,9 @@ def guardarPedido2(request):
         envio=response["envio"]
         descuento=response["descuento"]
         estadopedido=response["tarjetaRegalo"]
+
+        tarjeta=response["tarj"]
+
         total=(subtotal-descuento+envio)
         subtotal=round(subtotal/1.12,2)
         iva=round(subtotal*0.12,2)
@@ -620,16 +630,94 @@ def guardarPedido2(request):
         try:
             pedido=Pedido(tipo_entrega=tipoEntrega,tipo_pago=tipoPago,subtotal=subtotal,iva=iva,descuento=descuento,
             envio=envio,total=total,cliente=user,direccion=direccion,establecimiento=establecimiento,observacion="",fecha=timezone.now())
+            if(tarjeta=="monto" or tarjeta=="producto"):
+                pedido.estado="Regalo"
             pedido.save()
-            carrito=Carrito.objects.filter(id_carrito=carrito).first()
-            detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
-            detalle_oferta=Carrito_Oferta.objects.filter(id_carrito=carrito)
-            detalle_combo=Carrito_Combo.objects.filter(id_carrito=carrito)
-            detalle_cupon=Carrito_Cupones.objects.filter(id_carrito=carrito)
-            detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
-            detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
-            #dtm=Carrito_Tarjeta_Monto.objects.get(id_carrito=carrito)
-            detallePedido2(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto)
+            if(tarjeta=="monto"):
+                receptor=response["receptor"]
+                descripcion=response["descripcion"]
+                clienteEmisor = Cliente.objects.get(id_cliente=int(value))
+                clienteReceptor = Cliente.objects.get(usuario__correo=receptor)
+
+                tarjetaMonto=Tarjeta_Monto(id_cliente=clienteEmisor, monto=float(total),descripcion=descripcion,id_pedido=pedido)
+                tarjetaMonto.save()
+                tarjetaMontoCliente=Tarjeta_Monto_Cliente(id_cliente=clienteReceptor, id_tarjeta=tarjetaMonto, fecha=timezone.now())
+                tarjetaMontoCliente.save()
+
+                devices=GCMDevice.objects.filter(user=clienteReceptor.usuario)
+                mensaje= "¡Alguien te ha enviado un regalo!"
+
+                data = {"title":"Regalo recibido","icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "titulo": "Nuevo regalo", "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
+                #devices.send_message(mensaje, extra=data)
+
+                datasend={"to": clienteReceptor.usuario.token,
+                        "notification": {
+                            "title": "Regalo recibido",
+                            "body": mensaje
+                        },
+                        "data": data
+                    }
+                response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
+
+                msj = 'Ha recibido un regalo de: '+str(clienteEmisor.nombre)+' '+str(clienteEmisor.apellido)+', abra la app Cabuto`s para reclamarlo.'
+                email = EmailMessage('Nuevo regalo recibido: ', msj, to=[clienteReceptor.usuario.correo])
+                email.send()
+
+            elif(tarjeta=="producto"):
+                receptor=response["receptor"]
+                descripcion=response["descripcion"]
+                detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
+                clienteEmisor = Cliente.objects.get(id_cliente=int(value))
+                clienteReceptor = Cliente.objects.get(usuario__correo=receptor)
+                tarjetaProducto=Tarjeta_Producto(id_cliente=clienteEmisor, descripcion=descripcion,id_pedido=pedido)
+                tarjetaProducto.save()
+                tarjetaProductoCliente=Tarjeta_Producto_Cliente(id_cliente=clienteReceptor, id_tarjeta=tarjetaProducto, fecha=timezone.now())
+                tarjetaProductoCliente.save()
+
+                devices=GCMDevice.objects.filter(user=clienteReceptor.usuario)
+                mensaje= "¡Alguien te ha enviado un regalo!"
+                data = {"title":"Regalo recibido","icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "titulo": "Nuevo regalo", "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
+                '''devices.send_message(mensaje, extra=data)'''
+
+                datasend={"to": clienteReceptor.usuario.token,
+                        "notification": {
+                            "title": "Regalo recibido",
+                            "body": mensaje
+                        },
+                        "data": data
+                    }
+
+                response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
+                msj = 'Ha recibido un regalo de: '+str(clienteEmisor.nombre)+' '+str(clienteEmisor.apellido)+', abra la app Cabuto`s para reclamarlo.'
+                email = EmailMessage('Nuevo regalo recibido: ', msj, to=[clienteReceptor.usuario.correo])
+                email.send()
+
+                for producto in detalle_producto:
+                    '''pro=Producto.objects.filter(id_producto=producto.id_producto.id_producto).annotate(suma=Sum('establecimiento_producto__stock_disponible')).first()
+                    if(pro.suma-producto.cantidad>=0):
+                        productoxpedido=Producto_Pedido(cantidad=producto.cantidad,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
+                        productoxpedido.save()
+                        producto.delete()
+                    elif(pro.suma>0):
+                        productoxpedido=Producto_Pedido(cantidad=pro.suma,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
+                        productoxpedido.save()
+                        producto.delete()'''
+                    tarjetaProductoProducto=Tarjeta_Producto_Producto(id_tarjeta=tarjetaProducto, id_producto=producto.id_producto, cantidad=producto.cantidad)
+                    tarjetaProductoProducto.save()
+                    producto.delete()
+
+            else:
+                carrito=Carrito.objects.filter(id_carrito=carrito).first()
+                detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
+                detalle_oferta=Carrito_Oferta.objects.filter(id_carrito=carrito)
+                detalle_combo=Carrito_Combo.objects.filter(id_carrito=carrito)
+                detalle_cupon=Carrito_Cupones.objects.filter(id_carrito=carrito)
+                detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
+                detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
+
+
+                #dtm=Carrito_Tarjeta_Monto.objects.get(id_carrito=carrito)
+                detallePedido2(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto)
             res = {
             'valid': 'ok',
             'pedido': pedido.id_pedido
@@ -640,9 +728,11 @@ def guardarPedido2(request):
                 "message": f'Usuario {user.nombre} ha realizado un nuevo pedido.',
                 "vibrate": "[200, 100, 200, 100, 200, 100, 200]"
             })
+            #datasend={"to": "/topics/CAMBIAR", "notification": {"title": f'¡Nuevo pedido!',"subtitle": f'¡Nuevo pedido!',"body": f'Usuario {user.nombre} ha realizado un nuevo pedido.'},"data":data}
             for device in devices:
                 try:
                     device.send_message(message=data)
+                    #response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
                 except WebPushError as e:
                     print(e)
                     device.delete()
@@ -804,6 +894,50 @@ def getCliente(request):
             return JsonResponse(res,safe=False)
     return HttpResponse(status=400)
 
+def getCliente2(request):
+    if request.method == 'GET':
+        res = []
+        if request.GET.get("correo")!=None:
+            correo=request.GET.get("correo")
+            user = Cliente.objects.select_related("usuario").filter(usuario__correo=correo).first()
+            codigoUser=user.usuario.codigo_unico
+            try:
+                id_usuario=user.usuario.id_usuario
+                cedula=user.usuario.cedula
+                imagen=user.usuario.photo_url
+                codigoUser=user.usuario.codigo_unico
+            except:
+                id_usuario=""
+                cedula=""
+                imagen=""
+                codigoUser=""
+            if id_usuario!="":
+                diccionario={"id":user.id_cliente,"nombre":user.nombre,"apellido":user.apellido,"telefono":user.telefono,
+                "correo":correo,"direccion":user.direccion,"fechaNac":user.fecha_Nac,"cedula":cedula,"imagen":imagen,"codigo_unico":codigoUser}
+                res.append(diccionario)
+            return JsonResponse(res,safe=False)
+        else:
+            users = Cliente.objects.select_related("usuario")
+            for user in users:
+                try:
+                    id_usuario=user.usuario.id_usuario
+                    cedula=user.usuario.cedula
+                    imagen=user.usuario.photo_url
+                    codigoUser=user.usuario.codigo_unico
+                    correo=user.usuario.correo
+                except:
+                    id_usuario=""
+                    cedula=""
+                    imagen=""
+                    codigoUser=""
+                    correo=""
+                if id_usuario!="":
+                    diccionario={"id":user.id_cliente,"id_usuario":id_usuario,"nombre":user.nombre,"apellido":user.apellido,
+                    "telefono":user.telefono,"direccion":user.direccion,"fechaNac":user.fecha_Nac,"cedula":cedula,"imagen":imagen,"codigo_unico":codigoUser,"correo":correo}
+                    res.append(diccionario)
+            return JsonResponse(res,safe=False)
+    return HttpResponse(status=400)
+
 @csrf_exempt
 def getClienteCorreo(request):
     if request.method == "POST":
@@ -823,15 +957,15 @@ def getClienteCorreo(request):
 def getCodigo(request):
     if request.method == 'GET':
         if request.GET.get("id")!=None:
-            id_cliente = request.GET.get("id")       
+            id_cliente = request.GET.get("id")
             cliente=Cliente.objects.select_related().filter(id_cliente=id_cliente).first()
             usuario_id=cliente.usuario_id
             usuario=Usuario.objects.select_related().filter(id_usuario=usuario_id).first()
             codigo=usuario.codigo_unico
-            
+
             #codigo_unico=Usuario.objects.filter(id_usuario=id_usuario)
             #print(codigo)
-            
+
             return JsonResponse(codigo,safe=False)
     return HttpResponse(status=400)
 
@@ -872,7 +1006,6 @@ def registro(request):
             cr = u2.correo
             cn = u2.contrasena
             cd = u2.cedula
-
             if cr == email:
                 response_data = {
                 'valid': 'EMAIL'
@@ -885,6 +1018,7 @@ def registro(request):
                     }
                 return JsonResponse(response,safe=False)'''
         msj2 = 'Bienvenido a Cabutos, es un placer que se una a nosotros'
+        u =Usuario(cedula=cedula,correo=email,contrasena=contra)
         u =Usuario(cedula=cedula,correo=email,contrasena=contra,codigo_unico=codigo)
         print("usuario ",u)
         u.save()
@@ -909,11 +1043,80 @@ def registro(request):
                 }
         return JsonResponse(response_data,safe=False)
 
-
-    response_data = {
-        'valid': 'NOT'
-        }
-    return JsonResponse(response_data,safe=False)
+@csrf_exempt
+def registro2(request):
+    if request.method == 'POST':
+        print("estoy en django, metodo registro ")
+        print(request.body)
+        response = json.loads(request.body)
+        print(response)
+        cedula = response["cedula"]
+        email = response['email']
+        contra =response['contrasena']
+        nombre = response['nombre']
+        apellido = response['apellido']
+        telefono = response['telefono']
+        #Creamos el codigo UNico
+        def crear_codigo():
+            claves=""
+            num=random.randint(100,999)
+            while len(claves)<4:
+                letra=random.choice(string.ascii_letters)
+                claves+=letra
+            prefijo= claves.upper()[:2]
+            sufijo= claves.upper()[2:]
+            codigo=prefijo+str(num)+sufijo
+            try:
+                usuario=Usuario.objects.get(codigo_unico=str(codigo))
+            except Usuario.DoesNotExist:
+                usuario = None
+            if((usuario) is None):
+                return codigo
+            else:
+                crear_codigo()
+        codigo=crear_codigo()
+        #Fin crear codigo unico
+        users=Usuario.objects.filter()
+        for u2 in users :
+            cr = u2.correo
+            cn = u2.contrasena
+            cd = u2.cedula
+            if cr == email:
+                response_data = {
+                'valid': 'EMAIL'
+                }
+                return JsonResponse(response_data,safe=False)
+            '''if cedula!=" " and cedula == cd:
+                print("cedula repetida")
+                response = {
+                    'valid': 'CED'
+                    }
+                return JsonResponse(response,safe=False)'''
+        msj2 = 'Bienvenido a Cabutos, es un placer que se una a nosotros'
+        u =Usuario(cedula=cedula,correo=email,contrasena=contra)
+        u =Usuario(cedula=cedula,correo=email,contrasena=contra,codigo_unico=codigo)
+        print("usuario ",u)
+        u.save()
+        c = Cliente(nombre=nombre,apellido=apellido,usuario=u,telefono=telefono)
+        c.save()
+        try:
+            oferta=Oferta.objects.filter().order_by("-cantidad").first()
+            redes=RedSocial.objects.filter()
+            html = render_to_string("Correos/bienvenido.html",{"data":c, "oferta":oferta,"redes":redes})
+            msg = EmailMultiAlternatives('Bienvenido a Cabutos', html, 'cabutosoftware1@gmail.com', [email])
+            msg.content_subtype = 'html'
+            msg.mixed_subtype = 'related'
+            msg.send()
+        except:
+            print("Error al enviar correo")
+        response_data = {
+                'valid': 'OK',
+                #'foto': foto,
+                'id': u.id_usuario,
+                'nombre': nombre,
+                'apellido': apellido
+                }
+        return JsonResponse(response_data,safe=False)
 
 def imagenesCoded():
     bienvenido = base64.b64encode(open(settings.STATICFILES_DIRS[0] + '/img/correo/bienvenido.png', "rb").read()).decode()
@@ -1740,6 +1943,8 @@ def getCupones(request):
         print("estoy dentro del getCupones")
         res = []
         cupones = Cupones.objects.filter(cantidad__gt=0, estado="A")
+        cupones = cupones.filter(fecha_inicio__lte=datetime.today())
+        cupones = cupones.filter(fecha_fin__gte=datetime.today())
         for cupon in cupones:
             print(cupon.photo_url)
             diccionario = {"id":cupon.id_cupon,"nombre":cupon.nombre,"descripcion":cupon.descripcion,"cantidad":cupon.cantidad,
@@ -1752,12 +1957,28 @@ def getCupones(request):
         #return addCupon(request)
     #return HttpResponse(status=400)
 
+
+@csrf_exempt
+def getDatosCupon(request, name):
+    if request.method == 'GET':
+        cupon = Cupones.objects.get(nombre=name)
+        if cupon.tipo =="M":
+            cuponMonto = Cupones_Monto.objects.get(nombre=name)
+            res = {"nombre": cuponMonto.nombre, "monto": cuponMonto.monto, "tipo": "M"}
+        if cupon.tipo == "P":
+            cuponProducto = Cupones_Producto.objects.get(nombre=name)
+            res = {"nombre": cuponProducto.nombre, "cantidad": cuponProducto.cantidad, "nombreProducto":cuponProducto.id_producto.nombre, "tipo": "P"}
+        return JsonResponse(res,safe=False)
+    return HttpResponse(status=400)
+
 @csrf_exempt
 def getCuponesPersonales(request, id):
     if request.method == 'GET':
         print("estoy dentro del getCupones")
         res = []
         cupones = Cupones.objects.filter(cantidad__gt=0, estado="A")
+        cupones = cupones.filter(fecha_inicio__lte=datetime.today())
+        cupones = cupones.filter(fecha_fin__gte=datetime.today())
         for cupon in cupones:
             print(cupon.photo_url)
             diccionario = {"id":cupon.id_cupon,"nombre":cupon.nombre,"descripcion":cupon.descripcion,"cantidad":cupon.cantidad,
@@ -1766,9 +1987,23 @@ def getCuponesPersonales(request, id):
             print("Esto es lo que voy a enviar",res)
         cuponesCodigo = Codigo_Cliente.objects.filter(id_cliente = id).exclude(estado='I')
         for cupon in cuponesCodigo:
-            diccionario = {"id":cupon.id_codigo.id_codigo,"nombre":cupon.id_codigo.codigo,"descripcion":cupon.id_codigo.descripcion,"cantidad":cupon.id_codigo.cantidad,
-            "imagen":cupon.id_codigo.photo_url}
+            diccionario = {"id":cupon.id_codigo.id_codigo,"nombre":cupon.id_codigo.codigo,"descripcion":cupon.id_codigo.descripcion,"cantidad":cupon.id_codigo.cantidad,"imagen":cupon.id_codigo.photo_url}
             res.append(diccionario)
+        return JsonResponse(res,safe=False)
+    return HttpResponse(status=400)
+
+@csrf_exempt
+def getCuponesHistorial(request, id):
+    if request.method == 'GET':
+        print("estoy dentro del historial")
+        res = []
+        pedidos = Pedido.objects.filter(cliente=id)
+        for pedidoo in pedidos:
+            cuponP = Cupon_Pedido.objects.filter(pedido=pedidoo)
+            if len(cuponP)!=0:
+                for cupon in cuponP:
+                    diccionario = {"id":cupon.cupon.id_cupon,"nombre":cupon.cupon.nombre,"descripcion":cupon.cupon.descripcion, "fecha": cupon.pedido.fecha, "imagen": cupon.cupon.photo_url}
+                    res.append(diccionario)
         return JsonResponse(res,safe=False)
     return HttpResponse(status=400)
 
@@ -2223,7 +2458,7 @@ def getTarjetasRegalo(request, id):
         res = []
         tarjetas = Tarjeta_Monto_Cliente.objects.filter(id_cliente = id).exclude(estado="I")
         for tarjeta in tarjetas:
-            diccionario = {"id":tarjeta.id_tarjeta.id_tarjeta,"emisor":tarjeta.id_tarjeta.id_cliente.nombre,"descripcion":tarjeta.id_tarjeta.descripcion,"monto":tarjeta.id_tarjeta.monto}
+            diccionario = {"id":tarjeta.id_tarjeta.id_tarjeta,"emisor":tarjeta.id_tarjeta.id_cliente.nombre,"descripcion":tarjeta.id_tarjeta.descripcion,"monto":tarjeta.id_tarjeta.monto, "fecha":tarjeta.fecha}
             res.append(diccionario)
         return JsonResponse(res,safe=False)
     return HttpResponse(status=400)
@@ -2240,7 +2475,7 @@ def getTarjetasRegaloP(request, id):
             listaprod=""
             for producto in productos:
                 listaprod=listaprod+producto.id_producto.nombre+" x"+str(producto.cantidad)+" - "
-            diccionario = {"id":tarjeta.id_tarjeta.id_tarjeta,"emisor":tarjeta.id_tarjeta.id_cliente.nombre,"descripcion":tarjeta.id_tarjeta.descripcion,"listaprod":listaprod}
+            diccionario = {"id":tarjeta.id_tarjeta.id_tarjeta,"emisor":tarjeta.id_tarjeta.id_cliente.nombre,"descripcion":tarjeta.id_tarjeta.descripcion,"listaprod":listaprod, "fecha":tarjeta.fecha}
             res.append(diccionario)
         return JsonResponse(res,safe=False)
     return HttpResponse(status=400)
@@ -2274,7 +2509,9 @@ def crearTarjetaRegaloproducto(request):
         receptor=response["receptor"]
         descripcion=response["descripcion"]
         carrito=response["carrito"]
+
         detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
+
         clienteEmisor = Cliente.objects.get(id_cliente=int(emisor))
         clienteReceptor = Cliente.objects.get(usuario__correo=receptor)
         tarjetaProducto=Tarjeta_Producto(id_cliente=clienteEmisor, descripcion=descripcion)
@@ -2465,3 +2702,48 @@ def eliminarCarrito2(carrito,detalle_producto,detalle_oferta,detalle_combo,detal
     if total_combo > 0:
         for combo in detalle_combo:
             combo.delete()
+
+@csrf_exempt
+def addToken(request):
+    try:
+        response = json.loads(request.body)
+        id_usuario=response["id"]
+        token  = response["token"]
+        usuario=Usuario.objects.get(id_usuario=id_usuario)
+        usuario.token=token
+        usuario.save()
+        response_data = {
+            'valid':'Ok'
+            }
+        return JsonResponse(response_data,safe=False)
+    except:
+        response_data = {
+            'valid':'NO'
+            }
+        return JsonResponse(response_data,safe=False)
+
+
+@csrf_exempt
+def getPublicidadSuperior(request):
+    if request.method == 'GET':
+        res = []
+        publicidades = Publicidad.objects.filter(tipo = 'Superior')
+        for publicidad in publicidades:
+            dic = {"nombre": publicidad.nombre, "img": publicidad.photo_url, "link": publicidad.url}
+            res.append(dic)
+
+        return JsonResponse(res, safe = False)
+    return HttpResponse(status = 400)
+
+
+@csrf_exempt
+def getPublicidadInferior(request):
+    if request.method == 'GET':
+        res = []
+        publicidades = Publicidad.objects.filter(tipo = 'Inferior')
+        for publicidad in publicidades:
+            dic = {"nombre": publicidad.nombre, "img": publicidad.photo_url, "link": publicidad.url}
+            res.append(dic)
+
+        return JsonResponse(res, safe = False)
+    return HttpResponse(status = 400)
