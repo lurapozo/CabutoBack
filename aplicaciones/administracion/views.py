@@ -24,6 +24,10 @@ import json
 import re
 from django.core import serializers
 from .models import *
+
+notificacion_URL = "https://fcm.googleapis.com/fcm/send"
+notificacion_header = {"Authorization": "key=AAAAfK-HTLc:APA91bHkgzXZbzKIhpfreDv215qmTHJjhq1A2GPPm4R9Qc4VGjuTHkuYpsq6bike4TI7zraeehle2Uakv7CWfsp4zzjeKj8NBuOSNvmZigHnybD7a2CdITlJYfMJGjr0R2Gr_eks2CnE"}
+
 # Create your views here.
 #sesion = False
 def principal(request):
@@ -409,7 +413,7 @@ def pedido_page(request):
         print(data_clientes)
         if orden != None:
             if orden == 'fecha':
-                data_clientes=data_clientes.order_by('fecha',"-id_pedido")
+                data_clientes=data_clientes.order_by('-fecha',"-id_pedido")
             elif orden == 'total':
                 data_clientes=data_clientes.order_by('-total',"-id_pedido")
             elif orden == 'cliente':
@@ -423,7 +427,7 @@ def pedido_page(request):
 
         if orden != None:
             if orden == 'fecha':
-                espera=espera.order_by("-estado",'fecha',"-id_pedido")
+                espera=espera.order_by("-estado",'-fecha',"-id_pedido")
             elif orden == 'total':
                 espera=espera.order_by("-estado",'-total',"-id_pedido")
             elif orden == 'cliente':
@@ -431,35 +435,42 @@ def pedido_page(request):
         else:
             espera=espera.order_by("-estado","-id_pedido")
         print(data_clientes)
+
         if(espera.count()!=0):
             total0=round(espera.aggregate(suma=Sum('total'))["suma"],2)
         else:
            total0=0
+
         recibidos=data_clientes.select_related().filter(estado="Recibido")
         if(recibidos.count()!=0):
             total1=round(recibidos.aggregate(suma=Sum('total'))["suma"],2)
         else:
            total1=0
+
         enproceso=data_clientes.select_related().filter(estado="Proceso")
         if(enproceso.count()!=0):
             total15=round(enproceso.aggregate(suma=Sum('total'))["suma"],2)
         else:
            total15=0
+
         enviados=data_clientes.select_related().filter(estado="Enviado")
         if(enviados.count()!=0):
             total2=round(enviados.aggregate(suma=Sum('total'))["suma"],2)
         else:
            total2=0
+
         entregados=data_clientes.select_related().filter(estado="Entregado")
         if(entregados.count()!=0):
             total3=round(entregados.aggregate(suma=Sum('total'))["suma"],2)
         else:
            total3=0
+
         devueltos=data_clientes.select_related().filter(estado="Anulado")
         if(devueltos.count()!=0):
             total4=round(devueltos.aggregate(suma=Sum('total'))["suma"],2)
         else:
            total4=0
+
         pagina="THome"
         page = request.GET.get('page', 1)
         page0 = request.GET.get('page0', 1)
@@ -468,7 +479,7 @@ def pedido_page(request):
         page1 = request.GET.get('page1', 1)
         if request.GET.get('page1') != None:
             pagina="tMenu1"
-        page15 = request.GET.get('page15', 15)
+        page15 = request.GET.get('page15', 1)
         if request.GET.get('page15') != None:
             pagina="tMenu15"
         page2 = request.GET.get('page2', 1)
@@ -647,6 +658,7 @@ def confirmar_pedido(request, id_pedido):
     realizo el cambio
     """
     pedido=Pedido.objects.select_related().filter(id_pedido=id_pedido).first()
+    usuario=Usuario.objects.get(id_usuario=pedido.cliente.usuario.id_usuario)
     if pedido.estado == "Recibido":
 	    pedido.estado="Proceso"
 	    devices=GCMDevice.objects.filter(user=pedido.cliente.usuario)
@@ -657,6 +669,17 @@ def confirmar_pedido(request, id_pedido):
 	    mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" está siendo despachado."
 	    data = {"title":"Pedido despachado","titulo": "Pedido enviado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
 	    devices.send_message(mensaje, extra=data)
+	    datasend={"to": usuario.token,
+    	    "notification": {
+    	        "title": "Pedido despachado",
+    	        "subtitle": "Pedido enviado",
+    	        "body": mensaje,
+    	        "id": pedido.id_pedido
+    	        },
+    	        "data": data
+	        }
+	    response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
+
     elif pedido.estado == "Proceso":
         pedido.estado="Enviado"
         devices=GCMDevice.objects.filter(user=pedido.cliente.usuario)
@@ -667,6 +690,8 @@ def confirmar_pedido(request, id_pedido):
         mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" se encuentra en camino."
         data = {"title":"Pedido enviado","titulo": "Pedido enviado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
         devices.send_message(mensaje, extra=data)
+        datasend={"to": usuario.token, "notification": {"title": "Pedido enviado","subtitle": "Pedido enviado","body": mensaje,"id":pedido.id_pedido}, "data": data}
+        response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
     else:
 	    pedido.estado="Entregado"
 	    pedido.pagado=True
@@ -680,6 +705,8 @@ def confirmar_pedido(request, id_pedido):
 	    mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" ha sido entregado, en la ventana historial de compras puede calificar su compra, esto nos ayudará a brindarle un mejor servicio."
 	    data = {"title":"Pedido entregado","titulo": "Pedido entregado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
 	    devices.send_message(mensaje, extra=data)
+	    datasend={"to": usuario.token, "notification": {"title": "Pedido entregad","subtitle": "Pedido entregado","body": mensaje,"id":pedido.id_pedido},"data": data}
+	    response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
     pedido.save()
     pedido.save()
     return redirect("/pedidos")
@@ -829,9 +856,12 @@ def agregar_notificacion(request):
             devices=GCMDevice.objects.all()
             if notificacion.photo_url != "":
                 data = {"title":notificacion.asunto,"icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png","color":"#ff7c55", "titulo": notificacion.asunto, "mensaje": notificacion.mensaje, "priority":"high", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "notification_foreground": "true"}
+                datasend={"to": "/topics/masive", "notification": {"title": notificacion.asunto,"subtitle": notificacion.asunto,"body": notificacion.mensaje}, "data":data}
             else:
                 data = {"title":notificacion.asunto,"titulo": notificacion.asunto, "mensaje": notificacion.mensaje,"color":"#ff7c55", "priority":"high"}
+                datasend={"to": "/topics/masive", "notification": {"title": notificacion.asunto,"subtitle": notificacion.asunto,"body": notificacion.mensaje}, "data":data}
             devices.send_message(notificacion.mensaje, extra=data)
+            response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
             return  redirect("/notificaciones")
         except:
             return  redirect("/notificaciones")
@@ -859,9 +889,12 @@ def enviar_notificacion(request,id_notificacion):
 	    devices=GCMDevice.objects.all()
 	    if notificacion.photo_url != "":
 	        data = {"title":notificacion.asunto,"icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png","color":"#ff7c55", "titulo": notificacion.asunto, "mensaje": notificacion.mensaje, "priority":"high", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "notification_foreground": "true"}
+	        datasend={"to": "/topics/masive", "notification": {"title": notificacion.asunto,"subtitle": notificacion.asunto,"body": notificacion.mensaje}, "data":data}
 	    else:
 	        data = {"title":notificacion.asunto,"titulo": notificacion.asunto, "mensaje": notificacion.mensaje,"color":"#ff7c55", "priority":"high"}
+	        datasend={"to": "/topics/masive", "notification": {"title": notificacion.asunto,"subtitle": notificacion.asunto,"body": notificacion.mensaje}, "data":data}
 	    devices.send_message(notificacion.mensaje, extra=data)
+	    response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
 	    return  redirect("/notificaciones")
 	    response_data= '!La notificación ha sido creada y enviada con éxito!'
 	    print(response_data)
@@ -1291,9 +1324,12 @@ def agregar_ofertas(request):
                 devices=GCMDevice.objects.all()
                 if notificacion.photo_url != "":
                     data = {"title":notificacion.asunto, "icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "color":"#ff7c55", "titulo": notificacion.asunto, "mensaje": notificacion.mensaje, "priority":"high","notification_foreground": "true", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
+                    datasend={"to": "/topics/masive", "notification": {"title": notificacion.asunto,"subtitle": notificacion.asunto,"body": description}, "data":data}
                 else:
                     data = {"titulo": name, "title":name, "mensaje": description,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
+                    datasend={"to": "/topics/masive", "notification": {"title": name,"subtitle": name,"body": description}, "data":data}
                 devices.send_message(notificacion.mensaje, extra=data)
+                response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
             return  redirect("/ofertas")
         except:
             return  redirect("/ofertas")
@@ -1399,10 +1435,13 @@ def add_cupon(request):
                 notificacion.save()
                 if notificacion.photo_url != "":
                     data = {"title":notificacion.asunto, "icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "color":"#ff7c55", "titulo": notificacion.asunto, "mensaje": notificacion.mensaje, "priority":"high", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "notification_foreground": "true"}
+                    datasend={"to": "/topics/masive", "notification": {"title": notificacion.asunto,"subtitle": notificacion.asunto,"body": notificacion.mensaje}, "data":data}
                 else:
                     data = {"titulo": name, "title":name, "mensaje": description,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
+                    datasend={"to": "/topics/masive", "notification": {"title": name,"subtitle": name,"body": description}, "data":data}
                 devices=GCMDevice.objects.all()
                 devices.send_message(notificacion.mensaje, extra=data)
+                response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
             return  redirect("/cupones")
         except:
             return  redirect("/cupones")
@@ -1440,10 +1479,13 @@ def add_cupon2(request):
                 notificacion.save()
                 if notificacion.photo_url != "":
                     data = {"title":notificacion.asunto, "icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "color":"#ff7c55", "titulo": notificacion.asunto, "mensaje": notificacion.mensaje, "priority":"high", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
+                    datasend={"to": "/topics/masive", "notification": {"title": notificacion.asunto,"subtitle": notificacion.asunto,"body": notificacion.mensaje}, "data":data}
                 else:
                     data = {"titulo": name, "title":name, "mensaje": description,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
+                    datasend={"to": "/topics/masive", "notification": {"title": name,"subtitle": name,"body": description}, "data":data}
                 devices=GCMDevice.objects.all()
                 devices.send_message(notificacion.mensaje, extra=data)
+                response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
             return  redirect("/cupones")
         except:
             return  redirect("/cupones")
@@ -1773,9 +1815,12 @@ def add_sorteo(request):
                 devices=GCMDevice.objects.all()
                 if notificacion.photo_url != "":
                     data = {"title":notificacion.asunto, "icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "color":"#ff7c55", "titulo": notificacion.asunto, "mensaje": notificacion.mensaje, "priority":"high","notification_foreground": "true", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
+                    datasend={"to": "/topics/masive", "notification": {"title": notificacion.asunto,"subtitle": notificacion.asunto,"body": notificacion.mensaje}, "data":data}
                 else:
                     data = {"titulo": name, "title":name, "mensaje": description,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
+                    datasend={"to": "/topics/masive", "notification": {"title": name,"subtitle": name,"body": description}, "data":data}
                 devices.send_message(notificacion.mensaje, extra=data)
+                response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
             return  redirect("/sorteos")
         except:
             return  redirect("/sorteos")
@@ -1855,6 +1900,8 @@ def nuevoganador_sorteo(request, id_sorteo):
                     data = {"title":data.nombre, "color":"#ff7c55", "titulo": data.nombre, "mensaje":"Felicidades, es uno de los ganadores del sorteo! \n" + data.nombre, "priority":"high","notification_foreground": "true"}
                     mensaje = "Felicidades, es uno de los ganadores del sorteo! \n" + data.nombre
                     devices.send_message(mensaje, extra=data)
+                    datasend={"to": usuario.token, "notification": {"title": data.nombre,"subtitle": data.nombre,"body": "Felicidades, es uno de los ganadores del sorteo! \n" + data.nombre}, "data":data}
+                    response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
 
                     return  redirect("/sorteos")
             else:
@@ -2114,3 +2161,89 @@ def edit_repartidor(request,id_repartidor):
             html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
             return JsonResponse({'html': html, 'result': "error"})
     return render(request,"Repartidores/edit_repartidor.html",{"data":repartidor})
+
+@login_required(login_url='/login/')
+def publicidad_page(request):
+	if request.method=='GET':
+	    data_publicidad=Publicidad.objects
+	    valor = request.GET.get("busqueda")
+	    if request.GET.get("busqueda")!=None:
+	        data_publicidad= data_publicidad.filter(nombre__icontains=str(valor))
+	    data_publicidad=data_publicidad.order_by("-id_publicidad")
+
+	    page = request.GET.get('page', 1)
+	    paginator = Paginator(data_publicidad, 5)
+	    try:
+	    	publicidades = paginator.page(page)
+	    except PageNotAnInteger:
+	    	publicidades = paginator.page(1)
+	    except EmptyPage:
+	    	publicidades = paginator.page(paginator.num_pages)
+
+	    return render(request, "Publicidad/publicidad.html",{"datos":publicidades,"buscar":valor})
+	return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def agregar_publicidad(request):
+    res=[]
+    if request.method=='POST':
+        name=request.POST.get('nombre',None)
+        imagen = request.FILES.get('image',None)
+        tipo = request.POST.get('tipoPublicidad',None)
+        fromDate=request.POST.get('fromDate',None)
+        toDate= request.POST.get('toDate',None)
+        url= request.POST.get('url',None)
+
+        response_data = {}
+        publi=Publicidad.objects.filter(nombre=name).first()
+        if publi != None:
+            response_data= 'Ya existe una Publicidad con este nombre'
+            html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+            return JsonResponse({'html': html, 'result': "error"})
+        try:
+            publicidad = Publicidad(nombre=name, image=imagen, tipo=tipo, fecha_inicio=fromDate, fecha_fin=toDate, url=url)
+            publicidad.save()
+            return  redirect("/publicidad")
+        except:
+            return  redirect("/publicidad")
+    if request.method=='GET':
+        data_estab= Establecimiento.objects.all()
+        return render(request, "Publicidad/add-publicidades.html", {"estab":data_estab})
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def eliminar_publicidad(request,id_publicidad):
+	data_publi=Publicidad.objects.get(id_publicidad=id_publicidad)
+	if data_publi.image:
+	    data_publi.image.delete()
+	data_publi.delete()
+	return redirect("/publicidad")
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def editar_publicidad(request,id_publicidad):
+	res=[]
+	if request.method=='POST':
+		name=request.POST.get('nombre',None)
+		imagen = request.FILES.get('image',None)
+		tipo = request.POST.get('tipoPublicidad',None)
+		fromDate=request.POST.get('fromDate',None)
+		toDate= request.POST.get('toDate',None)
+		url= request.POST.get('url',None)
+		publicidad=Publicidad.objects.get(id_publicidad=id_publicidad)
+		publicidad.nombre=name
+		if(imagen != None):
+		    publicidad.image.delete()
+		    publicidad.image=imagen
+		publicidad.tipo=tipo
+		publicidad.fecha_inicio=fromDate
+		publicidad.fecha_fin=toDate
+		publicidad.url=url
+		publicidad.save()
+		return redirect("/publicidad")
+	if request.method=='GET':
+	    publicidad=Publicidad.objects.get(id_publicidad=id_publicidad)
+	    return render(request, "Publicidad/edit-publicidades.html",{"data":publicidad})
+	return HttpResponse(status=400)
+

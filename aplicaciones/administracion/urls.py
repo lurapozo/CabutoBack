@@ -90,6 +90,11 @@ urlpatterns = [
 	url(r'^reclamos/ver_reclamo/(?P<id_reclamo>\d+)', ver_reclamo, name="ver_reclamo"),
 	#path('combos/',combo_page),
 
+    path('publicidad/', publicidad_page),
+    url(r'^publicidad/add_publicidades/', agregar_publicidad, name="add_publicidades"),
+    url(r'^publicidad/eliminar_publicidad/(?P<id_publicidad>\d+)', eliminar_publicidad, name="eliminar_publicidad"),
+    url(r'^publicidad/editar_publicidad/(?P<id_publicidad>\d+)', editar_publicidad, name="editar_publicidad"),
 
+    
 
 ]

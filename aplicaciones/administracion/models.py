@@ -20,7 +20,9 @@ class Usuario(models.Model):
 	contrasena=models.CharField(max_length=64, editable=True)
 	foto=models.ImageField(default = " ")
 	registro = models.DateTimeField(auto_now_add=True)
-	codigo_unico=models.CharField(max_length=100)
+	codigo_unico=models.CharField(max_length=100,null=True)
+	token=models.CharField(max_length=500,default = "0000")
+	puntos=models.IntegerField(default = 0)
 	def __str__(self):
 		return self.correo
 
@@ -110,6 +112,7 @@ class Producto(models.Model):
 	estado=models.CharField(max_length=1,default = "A")
 	id_categoria=models.ForeignKey(Categoria,on_delete=models.SET_NULL, null=True)
 	stock_disponible=models.IntegerField()
+	puntos=models.IntegerField(default = 0)
 	def __str__(self):
 		return self.nombre
 
@@ -303,7 +306,8 @@ class Oferta(models.Model):
     image = models.ImageField()
     estado=models.CharField(max_length=1,default = "A")
     id_establecimiento = models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
-
+    fecha_inicio = models.DateField()
+    fecha_fin=models.DateField()
     def __str__(self):
         return self.nombre
 
@@ -429,6 +433,7 @@ class Tarjeta_Producto_Cliente(models.Model):
 	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
 	id_tarjeta = models.ForeignKey(Tarjeta_Producto,on_delete=models.SET_NULL, null=True)
 	estado=models.CharField(max_length=1,default = "A")
+	fecha = models.DateTimeField(null=True)
 
 class Tarjeta_Monto(models.Model):
 	id_tarjeta =  models.AutoField(primary_key=True)
@@ -442,6 +447,7 @@ class Tarjeta_Monto_Cliente(models.Model):
 	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
 	id_tarjeta = models.ForeignKey(Tarjeta_Monto,on_delete=models.SET_NULL, null=True)
 	estado=models.CharField(max_length=1,default = "A")
+	fecha = models.DateTimeField(null=True)
 
 class Carrito_Tarjeta_Monto(models.Model):
 	id_carritoxtarjeta=models.AutoField(primary_key=True)
@@ -530,4 +536,27 @@ class Sorteo_Usuario(models.Model):
 	id_usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL, null=True)
 
 
+class Publicidad(models.Model):
+    TiposPublicidad = (
+        ('Superior', 'Superior'),
+        ('Inferior', 'Inferior'),
+    )
+    id_publicidad =models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=100)
+    image=models.ImageField()
+    tipo=models.CharField(max_length=100,choices=TiposPublicidad,default="Superior")
+    url=models.CharField(max_length=100, null=True)
+    fecha_inicio=models.DateField()
+    fecha_fin=models.DateField()
+    def __str__(self):
+        return self.asunto
 
+    @property
+    def photo_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
+
+class Puntos(models.Model):
+    id_puntos =models.AutoField(primary_key=True)
+    dolarAPuntos =models.IntegerField(default=0)
+    puntosADolar =models.IntegerField(default=0)
