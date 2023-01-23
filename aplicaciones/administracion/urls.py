@@ -94,7 +94,10 @@ urlpatterns = [
     url(r'^publicidad/add_publicidades/', agregar_publicidad, name="add_publicidades"),
     url(r'^publicidad/eliminar_publicidad/(?P<id_publicidad>\d+)', eliminar_publicidad, name="eliminar_publicidad"),
     url(r'^publicidad/editar_publicidad/(?P<id_publicidad>\d+)', editar_publicidad, name="editar_publicidad"),
-
     
-
+    path('puntos/', puntos_page),
+	url(r'^puntos/editar_puntos/(?P<id_producto>\d+)', editar_puntos, name="editar_puntos"),
+	url(r'puntos/add_puntos/', add_puntos, name="add_puntos"),
+    url(r'^puntos/eliminar_puntos/(?P<id_producto>\d+)', eliminar_puntos, name="eliminar_puntos"),
+    url(r'puntos/puntosxpuntos/', puntosxpuntos, name="puntosxpuntos"),
 ]

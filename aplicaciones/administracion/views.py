@@ -2247,3 +2247,84 @@ def editar_publicidad(request,id_publicidad):
 	    return render(request, "Publicidad/edit-publicidades.html",{"data":publicidad})
 	return HttpResponse(status=400)
 
+@login_required(login_url='/login/')
+def puntos_page(request):
+	if request.method=='GET':
+	    productosLista= Producto.objects.all().order_by("nombre","-id_producto")
+	    puntos=Puntos.objects.get(id_puntos=1)
+	    dolarAPuntos=puntos.dolarAPuntos
+	    puntosADolar=puntos.puntosADolar
+	    data_puntos=Producto.objects
+	    valor = request.GET.get("busqueda")
+	    if request.GET.get("busqueda")!=None:
+	        data_puntos= data_puntos.filter(nombre__icontains=str(valor))
+	    #data_puntos=data_puntos.order_by("-id_publicidad")
+	    data_puntos= data_puntos.exclude(puntos=0)
+
+	    page = request.GET.get('page', 1)
+	    paginator = Paginator(data_puntos, 5)
+	    try:
+	    	puntos = paginator.page(page)
+	    except PageNotAnInteger:
+	    	puntos = paginator.page(1)
+	    except EmptyPage:
+	    	puntos = paginator.page(paginator.num_pages)
+
+	    return render(request, "Puntos/puntos.html",{"datos":puntos,"buscar":valor, "dolarAPuntos":dolarAPuntos, "puntosADolar":puntosADolar, "productosLista":productosLista})
+	return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def add_puntos(request):
+    productosLista= Producto.objects.all().order_by("nombre","-id_producto")
+    if request.method=='GET':
+        return render(request, "Puntos/add-puntos.html",{"productosLista":productosLista})
+    elif request.method == 'POST':
+        idproducto = request.POST.get('producto', None)
+        puntos = request.POST.get('puntos', None)
+        producto= Producto.objects.get(id_producto=idproducto)
+        producto.puntos=puntos
+        producto.save()
+        return  redirect("/puntos")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def puntosxpuntos(request):
+    puntos=Puntos.objects.get(id_puntos=1)
+    if request.method=='GET':
+        return render(request, "Puntos/puntosxpuntos.html",{"puntos":puntos})
+    elif request.method == 'POST':
+        dtp = request.POST.get('dtp', None)
+        ptd = request.POST.get('ptd', None)
+        puntos.dolarAPuntos=dtp
+        puntos.puntosADolar=ptd
+        puntos.save()
+        return  redirect("/puntos")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def editar_puntos(request, id_producto):
+    if request.method=='GET':
+        data_products = Producto.objects.get(id_producto=id_producto)
+        return render(request, "Puntos/edit-puntos.html",{"datos_mostrar":data_products})
+    elif request.method == 'POST':
+        puntos=request.POST.get("puntos", None)
+        data= Producto.objects.get(id_producto=id_producto)
+        data.puntos=puntos
+        data.save()
+        return  redirect("/puntos")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def eliminar_puntos(request,id_producto):
+    try:
+        data_producto=Producto.objects.get(id_producto=id_producto)
+        data_producto.puntos=0
+        data_producto.save()
+        return  redirect("/puntos")
+    except:
+        response_data= 'Ha ocurrido un error, intente de nuevo'
+        html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+        return JsonResponse({'html': html, 'result': "error"})
