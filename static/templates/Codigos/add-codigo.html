@@ -143,7 +143,7 @@
             var input = document.getElementById("fromDate");
             input.setAttribute("max", this.value);
         }
-
+        document.getElementById("codigo").defaultValue = Math.random().toString(36).substr(2, 6);
     });
 
     var loadImage = function(event) {
@@ -187,7 +187,7 @@
                 <div class="row fila">
                     <div class="col-md-8 input-container">
                         <label>Código:</label>
-                        <input type="text" class="form-control input" maxlength="20" name="nombre" required>
+                        <input type="text" class="form-control input" id ="codigo" maxlength="20" name="nombre" required>
                     </div>
                     <div class="col-md-4 input-container">
                         <label>Monto a gastar:</label>

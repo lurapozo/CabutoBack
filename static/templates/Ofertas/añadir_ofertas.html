@@ -111,6 +111,10 @@
         font-size: 10px;
         font-family: inherit;
     }
+    #fromDate, #toDate{
+        color: #0F195E;
+        background: #D8D9DD;
+    }
     .input-container .input, select {
         background: #EDEEF0;
     }
@@ -133,7 +137,37 @@
     		    location = '/ofertas/';
         	}
         });
+        var now = new Date();
+        var month = (now.getMonth() + 1);
+        var day = now.getDate();
+        if (month < 10)
+            month = "0" + month;
+        if (day < 10)
+            day = "0" + day;
+        var today = now.getFullYear() + '-' + month + '-' + day;
+        var from = document.getElementById("fromDate");
+        from.setAttribute("min", today);
+        var to = document.getElementById("toDate");
+        to.setAttribute("min", today);
+        document.getElementById("fromDate").onchange = function () {
+            var input = document.getElementById("toDate");
+            input.setAttribute("min", this.value);
+        }
+        document.getElementById("toDate").onchange = function () {
+            var input = document.getElementById("fromDate");
+            input.setAttribute("max", this.value);
+        }
     });
+
+        $('textarea').keyup(function () {
+
+        var characterCount = $(this).val().length,
+            current = $('#current'),
+            maximum = $('#maximum'),
+            theCount = $('#the-count');
+
+        current.text(characterCount);
+        });
 
     var loadImage = function(event) {
         var output = document.getElementById('img-subir');
@@ -181,7 +215,16 @@
                 <div class="input-container">
                     <label>Descripción de la Oferta</label>
                     <textarea class="form-control input" name="descripcion" required></textarea>
-
+		        </div>
+		        <div class="row fila">
+                    <div class="col-md-6 input-container">
+                        <label>Fecha inicio:</label>
+                        <input type='date' class="form-control" id='fromDate' name="from" required/>
+    		        </div>
+                    <div class="col-md-6 input-container">
+    			        <label>Fecha fin:</label>
+    			        <input type='date' class="form-control" id='toDate' name="to" required/>
+    		        </div>
 		        </div>
                 <br>
                 <div class="input-container">

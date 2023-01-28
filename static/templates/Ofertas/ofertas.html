@@ -224,7 +224,7 @@
                 <th>Precio sin oferta</th>
                 <th>Precio Oferta</th>
                 <th>Cantidad Disponible</th>
-                <th>Estado</th>
+
                 <th> </th>
                 <th></th>
                 </tr>
@@ -239,16 +239,7 @@
                     <td>{{data.precioAntes}}</td>
                     <td>{{data.precio}}</td>
                     <td>{{data.cantidad}}</td>
-                    <td>
-                        <label class="switch">
-                        {% if data.estado == "A" %}
-                            <input type="checkbox" class="checkbox" onclick="cambiarEstado({{data.id_oferta}})" checked/>
-                        {% else %}
-                            <input type="checkbox" class="checkbox" onclick="cambiarEstado({{data.id_oferta}})"/>
-                        {% endif %}
-                            <div class=""></div>
-                        </label>
-                    </td>
+
                     <td>
                         <div class = "iconos">
                         <a class="btn btn-sm edit" href="editar_ofertas/{{ data.id_oferta }}"><img class="img-editar" src="{% static 'img/iconos_administrador/editar.png' %}"></a>

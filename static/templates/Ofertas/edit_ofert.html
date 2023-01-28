@@ -132,6 +132,26 @@
     		    location = '/ofertas/';
         	}
         });
+        var now = new Date();
+        var month = (now.getMonth() + 1);
+        var day = now.getDate();
+        if (month < 10)
+            month = "0" + month;
+        if (day < 10)
+            day = "0" + day;
+        var today = now.getFullYear() + '-' + month + '-' + day;
+        var from = document.getElementById("fromDate");
+        from.setAttribute("min", today);
+        var to = document.getElementById("toDate");
+        to.setAttribute("min", today);
+        document.getElementById("fromDate").onchange = function () {
+            var input = document.getElementById("toDate");
+            input.setAttribute("min", this.value);
+        }
+        document.getElementById("toDate").onchange = function () {
+            var input = document.getElementById("fromDate");
+            input.setAttribute("max", this.value);
+        }
     });
 
     function limpiarCampos() {
@@ -151,6 +171,41 @@
     	if (! verificacion) {alert("Por favor ingrese la información requerida.")}
     	return verificacion
     }
+    $('textarea').keyup(function () {
+
+        var characterCount = $(this).val().length,
+            current = $('#current'),
+            maximum = $('#maximum'),
+            theCount = $('#the-count');
+
+        current.text(characterCount);
+
+        //Colores
+        if (characterCount < 20) {
+            current.css('color', '#666');
+        }
+        if (characterCount > 20 && characterCount < 30) {
+            current.css('color', '#6d5555');
+        }
+        if (characterCount > 30 && characterCount < 50) {
+            current.css('color', '#793535');
+        }
+        if (characterCount > 50 && characterCount < 75) {
+            current.css('color', '#841c1c');
+        }
+        if (characterCount > 75 && characterCount < 80) {
+            current.css('color', '#8f0001');
+        }
+
+        if (characterCount >= 80) {
+            maximum.css('color', '#8f0001');
+            current.css('color', '#8f0001');
+            theCount.css('font-weight', 'bold');
+        } else {
+            maximum.css('color', '#666');
+            theCount.css('font-weight', 'normal');
+        }
+    });
 </script>
 <div id="popup" class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
@@ -173,9 +228,19 @@
                 <div class="input-container">
                     <label>Descripción de la Oferta</label>
                     <textarea class="form-control input" id="descripcion"name="descripcion"  required>{{datos_mostrar.descripcion}}</textarea>
-
 		        </div>
                 <br>
+                <div class="row fila">
+                    <div class="input-container">
+                        <label>Fecha inicio:</label>
+                        <input type='date' class="form-control" id='fromDate' name="from" value={{inicio}} required/>
+    		        </div>
+                    <div class="input-container">
+    			        <label>Fecha fin:</label>
+    			        <input type='date' class="form-control" id='toDate' name="to" value={{fin}} required/>
+    		        </div>
+		        </div>
+		        <br>
                 <div class="input-container">
                     <div class = "row precio-stock">
                         <div class = "col-md-6 precio">

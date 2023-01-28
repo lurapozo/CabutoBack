@@ -98,6 +98,9 @@
             });
         });
 
+        $(document).on('hidden.bs.modal', function () {
+        document.location.reload();
+    });
 
         $('.add').click(function(){
             fila=$("#fila").html()

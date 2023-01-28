@@ -221,14 +221,28 @@
         <div class="row contener-notificaciones">
             <div class="col-md-6 contenedor-texto">
                 <div class="input-container">
-                    <label>1usd equivale a:</label>
-                    <input type="number" class="form-control input" name="dtp" value="{{puntos.dolarAPuntos}}" required>
+                    <label>El usuario gasta:</label>
+                    <input type="number" class="form-control input" name="dtp" value="{{puntos.dolarAPuntos}}" required>usd
 		        </div>
             </div>
             <div class="col-md-6 contenedor-texto">
                 <div class="input-container">
-                    <label>100ptos equivale a:</label>
-                    <input type="number" class="form-control input" name="ptd" value="{{puntos.puntosADolar}}" required>
+                    <label>El usuario obtiene:</label>
+                    <input type="number" class="form-control input" name="ptd" value="{{puntos.puntosADolar}}" required>puntos
+		        </div>
+            </div>
+        </div>
+        <div class="row contener-notificaciones">
+            <div class="col-md-6 contenedor-texto">
+                <div class="input-container">
+                    <label>El usuario gasta:</label>
+                    <input type="number" class="form-control input" name="ptt" value="{{puntos.puntosATarjeta}}" required>puntos
+		        </div>
+            </div>
+            <div class="col-md-6 contenedor-texto">
+                <div class="input-container">
+                    <label>El usuario obtiene:</label>
+                    <input type="number" class="form-control input" name="ttp" value="{{puntos.tarjetaAPuntos}}" required>usd en tarjeta
 		        </div>
             </div>
         </div>
