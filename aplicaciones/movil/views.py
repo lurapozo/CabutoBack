@@ -2753,11 +2753,39 @@ def getPublicidadInferior(request):
     return HttpResponse(status = 400)
 
 
+@csrf_exempt
+def getPremios(request):
+    if request.method == 'GET':
+        res = []
+        premios = Premios.objects.filter(fecha_inicio__lte=datetime.today())
+        premios = premios.filter(fecha_fin__gte=datetime.today())
+        for premio in premios:
+            dic = {"nombre": premio.nombre, "img": premio.photo_url, "descripcion": premio.descripcion, "cantidad": premio.cantidad, "puntos": premio.puntos, "fecha_fin": premio.fecha_fin}
+            res.append(dic)
 
+        return JsonResponse(res, safe = False)
+    return HttpResponse(status = 400)
 
+@csrf_exempt
+def getPuntosPersonales(request, id):
+    if request.method == 'GET':
+        cliente = Cliente.objects.get(id_cliente = id)
+        dic = {"nombre":cliente.nombre , "puntos":cliente.puntos}
+        return JsonResponse(dic, safe = False)
+    return HttpResponse(status = 400)
 
+@csrf_exempt
+def getPremiosPersonales(request, id):
+    if request.method == 'GET':
+        res = []
+        premios = Premios_Cliente.objects.filter(id_cliente = id)
+        for premiop in premios:
+            dic = {"nombre": premiop.id_premio.nombre, "img": premiop.id_premio.photo_url, "descripcion": premiop.id_premio.descripcion, "puntos": premiop.id_premio.puntos, "fecha_canje": premiop.fecha_canje, "fecha_entrega": premiop.fecha_entrega}
+            res.append(dic)
 
+        return JsonResponse(res, safe = False)
 
+    return HttpResponse(status = 400)
 
 
 
