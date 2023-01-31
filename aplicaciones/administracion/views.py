@@ -2254,6 +2254,8 @@ def puntos_page(request):
 	    puntos=Puntos.objects.get(id_puntos=1)
 	    dolarAPuntos=puntos.dolarAPuntos
 	    puntosADolar=puntos.puntosADolar
+	    tarjetaAPuntos=puntos.tarjetaAPuntos
+	    puntosATarjeta=puntos.puntosATarjeta
 	    data_puntos=Producto.objects
 	    valor = request.GET.get("busqueda")
 	    if request.GET.get("busqueda")!=None:
@@ -2270,7 +2272,7 @@ def puntos_page(request):
 	    except EmptyPage:
 	    	puntos = paginator.page(paginator.num_pages)
 
-	    return render(request, "Puntos/puntos.html",{"datos":puntos,"buscar":valor, "dolarAPuntos":dolarAPuntos, "puntosADolar":puntosADolar, "productosLista":productosLista})
+	    return render(request, "Puntos/puntos.html",{"datos":puntos,"buscar":valor, "dolarAPuntos":dolarAPuntos, "puntosADolar":puntosADolar, "productosLista":productosLista, "puntosATarjeta":puntosATarjeta, "tarjetaAPuntos":tarjetaAPuntos})
 	return HttpResponse(status=400)
 
 @login_required(login_url='/login/')
@@ -2297,8 +2299,12 @@ def puntosxpuntos(request):
     elif request.method == 'POST':
         dtp = request.POST.get('dtp', None)
         ptd = request.POST.get('ptd', None)
+        ptt = request.POST.get('ptt', None)
+        ttp = request.POST.get('ttp', None)
         puntos.dolarAPuntos=dtp
         puntos.puntosADolar=ptd
+        puntos.puntosATarjeta=ptt
+        puntos.tarjetaAPuntos=ttp
         puntos.save()
         return  redirect("/puntos")
     return HttpResponse(status=400)
@@ -2328,3 +2334,178 @@ def eliminar_puntos(request,id_producto):
         response_data= 'Ha ocurrido un error, intente de nuevo'
         html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
         return JsonResponse({'html': html, 'result': "error"})
+
+@login_required(login_url='/login/')
+def premios_page(request):
+	if request.method=='GET':
+	    premiosLista= Premios.objects.all().order_by("nombre","-id_prermio")
+	    data_premios=Premios.objects
+	    valor = request.GET.get("busqueda")
+	    if request.GET.get("busqueda")!=None:
+	        data_premios= data_premios.filter(nombre__icontains=str(valor))
+	    #data_puntos=data_puntos.order_by("-id_publicidad")
+	    data_premios= data_premios.exclude(puntos=0)
+
+	    page = request.GET.get('page', 1)
+	    paginator = Paginator(data_premios, 5)
+	    try:
+	    	premios = paginator.page(page)
+	    except PageNotAnInteger:
+	    	premios = paginator.page(1)
+	    except EmptyPage:
+	    	premios = paginator.page(paginator.num_pages)
+
+	    return render(request, "Premios/premios.html",{"datos":premios,"buscar":valor})
+	return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def add_premios(request):
+    if request.method=='GET':
+        return render(request, "Premios/add-premios.html")
+    elif request.method == 'POST':
+        inicio=request.POST.get("from", None)
+        fin=request.POST.get("to", None)
+        name = request.POST.get('nombre', None)
+        description = request.POST.get('descripcion', None)
+        stock = request.POST.get('cantidad', None)
+        puntos = request.POST.get('puntos', None)
+        imagen = request.FILES.get('image', None)
+        premio = Premios(nombre=name,descripcion=description,cantidad=stock,puntos=puntos,fecha_inicio=inicio,fecha_fin=fin,image=imagen)
+        premio.save()
+        return  redirect("/premios")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def add_premios2(request):
+    if request.method=='GET':
+        productosLista= Producto.objects.all().order_by("nombre","-id_producto")
+        return render(request, "Premios/add-premios2.html",{"productosLista":productosLista})
+    elif request.method == 'POST':
+        idproducto = request.POST.get('producto', None)
+        producto= Producto.objects.get(id_producto=idproducto)
+
+        inicio=request.POST.get("from", None)
+        fin=request.POST.get("to", None)
+        name = producto.nombre
+        description = request.POST.get('descripcion', None)
+        stock = producto.stock_disponible
+        puntos = request.POST.get('puntos', None)
+        imagen = producto.image
+        premio = Premios(nombre=name,descripcion=description,cantidad=stock,puntos=puntos,fecha_inicio=inicio,fecha_fin=fin,image=imagen)
+        premio.save()
+        return  redirect("/premios")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def tipo_premios(request):
+    if request.method=='GET':
+        return render(request, "Premios/tipo-premios.html")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def editar_premios(request, id_premio):
+    if request.method=='GET':
+        data_premio = Premios.objects.get(id_premio=id_premio)
+        return render(request, "Premios/edit-premios.html",{"datos_mostrar":data_premio, "inicio":data_premio.fecha_inicio.strftime("%Y-%m-%d"), "fin":data_premio.fecha_fin.strftime("%Y-%m-%d")})
+    elif request.method == 'POST':
+        data= Premios.objects.get(id_premio=id_premio)
+        data.nombre=request.POST.get("nombre", None)
+        data.descripcion=request.POST.get("descripcion", None)
+        data.cantidad=request.POST.get("cantidad", None)
+        data.puntos=request.POST.get("puntos", None)
+        data.fecha_inicio=request.POST.get("from", None)
+        data.fecha_fin=request.POST.get("to", None)
+        imagen = request.FILES.get("image", None)
+        if(imagen != None):
+            data.image.delete()
+            data.image=imagen
+        data.save()
+        return  redirect("/premios")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def eliminar_premios(request,id_premio):
+    try:
+        data_premio=Premios.objects.get(id_premio=id_premio)
+        data_premio.delete()
+        return  redirect("/premios")
+    except:
+        response_data= 'Ha ocurrido un error, intente de nuevo'
+        html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+        return JsonResponse({'html': html, 'result': "error"})
+
+
+@login_required(login_url='/login/')
+def historial_premios_page(request):
+    if request.method=='GET':
+        orden=request.GET.get("filtro")
+        desde=request.GET.get("from")
+        hasta=request.GET.get("to")
+        data_premio=Premios_Cliente.objects.all().order_by("-id_premioXcliente")
+        if request.GET.get("from")!=None and request.GET.get("to")!=None:
+            data_premio=data_premio.filter(fecha_canje__range=[desde, hasta]).order_by("-id_premioXcliente")
+        elif request.GET.get("from")!=None:
+            data_premio= data_premio.select_related().filter(fecha_canje__gte=desde).order_by("-id_premioXcliente")
+        elif request.GET.get("to")!=None:
+            data_premio= data_premio.filter(fecha_canje__lte=hasta).order_by("-id_premioXcliente")
+        print(data_premio)
+        if orden != None:
+            if orden == 'fecha':
+                data_premio=data_premio.order_by('-fecha_canje',"-id_premioXcliente")
+            elif orden == 'cliente':
+                data_premio=data_premio.order_by('id_cliente__nombre','id_cliente__apellido',"-id_premioXcliente")
+        todos=data_premio.select_related()
+        espera=data_premio.select_related().filter(estado__in=['Recibido'])
+
+        if orden != None:
+            if orden == 'fecha':
+                espera=espera.order_by("-estado",'-fecha_canje',"-id_premioXcliente")
+            elif orden == 'cliente':
+                espera=espera.order_by("-estado",'id_cliente__nombre','id_cliente__apellido',"-id_premioXcliente")
+        else:
+            espera=espera.order_by("-id_premioXcliente")
+        print(data_premio)
+
+        entregados=data_premio.select_related().filter(estado="Entregado")
+
+        pagina="THome"
+        page = request.GET.get('page', 1)
+        page0 = request.GET.get('page0', 1)
+        if request.GET.get('page0') != None:
+            pagina="tMenu0"
+        page1 = request.GET.get('page1', 1)
+        if request.GET.get('page1') != None:
+            pagina="tMenu1"
+
+        paginator = Paginator(todos, 15)
+        paginator0 = Paginator(espera, 1000000)
+        paginator1 = Paginator(entregados, 15)
+        try:
+            pedidos = paginator.page(page)
+            espera = paginator0.page(page0)
+            entregados = paginator1.page(page1)
+        except PageNotAnInteger:
+            pedidos = paginator.page(1)
+            espera = paginator0.page(1)
+            entregados = paginator1.page(1)
+        except EmptyPage:
+            pedidos = paginator.page(paginator.num_pages)
+            espera = paginator0.page(paginator0.num_pages)
+            entregados = paginator1.page(paginator3.num_pages)
+        diccionario={
+           "datos":pedidos, "espera":espera, "entregados":entregados,
+           "filtro":orden,"desde":desde,"hasta":hasta,"tab":pagina}
+        return render(request, "HistorialPremios/historialPremios.html",diccionario)
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def detalle_premios(request,id_premioXcliente):
+    cliente_premio=Premios_Cliente.objects.get(id_premioXcliente=id_premioXcliente)
+    premio=cliente_premio.id_premio
+    cliente=cliente_premio.id_cliente
+    context={"data": cliente_premio,"premio":premio,"cliente":cliente}
+    return render(request, "HistorialPremios/detalle-premios.html",context)

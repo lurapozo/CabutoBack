@@ -1,0 +1,220 @@
+{% load static %}
+<style>
+    .modal-dialog{
+        max-width: 35rem;
+    }
+    .modal-content{
+        border-radius: .7rem;
+        height: 90%;
+    }
+    .modal-body{
+        padding: 2rem 0rem 2rem 2rem;
+        overflow-y: auto;
+    }
+    .modal-header{
+        align-items: center;
+        border-width: 0px;
+        padding: 2rem;
+        padding-bottom: 0rem;
+    }
+    .modal-header .nombre-cliente{
+        margin: 0;
+    }
+    .modal-body img{
+        height: 4.5rem;
+    width: 4.5rem;
+    border-radius: 50%;
+    }
+    .campos .left {
+        text-align: left;
+        font-size: 0.7rem;
+        color: gray;
+        width: 30%;
+        margin-bottom: 0px;
+        font-weight: bold;
+    }
+    .campos .right {
+        text-align: left;
+        width: 55%;
+        font-size: 1rem;
+        font-weight: bold;
+        color: #0F195E;
+        margin-bottom: 0px;
+    }
+    .campos > p{
+        display: table-cell;
+    }
+    .campos, .valores{
+        display: table;
+        margin: 0px auto;
+        width: 100%;
+
+    }
+    .contener-datos{
+        display:flex;
+        justify-content:center;
+        align-items:start;
+    }
+    .imagen{
+        width:25%;
+        text-align: center;
+    }
+    .datos{
+        width:75%;
+    }
+    .nombre-cliente{
+        font-weight: bolder;
+        margin-bottom: 1rem;
+        color: #0F195E;
+        padding: 0px !important;
+    }
+    .valores .left {
+        text-align: right;
+        font-size: 0.7rem;
+        color: #FE3A00;
+        width: 75%;
+        padding-right: 10px;
+        font-style: italic;
+        margin-bottom: 0px;
+    }
+    .valores .right {
+        text-align: left;
+        width: 25%;
+        padding-left:  10px;
+        font-size: 1rem;
+        font-weight: bold;
+        color:#0F195E;
+        margin-bottom:0px;
+    }
+    .valores > p{
+        display: table-cell;
+    }
+    .div-producto{
+        margin: auto;
+        padding: 15px 0px 0px 0px;
+        min-width: min-content;
+        max-width: 90%;
+    }
+
+    .productos{
+        text-align: center;
+        font-size: .7rem;
+    }
+    thead th{
+        background-color: #FE3A00;
+        color: white;
+        padding: 7px !important;
+        vertical-align: middle !important;
+        line-height: 1rem;
+        font-size: small;
+    }
+    tr th:first-child {
+      border-top-left-radius: 7px;
+      border-bottom-left-radius: 7px;
+    }
+    tr th:last-child {
+      border-top-right-radius: 7px;
+      border-bottom-right-radius: 7px;
+    }
+    tbody td{
+        border-top: 2px solid rgba(15,25,94,0.3) !important;
+        border-bottom: 1px solid rgba(15,25,94,0.3);
+        padding: 1.1rem !important;
+        vertical-align: middle !important;
+        color:#444242;
+    }
+    tr:first-child td {
+        border-top: none !important;
+    }
+    table th{
+        border: none !important;
+    }
+    .footer{
+        text-align:center;
+        display: block;
+        margin-top: 1rem;
+    }
+    .btn-cancelar{
+        background-color: #87868A;
+    }
+    .btn{
+        color: white;
+        width: 8rem;
+        text-transform: uppercase;
+        font-size: .7rem;
+        font-weight: bolder;
+        padding: 10px;
+    }
+    .btn-sucess{
+        background: linear-gradient(to right, #2153FF, #0F195E);
+    }
+    .justificacion{
+        background-color: #D8D9DD;
+        border-radius: 7px;
+        resize: none;
+        width: 100%;
+        border-width: 0px;
+    }
+    .direccion{
+        color: #007bff !important;
+        cursor: pointer;
+        font-size: small;
+        margin-left: 15px;
+    }
+
+</style>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $.mCustomScrollbar.defaults.scrollButtons.enable=true;
+        $("#body-modal").mCustomScrollbar({
+            theme:"light"
+        });
+    });
+</script>
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="nombre-cliente">{{cliente.nombre}} {{cliente.apellido}}</h3>
+            <button type="button" class="close cerrar-modal" data-dismiss="modal">&times;</button>
+        </div>
+        <div id="body-modal" class="modal-body mCustomScrollbar">
+            <div class="contener-datos">
+                <div class="imagen">
+                    {% if cliente.usuario.foto != " " and cliente.usuario.photo_url %}
+                        <img src={{cliente.usuario.photo_url}}>
+                    {% else %}
+                        <img src="{% static 'img/iconos_administrador/avatar.png' %}">
+                    {% endif %}
+                </div>
+                <div class="datos">
+                    <div class="campos" >
+                      <label class="left">Estado: </label>
+                      <label class="right">{{data.estado}}</label>
+                    </div>
+                    <div class="campos" >
+                      <label class="left">Nombres: </label>
+                      <label class="right">{{cliente.nombre}} {{cliente.apellido}}</label>
+                    </div>
+                    <div class="campos" >
+                      <label class="left">RUC/Cédula: </label>
+                      <label class="right">{{cliente.usuario.cedula}}</label>
+                    </div>
+                    <div class="campos" >
+                      <label class="left">Teléfono: </label>
+                      <label class="right">{{cliente.telefono}}</label>
+                    </div>
+                    <div class="campos">
+                      <label class="left">Fecha: </label>
+                      <label class="right">{{ data.fecha_canje | date:"d/m/Y" }}</label>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+                <button class="btn btn-sucess" id="guardar-btn" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>

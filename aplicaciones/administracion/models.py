@@ -22,7 +22,6 @@ class Usuario(models.Model):
 	registro = models.DateTimeField(auto_now_add=True)
 	codigo_unico=models.CharField(max_length=100,null=True)
 	token=models.CharField(max_length=500,default = "0000")
-	puntos=models.IntegerField(default = 0)
 	def __str__(self):
 		return self.correo
 
@@ -131,6 +130,7 @@ class Cliente(models.Model):
 	direccion = models.CharField(max_length=100, default = "NONE")
 	fecha_Nac=models.DateField(default=datetime.now)
 	usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
+	puntos=models.IntegerField(default = 0)
 	def __str__(self):
 		return '%s %s' %(self.nombre, self.apellido)
 
@@ -560,3 +560,35 @@ class Puntos(models.Model):
     id_puntos =models.AutoField(primary_key=True)
     dolarAPuntos =models.IntegerField(default=0)
     puntosADolar =models.IntegerField(default=0)
+    puntosATarjeta =models.IntegerField(default=0)
+    tarjetaAPuntos =models.IntegerField(default=0)
+
+class Premios(models.Model):
+    id_premio =models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=100)
+    image=models.ImageField()
+    descripcion = models.CharField(max_length=300)
+    cantidad=models.IntegerField()
+    puntos=models.IntegerField()
+    fecha_inicio=models.DateField()
+    fecha_fin=models.DateField()
+
+    def __str__(self):
+        return self.asunto
+
+    @property
+    def photo_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
+
+class Premios_Cliente(models.Model):
+    Estado = (
+        ('Entregado', 'Entregado'),
+        ('Recibido', 'Recibido'),
+    )
+    id_premioXcliente =  models.AutoField(primary_key=True)
+    fecha_canje=models.DateField()
+    fecha_entrega=models.DateField(null=True)
+    id_premio = models.ForeignKey(Premios,on_delete=models.SET_NULL,null=True)
+    id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL,null=True)
+    estado= models.CharField(max_length=10,choices=Estado,default='Recibido',)

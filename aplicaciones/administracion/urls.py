@@ -94,10 +94,24 @@ urlpatterns = [
     url(r'^publicidad/add_publicidades/', agregar_publicidad, name="add_publicidades"),
     url(r'^publicidad/eliminar_publicidad/(?P<id_publicidad>\d+)', eliminar_publicidad, name="eliminar_publicidad"),
     url(r'^publicidad/editar_publicidad/(?P<id_publicidad>\d+)', editar_publicidad, name="editar_publicidad"),
-    
+
     path('puntos/', puntos_page),
 	url(r'^puntos/editar_puntos/(?P<id_producto>\d+)', editar_puntos, name="editar_puntos"),
 	url(r'puntos/add_puntos/', add_puntos, name="add_puntos"),
     url(r'^puntos/eliminar_puntos/(?P<id_producto>\d+)', eliminar_puntos, name="eliminar_puntos"),
     url(r'puntos/puntosxpuntos/', puntosxpuntos, name="puntosxpuntos"),
+
+    path('premios/', premios_page),
+    url(r'premios/add_premios/', add_premios, name="add_premios"),
+    url(r'premios/add_premios2/', add_premios2, name="add_premios2"),
+    url(r'premios/tipo_premios/', tipo_premios, name="tipo_premios"),
+    url(r'^premios/editar_premios/(?P<id_premio>\d+)', editar_premios, name="editar_premios"),
+	url(r'^premios/eliminar_premios/(?P<id_premio>\d+)', eliminar_premios, name="eliminar_premios"),
+
+    path('historial_premios/', historial_premios_page),
+    url(r'^detalle_premios/(?P<id_premioXcliente>\d+)', detalle_premios, name="detalle_premios"),
+
+
+
+
 ]

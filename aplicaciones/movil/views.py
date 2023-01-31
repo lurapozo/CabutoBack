@@ -2728,6 +2728,8 @@ def getPublicidadSuperior(request):
     if request.method == 'GET':
         res = []
         publicidades = Publicidad.objects.filter(tipo = 'Superior')
+        publicidades = publicidades.filter(fecha_inicio__lte=datetime.today())
+        publicidades = publicidades.filter(fecha_fin__gte=datetime.today())
         for publicidad in publicidades:
             dic = {"nombre": publicidad.nombre, "img": publicidad.photo_url, "link": publicidad.url}
             res.append(dic)
@@ -2741,9 +2743,26 @@ def getPublicidadInferior(request):
     if request.method == 'GET':
         res = []
         publicidades = Publicidad.objects.filter(tipo = 'Inferior')
+        publicidades = publicidades.filter(fecha_inicio__lte=datetime.today())
+        publicidades = publicidades.filter(fecha_fin__gte=datetime.today())
         for publicidad in publicidades:
             dic = {"nombre": publicidad.nombre, "img": publicidad.photo_url, "link": publicidad.url}
             res.append(dic)
 
         return JsonResponse(res, safe = False)
     return HttpResponse(status = 400)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
