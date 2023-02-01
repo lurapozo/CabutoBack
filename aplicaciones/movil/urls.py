@@ -70,4 +70,7 @@ urlpatterns = [
     path('addToken/',addToken),
     path('getPublicidadSuperior/',getPublicidadSuperior),
     path('getPublicidadInferior/',getPublicidadInferior),
+    path('premios/', getPremios),
+    path('misPuntos/<int:id>', getPuntosPersonales),
+    path('misPremios/<int:id>', getPremiosPersonales)
 ]
