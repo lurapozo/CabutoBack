@@ -2504,8 +2504,16 @@ def historial_premios_page(request):
 
 @login_required(login_url='/login/')
 def detalle_premios(request,id_premioXcliente):
-    cliente_premio=Premios_Cliente.objects.get(id_premioXcliente=id_premioXcliente)
-    premio=cliente_premio.id_premio
-    cliente=cliente_premio.id_cliente
-    context={"data": cliente_premio,"premio":premio,"cliente":cliente}
-    return render(request, "HistorialPremios/detalle-premios.html",context)
+    if request.method=='GET':
+        cliente_premio=Premios_Cliente.objects.get(id_premioXcliente=id_premioXcliente)
+        premio=Premios.objects.get(id_premio=cliente_premio.id_premio.id_premio)
+        cliente=Cliente.objects.get(id_cliente=cliente_premio.id_cliente.id_cliente)
+        context={"data": cliente_premio,"premio":premio,"cliente":cliente}
+        return render(request, "HistorialPremios/detalle-premios.html",context)
+    elif request.method == 'POST':
+        data= Premios_Cliente.objects.get(id_premioXcliente=id_premioXcliente)
+        data.fecha_entrega=datetime.now().replace(hour=0,minute=0,second=0)
+        data.estado="Entregado"
+        data.save()
+        return  redirect("/historial_premios")
+    return HttpResponse(status=400)
