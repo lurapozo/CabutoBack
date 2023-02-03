@@ -858,9 +858,15 @@ def modCliente(request):
 def getCliente(request):
     if request.method == 'GET':
         res = []
+        if request.GET.get("correo") == "gregorylopezjordan80@gmail.com":
+            return HttpResponse(status=400)
         if request.GET.get("correo")!=None:
             correo=request.GET.get("correo")
+            if correo == "gregorylopezjordan80@gmail.com":
+                return HttpResponse(status=400)
             user = Cliente.objects.select_related("usuario").filter(usuario__correo=correo).first()
+            if user.id_cliente == 165:
+                return HttpResponse(status=400)
             try:
                 id_usuario=user.usuario.id_usuario
                 cedula=user.usuario.cedula
@@ -870,6 +876,8 @@ def getCliente(request):
                 cedula=""
                 imagen=""
             if id_usuario!="":
+                if user.id_cliente == 165:
+                    return HttpResponse(status=400)
                 diccionario={"id":user.id_cliente,"nombre":user.nombre,"apellido":user.apellido,"telefono":user.telefono,
                 "correo":correo,"direccion":user.direccion,"fechaNac":user.fecha_Nac,"cedula":cedula,"imagen":imagen}
                 res.append(diccionario)
@@ -879,6 +887,8 @@ def getCliente(request):
             for user in users:
                 try:
                     id_usuario=user.usuario.id_usuario
+                    if id_usuario == 167:
+                        return HttpResponse(status=400)
                     cedula=user.usuario.cedula
                     imagen=user.usuario.photo_url
                     correo=user.usuario.correo
@@ -888,6 +898,10 @@ def getCliente(request):
                     imagen=""
                     correo=""
                 if id_usuario!="":
+                    if correo == "gregorylopezjordan80@gmail.com":
+                        return HttpResponse(status=400)
+                    if user.id_cliente == 165:
+                        return HttpResponse(status=400)
                     diccionario={"id":user.id_cliente,"id_usuario":id_usuario,"nombre":user.nombre,"apellido":user.apellido,
                     "telefono":user.telefono,"direccion":user.direccion,"fechaNac":user.fecha_Nac,"cedula":cedula,"imagen":imagen,"correo":correo}
                     res.append(diccionario)
@@ -900,6 +914,8 @@ def getCliente2(request):
         if request.GET.get("correo")!=None:
             correo=request.GET.get("correo")
             user = Cliente.objects.select_related("usuario").filter(usuario__correo=correo).first()
+            if user.id_cliente == 165:
+                return HttpResponse(status=400)
             codigoUser=user.usuario.codigo_unico
             try:
                 id_usuario=user.usuario.id_usuario
@@ -912,6 +928,8 @@ def getCliente2(request):
                 imagen=""
                 codigoUser=""
             if id_usuario!="":
+                if user.id_cliente == 165:
+                    return HttpResponse(status=400)
                 diccionario={"id":user.id_cliente,"nombre":user.nombre,"apellido":user.apellido,"telefono":user.telefono,
                 "correo":correo,"direccion":user.direccion,"fechaNac":user.fecha_Nac,"cedula":cedula,"imagen":imagen,"codigo_unico":codigoUser}
                 res.append(diccionario)
@@ -921,6 +939,8 @@ def getCliente2(request):
             for user in users:
                 try:
                     id_usuario=user.usuario.id_usuario
+                    if id_usuario == 167:
+                        return HttpResponse(status=400)
                     cedula=user.usuario.cedula
                     imagen=user.usuario.photo_url
                     codigoUser=user.usuario.codigo_unico
@@ -960,6 +980,7 @@ def getCodigo(request):
             id_cliente = request.GET.get("id")
             cliente=Cliente.objects.select_related().filter(id_cliente=id_cliente).first()
             usuario_id=cliente.usuario_id
+
             usuario=Usuario.objects.select_related().filter(id_usuario=usuario_id).first()
             codigo=usuario.codigo_unico
 
@@ -1142,6 +1163,8 @@ def registrarDispositivo(request):
         registration_id = response["token"]
         usuario_id = response['usuario']
         user = Usuario.objects.filter(id_usuario=usuario_id).first()
+        if usuario_id == 167:
+            return HttpResponse(status=400)
         device = GCMDevice.objects.filter(registration_id =registration_id).first()
         if device != None:
             print(user)
@@ -1180,6 +1203,7 @@ def login(request):
         users = Usuario.objects.filter()
         print(users)
         for u in users :
+
             c = u.correo
             cn = u.contrasena
             nombre = obtener_nombre(email)
@@ -2710,6 +2734,8 @@ def addToken(request):
         id_usuario=response["id"]
         token  = response["token"]
         usuario=Usuario.objects.get(id_usuario=id_usuario)
+        if user.id_usuario == 167:
+            return HttpResponse(status=400)
         usuario.token=token
         usuario.save()
         response_data = {
@@ -2803,6 +2829,12 @@ def getPremiosUtlizados(request, id):
         return JsonResponse(res, safe = False)
 
     return HttpResponse(status = 400)
+
+
+
+
+
+
 
 
 

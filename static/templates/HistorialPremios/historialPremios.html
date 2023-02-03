@@ -418,9 +418,6 @@
         window.location.reload(1);
     }, 180000);
 </script>
-{% if recibidos %}
-    <audio src="https://cabutoshop.pythonanywhere.com/media/audio/Fit_fo_an_Autopsy-The_Conqueror.mp3" id="miAudio" autoplay></audio>
-{% endif %}
 {% timezone "America/Guayaquil" %}
 <div class="col-12">
     <div class="col-md-12">
@@ -464,8 +461,9 @@
                         <thead>
                             <tr>
                                 <th>Código</th>
-                                <th>Fecha</th>
+                                <th>Fecha De Canje</th>
                                 <th>Foto</th>
+                                <th>Premio</th>
                                 <th>Cliente</th>
                                 <th>Detalle</th>
                             </tr>
@@ -474,21 +472,22 @@
                             {% for data in espera %}
                             <a class="contenedor open-modal" data-url="/buscar_pedido/{{data.id_premio.id_premio}}">
                             <tr>
-                                <td>{{data.id_premio.id_premio|stringformat:"03d"}}</td>
+                                <td>{{data.id_premioXcliente|stringformat:"03d"}}</td>
                                 <td>{{data.fecha_canje|date:"d/m/Y"}}</td>
                                 <td>
                                     <a class="contenedor open-modal" data-url="/detalle_premios/{{data.id_premio.id_premio}}">
                                         <div class="contener-columnaI">
                                             {% if data.id_cliente.usuario.foto != " " and data.id_cliente.usuario.photo_url %}
-                                                <img src={{data.id_cliente.usuario.photo_url}}>
+                                                <img src={{data.id_premio.photo_url}}>
                                             {% else %}
                                                 <img src="{% static 'img/iconos_administrador/avatar.png' %}">
                                             {% endif %}
                                         </div>
                                     </a>
                                 </td>
+                                <td>{{data.id_premio.nombre}}</td>
                                 <td>{{data.id_cliente.nombre}} {{data.id_cliente.apellido}}</td>
-                                <td><a class="contenedor open-modal" data-url="/detalle_premios/{{data.id_premio.id_premio}}">Ver detalle</a></td>
+                                <td><a class="contenedor open-modal" data-url="/detalle_premios/{{data.id_premioXcliente}}">Ver detalle</a></td>
                             </tr>
                             </a>
                             {% endfor %}
@@ -512,18 +511,22 @@
                         <thead>
                             <tr>
                                 <th>Código</th>
-                                <th>Fecha</th>
+                                <th>Fecha De Canje</th>
                                 <th>Fecha Entrega</th>
+                                <th>Premio</th>
                                 <th>Cliente</th>
+                                <th>Detalle</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for data in entregados %}
                             <tr>
-                                <td>{{data.id_premio.id_premio|stringformat:"03d"}}</td>
+                                <td>{{data.id_premioXcliente|stringformat:"03d"}}</td>
                                 <td>{{data.fecha_canje|date:"d/m/Y"}}</td>
                                 <td>{{data.fecha_entrega|date:"d/m/Y"}}</td>
+                                <td>{{data.id_premio.nombre}}</td>
                                 <td>{{data.id_cliente.nombre}} {{data.id_cliente.apellido}}</td>
+                                <td><a class="contenedor open-modal" data-url="/detalle_premios/{{data.id_premioXcliente}}">Ver detalle</a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
