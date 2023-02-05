@@ -2344,7 +2344,7 @@ def premios_page(request):
 	    if request.GET.get("busqueda")!=None:
 	        data_premios= data_premios.filter(nombre__icontains=str(valor))
 	    #data_puntos=data_puntos.order_by("-id_publicidad")
-	    data_premios= data_premios.exclude(puntos=0)
+	    data_premios= data_premios.exclude(puntos=-100000)
 
 	    page = request.GET.get('page', 1)
 	    paginator = Paginator(data_premios, 5)

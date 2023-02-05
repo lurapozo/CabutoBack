@@ -2831,6 +2831,31 @@ def getPremiosUtlizados(request, id):
     return HttpResponse(status = 400)
 
 
+@csrf_exempt
+def recalmarPremio(request):
+    response_data = {'valid':'NO'}
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        clienteId=response["id"]
+        nombrePremio=response["premio"]
+        cliente = Cliente.objects.get(id_cliente = clienteId)
+        premio = Premios.objects.get(nombre = nombrePremio)
+        if cliente.puntos >= premio.puntos:
+            if premio.cantidad != 0:
+                premio.cantidad = premio.cantidad - 1
+                premio.save()
+                cliente.puntos = cliente.puntos - premio.puntos
+                cliente.save()
+                response_data = {'valid':'OK', 'cant':premio.cantidad, 'pnts': cliente.puntos}
+            else:
+                response_data = {'valid':'cantidad', 'cant':premio.cantidad, 'pnts': cliente.puntos}
+                return JsonResponse(response_data,safe=False)
+        else:
+            response_data = {'valid':'puntos', 'cant':premio.cantidad, 'pnts': cliente.puntos}
+            return JsonResponse(response_data,safe=False)
+
+    return JsonResponse(response_data,safe=False)
+
 
 
 
