@@ -2518,7 +2518,7 @@ def crearTarjetaRegaloMonto(request):
 
         tarjetaMonto=Tarjeta_Monto(id_cliente=clienteEmisor, monto=float(total),descripcion=descripcion)
         tarjetaMonto.save()
-        tarjetaMontoCliente=Tarjeta_Monto_Cliente(id_cliente=clienteReceptor, id_tarjeta=tarjetaMonto)
+        tarjetaMontoCliente=Tarjeta_Monto_Cliente(id_cliente=clienteReceptor, id_tarjeta=tarjetaMonto, fecha=timezone.now())
         tarjetaMontoCliente.save()
         response_data = {'valid': 'OK',}
         return JsonResponse(response_data,safe=False)
@@ -2846,6 +2846,12 @@ def recalmarPremio(request):
                 premio.save()
                 cliente.puntos = cliente.puntos - premio.puntos
                 cliente.save()
+                premCLi=Premios_Cliente.objects.filter(id_premio=premio, id_cliente=cliente, estado='Recibido').first()
+                if premCLi != None:
+                    response_data = {'valid':'existe'}
+                    return JsonResponse(response_data,safe=False)
+                premioCliente=Premios_Cliente(fecha_canje=datetime.now().replace(hour=0,minute=0,second=0),id_premio=premio,id_cliente=cliente)
+                premioCliente.save()
                 response_data = {'valid':'OK', 'cant':premio.cantidad, 'pnts': cliente.puntos}
             else:
                 response_data = {'valid':'cantidad', 'cant':premio.cantidad, 'pnts': cliente.puntos}
@@ -2856,13 +2862,19 @@ def recalmarPremio(request):
 
     return JsonResponse(response_data,safe=False)
 
-
-
-
-
-
-
-
+@csrf_exempt
+def restarPuntos(request):
+    response_data = {'valid':'NO'}
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        clienteId=response["id"]
+        puntos=response["puntos"]
+        cliente = Cliente.objects.get(id_cliente = clienteId)
+        cliente.puntos = puntos
+        cliente.save()
+        response_data = {'valid':'OK'}
+        return JsonResponse(response_data,safe=False)
+    return JsonResponse(response_data,safe=False)
 
 
 
