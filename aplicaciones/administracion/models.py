@@ -131,6 +131,7 @@ class Cliente(models.Model):
 	fecha_Nac=models.DateField(default=datetime.now)
 	usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
 	puntos=models.IntegerField(default = 0)
+	ban=models.IntegerField(default = 0)
 	def __str__(self):
 		return '%s %s' %(self.nombre, self.apellido)
 
@@ -179,6 +180,7 @@ class Pedido(models.Model):
     cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL,null=True)
     establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
     direccion=models.ForeignKey(DireccionEntrega, on_delete=models.SET_NULL, null=True)
+    puntos=models.IntegerField(default=0)
 
 class TransaccionPedido(models.Model):
     id_transaccion=models.AutoField(primary_key=True)

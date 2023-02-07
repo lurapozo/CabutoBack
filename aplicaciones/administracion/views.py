@@ -695,6 +695,9 @@ def confirmar_pedido(request, id_pedido):
     else:
 	    pedido.estado="Entregado"
 	    pedido.pagado=True
+	    elclient=Cliente.objects.get(id_cliente=pedido.cliente.id_cliente)
+	    elclient.puntos=elclient.puntos + pedido.puntos
+	    elclient.save()
 	    calificacion=CalificacionPedido(calificacion=0,pedido=pedido,justificacion="")
 	    calificacion.save()
 	    devices=GCMDevice.objects.filter(user=pedido.cliente.usuario)
@@ -705,7 +708,7 @@ def confirmar_pedido(request, id_pedido):
 	    mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" ha sido entregado, en la ventana historial de compras puede calificar su compra, esto nos ayudará a brindarle un mejor servicio."
 	    data = {"title":"Pedido entregado","titulo": "Pedido entregado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
 	    devices.send_message(mensaje, extra=data)
-	    datasend={"to": usuario.token, "notification": {"title": "Pedido entregad","subtitle": "Pedido entregado","body": mensaje,"id":pedido.id_pedido},"data": data}
+	    datasend={"to": usuario.token, "notification": {"title": "Pedido entregado","subtitle": "Pedido entregado","body": mensaje,"id":pedido.id_pedido},"data": data}
 	    response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
     pedido.save()
     pedido.save()
@@ -2517,3 +2520,21 @@ def detalle_premios(request,id_premioXcliente):
         data.save()
         return  redirect("/historial_premios")
     return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def ban(request,id_cliente):
+    try:
+        data=Cliente.objects.get(id_cliente=id_cliente)
+        if(data.ban == 1):
+            data.ban=0
+            response_data= 'El cliente ha sido baneado'
+        else:
+            data.ban=1
+            response_data= 'El cliente no esta baneado'
+        data.save()
+        html = render_to_string("Avisos/correcto.html",{"data":response_data})
+        return JsonResponse({'html': html, 'result': "ok"})
+    except:
+        response_data= 'Ha ocurrido un error, intente de nuevo'
+        html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+        return JsonResponse({'html': html, 'result': "error"})

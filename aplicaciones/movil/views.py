@@ -124,26 +124,29 @@ def getProducto(request):
     if request.method == 'GET':
         res = []
         print(request.GET.get("nombre"))
-
-
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
         if request.GET.get("nombre")!=None:
             res = []
             valor = request.GET.get("nombre")
             print("lo que recibe mi get :v ay diosito que reaccione",valor, str(valor))
             producto= Producto.objects.filter(nombre__icontains=str(valor)).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma")
             for product in producto:
-                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-                diccionario={"id":product.id_producto,"id_unico":id, "nombre":product.nombre,"descripcion":product.descripcion,
-                "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-                res.append(diccionario)
+                estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+                if estab.count() != 0:
+                    id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                    diccionario={"id":product.id_producto,"id_unico":id, "nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                    res.append(diccionario)
             return JsonResponse(res,safe=False)
         else:
             producto= Producto.objects.filter().exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma")
             for product in producto:
-                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-                diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
-                "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-                res.append(diccionario)
+                estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+                if estab.count() != 0:
+                    id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                    diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                    res.append(diccionario)
 
             return JsonResponse(res,safe=False)
 
@@ -157,28 +160,31 @@ def getProductoParcial(request, page):
     if request.method == 'GET':
         res = []
         print(request.GET.get("nombre"))
-
-
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
         if request.GET.get("nombre")!=None:
             res = []
             valor = request.GET.get("nombre")
             print("lo que recibe mi get :v ay diosito que reaccione",valor, str(valor))
             producto= Producto.objects.filter(nombre__icontains=str(valor)).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma")
             for product in producto:
-                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-                diccionario={"id":product.id_producto,"id_unico":id, "nombre":product.nombre,"descripcion":product.descripcion,
-                "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-                res.append(diccionario)
+                estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+                if estab.count() != 0:
+                    id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                    diccionario={"id":product.id_producto,"id_unico":id, "nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                    res.append(diccionario)
             return JsonResponse(res,safe=False)
         else:
             arrProducto= Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("suma", "id_producto")
             paginator = Paginator(arrProducto, per_page = 10)
             page_object = paginator.get_page(page)
             for product in page_object:
-                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-                diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
-                "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-                res.append(diccionario)
+                estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+                if estab.count() != 0:
+                    id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                    diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                    res.append(diccionario)
 
             return JsonResponse(res,safe=False)
 
@@ -194,11 +200,15 @@ def getProductoAaZ(request, page):
         arrProducto=Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('nombre')
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
         for product in page_object:
-            id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-            diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
-            "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-            res.append(diccionario)
+            estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+            if estab.count() != 0:
+                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                res.append(diccionario)
 
         return JsonResponse(res,safe=False)
     if request.method == 'POST':
@@ -213,11 +223,15 @@ def getProductoZaA(request, page):
         arrProducto=Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('-nombre')
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
         for product in page_object:
-            id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-            diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
-            "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-            res.append(diccionario)
+            estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+            if estab.count() != 0:
+                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                res.append(diccionario)
         return JsonResponse(res,safe=False)
     if request.method == 'POST':
         return addCarrito(request)
@@ -229,11 +243,15 @@ def getProductoPrecioMenor(request, page):
         arrProducto=Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('-precio')
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
         for product in page_object:
-            id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-            diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
-            "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-            res.append(diccionario)
+            estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+            if estab.count() != 0:
+                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                res.append(diccionario)
         return JsonResponse(res,safe=False)
     if request.method == 'POST':
         return addCarrito(request)
@@ -245,11 +263,15 @@ def getProductoPrecioMayor(request, page):
         arrProducto=Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by('precio')
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
         for product in page_object:
-            id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-            diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
-            "precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
-            res.append(diccionario)
+            estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+            if estab.count() != 0:
+                id=product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url, "suma": product.suma}
+                res.append(diccionario)
         return JsonResponse(res,safe=False)
     if request.method == 'POST':
         return addCarrito(request)
@@ -355,7 +377,7 @@ def getHistorial(request):
         elif request.GET.get("cliente")!=None:
             valor = request.GET.get("cliente")
             user = Cliente.objects.filter(usuario__id_usuario=valor).first()
-            pedidos = Pedido.objects.filter(cliente=user).exclude(estado="Anulado").order_by("-id_pedido").values('id_pedido', 'fecha','total')
+            pedidos = Pedido.objects.filter(cliente=user).exclude(estado="Anulado").order_by("-id_pedido").values('id_pedido', 'fecha','total', 'puntos')
             data = list(pedidos)
             return JsonResponse(data, safe=False)
     return HttpResponse(status=400)
@@ -608,6 +630,7 @@ def guardarPedido2(request):
         direccion=response["direccion"]
         tipoPago=response["tipoPago"]
         subtotal=response["subtotal"]
+        subtotal2=response["subtotal"]
         envio=response["envio"]
         descuento=response["descuento"]
         estadopedido=response["tarjetaRegalo"]
@@ -632,6 +655,8 @@ def guardarPedido2(request):
             envio=envio,total=total,cliente=user,direccion=direccion,establecimiento=establecimiento,observacion="",fecha=timezone.now())
             if(tarjeta=="monto" or tarjeta=="producto"):
                 pedido.estado="Regalo"
+            puntos = Puntos.objects.get(id_puntos = 1)
+            pedido.puntos=subtotal2 * (puntos.puntosADolar / puntos.dolarAPuntos)
             pedido.save()
             if(tarjeta=="monto"):
                 receptor=response["receptor"]
@@ -2297,6 +2322,9 @@ def detallePedido2(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,
     if total_producto > 0:
         for producto in detalle_producto:
             pro=Producto.objects.filter(id_producto=producto.id_producto.id_producto).annotate(suma=Sum('establecimiento_producto__stock_disponible')).first()
+            productoop=Producto.objects.get(id_producto=producto.id_producto.id_producto)
+            pedido.puntos=pedido.puntos + (productoop.puntos * producto.cantidad)
+            pedido.save()
             if(pro.suma-producto.cantidad>=0):
                 productoxpedido=Producto_Pedido(cantidad=producto.cantidad,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
                 productoxpedido.save()
@@ -2828,7 +2856,7 @@ def getPremiosUtlizados(request, id):
 
         return JsonResponse(res, safe = False)
 
-    return HttpResponse(status = 400)
+    JsonResponse(response_data,safe=False)
 
 
 @csrf_exempt
@@ -2842,14 +2870,14 @@ def recalmarPremio(request):
         premio = Premios.objects.get(nombre = nombrePremio)
         if cliente.puntos >= premio.puntos:
             if premio.cantidad != 0:
-                premio.cantidad = premio.cantidad - 1
-                premio.save()
-                cliente.puntos = cliente.puntos - premio.puntos
-                cliente.save()
                 premCLi=Premios_Cliente.objects.filter(id_premio=premio, id_cliente=cliente, estado='Recibido').first()
                 if premCLi != None:
                     response_data = {'valid':'existe'}
                     return JsonResponse(response_data,safe=False)
+                premio.cantidad = premio.cantidad - 1
+                premio.save()
+                cliente.puntos = cliente.puntos - premio.puntos
+                cliente.save()
                 premioCliente=Premios_Cliente(fecha_canje=datetime.now().replace(hour=0,minute=0,second=0),id_premio=premio,id_cliente=cliente)
                 premioCliente.save()
                 response_data = {'valid':'OK', 'cant':premio.cantidad, 'pnts': cliente.puntos}
@@ -2876,5 +2904,13 @@ def restarPuntos(request):
         return JsonResponse(response_data,safe=False)
     return JsonResponse(response_data,safe=False)
 
-
-
+@csrf_exempt
+def revisarBan(request, id):
+    if request.method == 'GET':
+        cliente = Cliente.objects.get(id_cliente = id)
+        if cliente.ban == 0:
+            response_data = {'valid':'OK'}
+        else:
+            response_data = {'valid':'NO'}
+        return JsonResponse(response_data,safe=False)
+    JsonResponse(response_data,safe=False)
