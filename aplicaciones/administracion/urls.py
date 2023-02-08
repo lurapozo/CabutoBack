@@ -28,6 +28,7 @@ urlpatterns = [
 	path('reclamos/', reclamo_page, name="reclamos"),
 	path('web_push/', register_wp_notifications, name='register_wp_notifications'),
 	url(r'^clientes/ver_cliente/(?P<id_cliente>\d+)', ver_cliente, name="ver_cliente"),
+	url(r'^clientes/ban/(?P<id_cliente>\d+)', ban, name="ban"),
 	url(r'^notificaciones/add_notificaciones/', agregar_notificacion, name="add_notificaciones"),
 	url(r'^notificaciones/ver_notificacion/(?P<id_notificacion>\d+)', ver_notificacion, name="ver_notificacion"),
 	url(r'^notificaciones/enviar_notificacion/(?P<id_notificacion>\d+)', enviar_notificacion, name="enviar_notificacion"),

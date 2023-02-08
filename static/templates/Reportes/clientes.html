@@ -145,6 +145,49 @@
     .buscar{
         margin-bottom= 10px;
     }
+
+    .switch > input{
+        opacity: 0;
+    }
+    .switch > div {
+      width: 60px;
+      height: 30px;
+      background: #9A9A9A;
+      z-index: 0;
+      cursor: pointer;
+      position: relative;
+      border-radius: 50px;
+      line-height: 40px;
+      text-align: right;
+      padding: 0 10px;
+      color: rgba(0,0,0,.5);
+      transition: all 250ms;
+    }
+
+    .switch > input:checked + div {
+      background: lime;
+      text-align: left;
+    }
+
+    .switch > div:before {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        left: 4px;
+        top: 3px;
+        height: 24px;
+        width: 24px;
+        background: white;
+        border-radius: 50%;
+        transition: all 200ms;
+    }
+
+    .switch > input:checked + div:before {
+      content: '';
+      position: absolute;
+      left: 32px;
+      border-radius: 50%;
+    }
 </style>
 
 <script type="text/javascript">
@@ -224,6 +267,24 @@
             }
         }
     }
+
+    function cambiarEstado(id){
+        console.log(id)
+        $.ajax({
+            beforeSend: function(){
+                $('.ajax-loader').css("visibility", "visible");
+            },
+            url: "ban/"+id,
+            success: function(data) {
+                var modalDiv = $("#modal-div");
+                modalDiv.html(data.html);
+                $("#myModal").modal();
+            },
+            complete: function(){
+                $('.ajax-loader').css("visibility", "hidden");
+            }
+        });
+    }
 </script>
 <div class="col-12">
   <div class="col-md-12">
@@ -258,6 +319,7 @@
           <th>Correo</th>
           <th>Fecha de registro</th>
           <th>Imagen</th>
+          <th>Ban</th>
           <th> </th>
         </tr>
       </thead>
@@ -274,6 +336,16 @@
             <td>{{data.usuario.registro|date:"d/m/Y"}}</td>
             <td>
                 <img src={{data.usuario.photo_url}} height="100">
+            </td>
+            <td>
+                <label class="switch">
+                    {% if data.ban == 0 %}
+                        <input type="checkbox" class="checkbox" onclick="cambiarEstado({{data.id_cliente}})" checked />
+                    {% else %}
+                        <input type="checkbox" class="checkbox" onclick="cambiarEstado({{data.id_cliente}})" />
+                    {% endif %}
+                    <div class=""></div>
+                </label>
             </td>
             <td>
                 <a class="btn btn-sm open-modal" href="ver_cliente/{{data.id_cliente}}"><img class="img-ver" src="{% static 'img/iconos_administrador/ver.png' %}"></a>

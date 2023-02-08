@@ -76,4 +76,5 @@ urlpatterns = [
     path('getPremiosUtlizados/<int:id>', getPremiosUtlizados),
     path('reclamarPremio/', recalmarPremio),
     path('restarPuntos/', restarPuntos),
+    path('revisarBan/<int:id>', revisarBan),
 ]
