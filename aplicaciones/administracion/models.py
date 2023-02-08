@@ -10,47 +10,51 @@ from django.utils.translation import gettext_lazy as _
 from django import forms
 from django.contrib.auth.models import AbstractUser
 
+#import para Chat
+from django.db.models import Count
+import uuid
+
 
 # Create your models here.
 class Usuario(models.Model):
-	id_usuario = models.AutoField(primary_key=True)
-	rol=models.CharField(max_length=150,default = "cliente")
-	cedula=models.CharField(max_length=10)
-	correo=models.EmailField(unique=True)
-	contrasena=models.CharField(max_length=64, editable=True)
-	foto=models.ImageField(default = " ")
-	registro = models.DateTimeField(auto_now_add=True)
-	codigo_unico=models.CharField(max_length=100,null=True)
-	token=models.CharField(max_length=500,default = "0000")
-	def __str__(self):
-		return self.correo
+    id_usuario = models.AutoField(primary_key=True)
+    rol=models.CharField(max_length=150,default = "cliente")
+    cedula=models.CharField(max_length=10)
+    correo=models.EmailField(unique=True)
+    contrasena=models.CharField(max_length=64, editable=True)
+    foto=models.ImageField(default = " ")
+    registro = models.DateTimeField(auto_now_add=True)
+    codigo_unico=models.CharField(max_length=100,null=True)
+    token=models.CharField(max_length=500,default = "0000")
+    def __str__(self):
+        return self.correo
 
-	@property
-	def photo_url(self):
-		if self.foto and hasattr(self.foto, 'url'):
-			return self.foto.url
+    @property
+    def photo_url(self):
+        if self.foto and hasattr(self.foto, 'url'):
+            return self.foto.url
 
 class Empleado(models.Model):
-	id_empleado = models.AutoField(primary_key=True)
-	nombre=models.CharField(max_length=100)
-	apellido=models.CharField(max_length=100)
-	rol=models.CharField(max_length=150,default = "administrador")
-	cedula=models.CharField(max_length=10)
-	telefono=models.CharField(max_length=10)
-	usuario = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, )
-	def __str__(self):
-		return self.nombre +" "+ self.apellido
+    id_empleado = models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=100)
+    apellido=models.CharField(max_length=100)
+    rol=models.CharField(max_length=150,default = "administrador")
+    cedula=models.CharField(max_length=10)
+    telefono=models.CharField(max_length=10)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.CASCADE, )
+    def __str__(self):
+        return self.nombre +" "+ self.apellido
 
 
 class Empresa(models.Model):
-	id_empresa = models.AutoField(primary_key=True)
-	nombre = models.CharField(max_length=100)
-	descripcion = models.CharField(max_length=100)
-	logo = models.ImageField()
-	razon_social=models.CharField(max_length=300)
-	ruc_cedula=models.CharField(max_length=13)
-	def __str__(self):
-		return self.nombre
+    id_empresa = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+    descripcion = models.CharField(max_length=100)
+    logo = models.ImageField()
+    razon_social=models.CharField(max_length=300)
+    ruc_cedula=models.CharField(max_length=13)
+    def __str__(self):
+        return self.nombre
 
 class RedSocial(models.Model):
     id_red=models.AutoField(primary_key=True)
@@ -64,75 +68,75 @@ class RedSocial(models.Model):
             return self.icono.url
 
 class Establecimiento(models.Model):
-	id_establecimiento=models.AutoField(primary_key=True)
-	nombre=models.CharField(max_length=100)
-	direccion=models.CharField(max_length=100)
-	telefono=models.CharField(max_length=100)
-	referencia=models.CharField(max_length=200,default = "")
-	latitud=models.FloatField()
-	longitud=models.FloatField()
-	encargado=models.CharField(max_length=100)
-	image=models.ImageField()
-	estado=models.CharField(max_length=1,default = "A")
-	def __str__(self):
-		return self.nombre
+    id_establecimiento=models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=100)
+    direccion=models.CharField(max_length=100)
+    telefono=models.CharField(max_length=100)
+    referencia=models.CharField(max_length=200,default = "")
+    latitud=models.FloatField()
+    longitud=models.FloatField()
+    encargado=models.CharField(max_length=100)
+    image=models.ImageField()
+    estado=models.CharField(max_length=1,default = "A")
+    def __str__(self):
+        return self.nombre
 
 class Horario(models.Model):
-	id_horario=models.AutoField(primary_key=True)
-	dia=models.CharField(max_length=100)
-	hora_inicio=models.CharField(max_length=100)
-	hora_fin=models.CharField(max_length=100)
-	estado=models.CharField(max_length=1,default = "A")
-	establecimiento=models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
-	def __str__(self):
-		return self.dia
+    id_horario=models.AutoField(primary_key=True)
+    dia=models.CharField(max_length=100)
+    hora_inicio=models.CharField(max_length=100)
+    hora_fin=models.CharField(max_length=100)
+    estado=models.CharField(max_length=1,default = "A")
+    establecimiento=models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
+    def __str__(self):
+        return self.dia
 
 class Categoria(models.Model):
-	id_categoria=models.AutoField(primary_key=True)
-	nombre = models.TextField()
-	image=models.ImageField()
-	id_establecimiento=models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
-	def __str__(self):
-		return self.nombre
+    id_categoria=models.AutoField(primary_key=True)
+    nombre = models.TextField()
+    image=models.ImageField()
+    id_establecimiento=models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
+    def __str__(self):
+        return self.nombre
 
-	@property
-	def photo_url(self):
-		if self.image and hasattr(self.image, 'url'):
-			return self.image.url
+    @property
+    def photo_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
 
 
 
 class Producto(models.Model):
-	id_producto = models.AutoField(primary_key=True)
-	nombre=models.CharField(max_length=100)
-	descripcion=models.CharField(max_length=300)
-	precio=models.FloatField()
-	image=models.ImageField()
-	estado=models.CharField(max_length=1,default = "A")
-	id_categoria=models.ForeignKey(Categoria,on_delete=models.SET_NULL, null=True)
-	stock_disponible=models.IntegerField()
-	puntos=models.IntegerField(default = 0)
-	def __str__(self):
-		return self.nombre
+    id_producto = models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=100)
+    descripcion=models.CharField(max_length=300)
+    precio=models.FloatField()
+    image=models.ImageField()
+    estado=models.CharField(max_length=1,default = "A")
+    id_categoria=models.ForeignKey(Categoria,on_delete=models.SET_NULL, null=True)
+    stock_disponible=models.IntegerField()
+    puntos=models.IntegerField(default = 0)
+    def __str__(self):
+        return self.nombre
 
-	@property
-	def photo_url(self):
-		if self.image and hasattr(self.image, 'url'):
-			return self.image.url
+    @property
+    def photo_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
 
 
 class Cliente(models.Model):
-	id_cliente = models.AutoField(primary_key=True)
-	nombre=models.CharField(max_length=100)
-	apellido=models.CharField(max_length=100)
-	metodo_pago= models.CharField(max_length=100, default = "Efectivo")
-	telefono =models.CharField(max_length=100, default = "NONE")
-	direccion = models.CharField(max_length=100, default = "NONE")
-	fecha_Nac=models.DateField(default=datetime.now)
-	usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
-	puntos=models.IntegerField(default = 0)
-	def __str__(self):
-		return '%s %s' %(self.nombre, self.apellido)
+    id_cliente = models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=100)
+    apellido=models.CharField(max_length=100)
+    metodo_pago= models.CharField(max_length=100, default = "Efectivo")
+    telefono =models.CharField(max_length=100, default = "NONE")
+    direccion = models.CharField(max_length=100, default = "NONE")
+    fecha_Nac=models.DateField(default=datetime.now)
+    usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
+    puntos=models.IntegerField(default = 0)
+    def __str__(self):
+        return '%s %s' %(self.nombre, self.apellido)
 
 class DireccionEntrega(models.Model):
     id_direccion=models.AutoField(primary_key=True)
@@ -192,72 +196,72 @@ class CalificacionPedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
 
 class Repartidor(models.Model):
-	id_repartidor=models.AutoField(primary_key=True)
-	nombre=models.CharField(max_length=120)
-	apellido=models.CharField(max_length=120)
-	telefono=models.CharField(max_length=120)
-	token=models.CharField(max_length=120)
-	estado=models.CharField(max_length=120)
+    id_repartidor=models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=120)
+    apellido=models.CharField(max_length=120)
+    telefono=models.CharField(max_length=120)
+    token=models.CharField(max_length=120)
+    estado=models.CharField(max_length=120)
 
 class Repartidor_Pedido(models.Model):
-	id_repedido = models.AutoField(primary_key=True)
-	id_repartidor = models.ForeignKey(Repartidor,on_delete=models.SET_NULL, null=True)
-	id_pedido = models.ForeignKey(Pedido,on_delete=models.SET_NULL, null=True)
-	hora_inicio = models.DateTimeField(default=now)
-	hora_fin = models.DateTimeField(default=now)
+    id_repedido = models.AutoField(primary_key=True)
+    id_repartidor = models.ForeignKey(Repartidor,on_delete=models.SET_NULL, null=True)
+    id_pedido = models.ForeignKey(Pedido,on_delete=models.SET_NULL, null=True)
+    hora_inicio = models.DateTimeField(default=now)
+    hora_fin = models.DateTimeField(default=now)
 
 class Combo(models.Model):
-	id_combo=models.AutoField(primary_key=True)
-	nombre=models.CharField(max_length=100)
-	imagen=models.ImageField()
-	precio_total=models.FloatField()
-	estado=models.CharField(max_length=100,default = "A")
-	cantidad_disponible=models.IntegerField()
-	cantidad_despachada=models.IntegerField()
-	fecha_inicio=models.DateField()
-	fecha_fin=models.DateField()
-	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
-	def __str__(self):
-		return self.nombre
+    id_combo=models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=100)
+    imagen=models.ImageField()
+    precio_total=models.FloatField()
+    estado=models.CharField(max_length=100,default = "A")
+    cantidad_disponible=models.IntegerField()
+    cantidad_despachada=models.IntegerField()
+    fecha_inicio=models.DateField()
+    fecha_fin=models.DateField()
+    id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+    def __str__(self):
+        return self.nombre
 
-	@property
-	def photo_url(self):
-		if self.image and hasattr(self.image, 'url'):
-			return self.image.url
+    @property
+    def photo_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
 
 
 class Combo_Producto(models.Model) :
-	id_comboxproducto=models.AutoField(primary_key=True)
-	cantidad=models.IntegerField()
-	id_combo=models.ForeignKey(Combo, on_delete=models.SET_NULL, null=True)
-	id_producto=models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
-	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+    id_comboxproducto=models.AutoField(primary_key=True)
+    cantidad=models.IntegerField()
+    id_combo=models.ForeignKey(Combo, on_delete=models.SET_NULL, null=True)
+    id_producto=models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
+    id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
 
 class Carrito(models.Model):
-	id_carrito=models.AutoField(primary_key=True)
-	precio_total=models.FloatField(default=0)
-	tiene_combo= models.BooleanField(default=False)
-	tiene_oferta=models.BooleanField(default=False)
-	cantidad_disponible=models.IntegerField(default=0)
-	cantidad_despachada=models.IntegerField(default=0)
-	fecha_inicio=models.DateField(default=datetime.now)
-	fecha_fin=models.DateField(default=datetime.now)
-	id_cliente=models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True)
+    id_carrito=models.AutoField(primary_key=True)
+    precio_total=models.FloatField(default=0)
+    tiene_combo= models.BooleanField(default=False)
+    tiene_oferta=models.BooleanField(default=False)
+    cantidad_disponible=models.IntegerField(default=0)
+    cantidad_despachada=models.IntegerField(default=0)
+    fecha_inicio=models.DateField(default=datetime.now)
+    fecha_fin=models.DateField(default=datetime.now)
+    id_cliente=models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True)
 
 class Detalle_Carrito(models.Model):
-	id_detallexcarrito=models.AutoField(primary_key=True)
-	cantidad=models.IntegerField(default=0)
-	precio=models.FloatField(default=0)
-	id_producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
-	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
+    id_detallexcarrito=models.AutoField(primary_key=True)
+    cantidad=models.IntegerField(default=0)
+    precio=models.FloatField(default=0)
+    id_producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
+    id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
 
 
 class Establecimiento_Producto(models.Model):
-	id_estabxprod=models.AutoField(primary_key=True)
-	stock_disponible=models.IntegerField()
-	stock_despacho=models.IntegerField()
-	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
-	id_producto=models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
+    id_estabxprod=models.AutoField(primary_key=True)
+    stock_disponible=models.IntegerField()
+    stock_despacho=models.IntegerField()
+    id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+    id_producto=models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
 
 
 class Politica(models.Model):
@@ -275,8 +279,8 @@ class Reclamo(models.Model):
 
     @property
     def photo_url(self):
-    	if self.image and hasattr(self.image, 'url'):
-    		return self.image.url
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
 
 
 class Notificacion(models.Model):
@@ -317,18 +321,18 @@ class Oferta(models.Model):
             return self.image.url
 
 class Carrito_Oferta(models.Model):
-	id_carritoxoferta=models.AutoField(primary_key=True)
-	cantidad=models.IntegerField(default=0)
-	precio=models.FloatField(default=0)
-	id_oferta = models.ForeignKey(Oferta, on_delete=models.SET_NULL, null=True)
-	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
+    id_carritoxoferta=models.AutoField(primary_key=True)
+    cantidad=models.IntegerField(default=0)
+    precio=models.FloatField(default=0)
+    id_oferta = models.ForeignKey(Oferta, on_delete=models.SET_NULL, null=True)
+    id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
 
 class Carrito_Combo(models.Model):
-	id_carritoxcombo=models.AutoField(primary_key=True)
-	cantidad=models.IntegerField(default=0)
-	precio=models.FloatField(default=0)
-	id_combo = models.ForeignKey(Combo, on_delete=models.SET_NULL, null=True)
-	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
+    id_carritoxcombo=models.AutoField(primary_key=True)
+    cantidad=models.IntegerField(default=0)
+    precio=models.FloatField(default=0)
+    id_combo = models.ForeignKey(Combo, on_delete=models.SET_NULL, null=True)
+    id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
 
 
 class Cupones(models.Model):
@@ -372,11 +376,11 @@ class Cupones_Cliente(models.Model):
     estado=models.CharField(max_length=1,default = "A")
 
 class Carrito_Cupones(models.Model):
-	id_carritoxcupones=models.AutoField(primary_key=True)
-	cantidad=models.IntegerField(default=0)
-	precio=models.FloatField(default=0)
-	id_cupon = models.ForeignKey(Cupones, on_delete=models.SET_NULL, null=True)
-	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
+    id_carritoxcupones=models.AutoField(primary_key=True)
+    cantidad=models.IntegerField(default=0)
+    precio=models.FloatField(default=0)
+    id_cupon = models.ForeignKey(Cupones, on_delete=models.SET_NULL, null=True)
+    id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
 
 class Producto_Pedido(models.Model):
     id_detalle = models.AutoField(primary_key=True)
@@ -407,59 +411,59 @@ class Cupon_Pedido(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
 
 class Cardauth(models.Model):
-	id_cardauth =  models.AutoField(primary_key=True)
-	token = models.CharField(max_length=20)
-	auth = models.CharField(max_length=3)
+    id_cardauth =  models.AutoField(primary_key=True)
+    token = models.CharField(max_length=20)
+    auth = models.CharField(max_length=3)
 
 class Establecimiento_ZonaEnvio(models.Model):
-	id_estabxzona =  models.AutoField(primary_key=True)
-	id_establecimiento = models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
-	id_zona = models.ForeignKey(ZonaEnvio,on_delete=models.SET_NULL, null=True)
+    id_estabxzona =  models.AutoField(primary_key=True)
+    id_establecimiento = models.ForeignKey(Establecimiento,on_delete=models.SET_NULL, null=True)
+    id_zona = models.ForeignKey(ZonaEnvio,on_delete=models.SET_NULL, null=True)
 
 class Tarjeta_Producto(models.Model):
-	id_tarjeta =  models.AutoField(primary_key=True)
-	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
-	descripcion = models.CharField(max_length=100)
-	id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
+    id_tarjeta =  models.AutoField(primary_key=True)
+    id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+    descripcion = models.CharField(max_length=100)
+    id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
 
 class Tarjeta_Producto_Producto(models.Model):
-	id_tarjetaxproducto =  models.AutoField(primary_key=True)
-	id_producto = models.ForeignKey(Producto,on_delete=models.SET_NULL, null=True)
-	id_tarjeta = models.ForeignKey(Tarjeta_Producto,on_delete=models.SET_NULL, null=True)
-	cantidad=models.IntegerField()
+    id_tarjetaxproducto =  models.AutoField(primary_key=True)
+    id_producto = models.ForeignKey(Producto,on_delete=models.SET_NULL, null=True)
+    id_tarjeta = models.ForeignKey(Tarjeta_Producto,on_delete=models.SET_NULL, null=True)
+    cantidad=models.IntegerField()
 
 class Tarjeta_Producto_Cliente(models.Model):
-	id_tarjetaxcliente = models.AutoField(primary_key=True)
-	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
-	id_tarjeta = models.ForeignKey(Tarjeta_Producto,on_delete=models.SET_NULL, null=True)
-	estado=models.CharField(max_length=1,default = "A")
-	fecha = models.DateTimeField(null=True)
+    id_tarjetaxcliente = models.AutoField(primary_key=True)
+    id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+    id_tarjeta = models.ForeignKey(Tarjeta_Producto,on_delete=models.SET_NULL, null=True)
+    estado=models.CharField(max_length=1,default = "A")
+    fecha = models.DateTimeField(null=True)
 
 class Tarjeta_Monto(models.Model):
-	id_tarjeta =  models.AutoField(primary_key=True)
-	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
-	monto = models.FloatField()
-	descripcion = models.CharField(max_length=100)
-	id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
+    id_tarjeta =  models.AutoField(primary_key=True)
+    id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+    monto = models.FloatField()
+    descripcion = models.CharField(max_length=100)
+    id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
 
 class Tarjeta_Monto_Cliente(models.Model):
-	id_tarjetaxcliente = models.AutoField(primary_key=True)
-	id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
-	id_tarjeta = models.ForeignKey(Tarjeta_Monto,on_delete=models.SET_NULL, null=True)
-	estado=models.CharField(max_length=1,default = "A")
-	fecha = models.DateTimeField(null=True)
+    id_tarjetaxcliente = models.AutoField(primary_key=True)
+    id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL, null=True)
+    id_tarjeta = models.ForeignKey(Tarjeta_Monto,on_delete=models.SET_NULL, null=True)
+    estado=models.CharField(max_length=1,default = "A")
+    fecha = models.DateTimeField(null=True)
 
 class Carrito_Tarjeta_Monto(models.Model):
-	id_carritoxtarjeta=models.AutoField(primary_key=True)
-	precio=models.FloatField(default=0)
-	id_tarjeta = models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
-	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
+    id_carritoxtarjeta=models.AutoField(primary_key=True)
+    precio=models.FloatField(default=0)
+    id_tarjeta = models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
+    id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
 
 class Carrito_Tarjeta_Producto(models.Model):
-	id_carritoxtarjeta=models.AutoField(primary_key=True)
-	precio=models.FloatField(default=0)
-	id_tarjeta = models.ForeignKey(Tarjeta_Producto, on_delete=models.SET_NULL, null=True)
-	id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
+    id_carritoxtarjeta=models.AutoField(primary_key=True)
+    precio=models.FloatField(default=0)
+    id_tarjeta = models.ForeignKey(Tarjeta_Producto, on_delete=models.SET_NULL, null=True)
+    id_carrito = models.ForeignKey(Carrito, on_delete=models.SET_NULL, null=True)
 
 class Tarjeta_Monto_Pedido(models.Model):
     id_detalle = models.AutoField(primary_key=True)
@@ -473,25 +477,25 @@ class Tarjeta_Producto_Pedido(models.Model):
     id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
 
 class Codigo(models.Model):
-	id_codigo = models.AutoField(primary_key=True)
-	codigo = models.CharField(max_length=20)
-	descripcion=models.CharField(max_length=100)
-	fecha_inicio=models.DateField()
-	fecha_fin=models.DateField()
-	estado=models.CharField(max_length=1,default = "A")
-	tipo=models.CharField(max_length=1,default = "M")
-	precio=models.FloatField(default = 0)
-	cantidad=models.IntegerField(default = 0)
-	image = models.ImageField()
-	id_cupon=models.ForeignKey(Cupones, on_delete=models.SET_NULL, null=True)
-	id_tarjetamonto=models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
-	id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
-	def __str__(self):
-	    return self.codigo
-	@property
-	def photo_url(self):
-	    if self.image and hasattr(self.image, 'url'):
-	        return self.image.url
+    id_codigo = models.AutoField(primary_key=True)
+    codigo = models.CharField(max_length=20)
+    descripcion=models.CharField(max_length=100)
+    fecha_inicio=models.DateField()
+    fecha_fin=models.DateField()
+    estado=models.CharField(max_length=1,default = "A")
+    tipo=models.CharField(max_length=1,default = "M")
+    precio=models.FloatField(default = 0)
+    cantidad=models.IntegerField(default = 0)
+    image = models.ImageField()
+    id_cupon=models.ForeignKey(Cupones, on_delete=models.SET_NULL, null=True)
+    id_tarjetamonto=models.ForeignKey(Tarjeta_Monto, on_delete=models.SET_NULL, null=True)
+    id_establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
+    def __str__(self):
+        return self.codigo
+    @property
+    def photo_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
 
 class Codigo_Monto(models.Model):
     id_codigomonto = models.AutoField(primary_key=True)
@@ -513,27 +517,27 @@ class Codigo_Cliente(models.Model):
     estado=models.CharField(max_length=1,default = "A")
 
 class Sorteo(models.Model):
-	id_sorteo = models.AutoField(primary_key=True)
-	nombre = models.CharField(max_length=20)
-	descripcion = models.CharField(max_length=100)
-	fecha_inicio=models.DateField()
-	fecha_fin=models.DateField()
-	numGanadores=models.IntegerField(default = 0)
-	maxGanadores=models.IntegerField()
-	image = models.ImageField()
-	def __str__(self):
-	    return self.nombre
+    id_sorteo = models.AutoField(primary_key=True)
+    nombre = models.CharField(max_length=20)
+    descripcion = models.CharField(max_length=100)
+    fecha_inicio=models.DateField()
+    fecha_fin=models.DateField()
+    numGanadores=models.IntegerField(default = 0)
+    maxGanadores=models.IntegerField()
+    image = models.ImageField()
+    def __str__(self):
+        return self.nombre
 
-	@property
-	def photo_url(self):
-	    if self.image and hasattr(self.image, 'url'):
-	        return self.image.url
+    @property
+    def photo_url(self):
+        if self.image and hasattr(self.image, 'url'):
+            return self.image.url
 
 
 class Sorteo_Usuario(models.Model):
-	id_sorteoxusuario =  models.AutoField(primary_key=True)
-	id_sorteo = models.ForeignKey(Sorteo,on_delete=models.SET_NULL, null=True)
-	id_usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL, null=True)
+    id_sorteoxusuario =  models.AutoField(primary_key=True)
+    id_sorteo = models.ForeignKey(Sorteo,on_delete=models.SET_NULL, null=True)
+    id_usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL, null=True)
 
 
 class Publicidad(models.Model):
@@ -592,3 +596,198 @@ class Premios_Cliente(models.Model):
     id_premio = models.ForeignKey(Premios,on_delete=models.SET_NULL,null=True)
     id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL,null=True)
     estado= models.CharField(max_length=10,choices=Estado,default='Recibido',)
+    
+    
+    
+    
+    
+#Modelos para Chat
+class ModelBase(models.Model):
+    id = models.UUIDField(default=uuid.uuid4,
+                          primary_key=True, db_index=True, editable=False)
+    tiempo = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+class CanalMensaje(ModelBase):
+    canal = models.ForeignKey("Canal", on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    texto = models.TextField()
+    check_leido = models.BooleanField()
+    esAdmin=models.BooleanField()
+
+
+    def obtener_data_mensaje_usuarios(id_canal):
+        qs = CanalMensaje.objects.filter(
+            canal_id=id_canal).values("id","esAdmin","check_leido","texto", "usuario","tiempo","usuario__rol","usuario__correo")
+        mensajes = list(qs.order_by("tiempo"))
+        return list(mensajes)
+
+    def verificar_leido(id_mensaje):
+        qs=CanalMensaje.objects.filter(
+            id=id_mensaje
+        )
+        return qs.update(check_leido=True)
+
+    def __str__(self):
+        return str(self.canal)
+
+
+class CanalUsuario(ModelBase):
+    canal = models.ForeignKey("Canal", null=True, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.canal)
+
+
+class CanalQuerySet(models.QuerySet):
+
+    def solo_uno(self):
+        return self.annotate(num_usuarios=Count("usuarios")).filter(num_usuarios=1)
+
+    def solo_dos(self):
+        return self.annotate(num_usuarios=Count("usuarios")).filter(num_usuarios=2)
+
+    def filtrar_por_admin(self, username):
+        return self.filter(usuario_admin__cedula=username)
+    def filtrar_por_cliente(self, username):
+        return self.filter(usuario_cliente__usuario__cedula=username)
+    
+
+    def filtrar_por_usuario(self, usuario_a, usuario_b):
+        
+        print("===============================================")
+        qsAdmin=self.filtrar_por_admin(usuario_a) | self.filtrar_por_admin(usuario_b)
+        qsCliente=self.filtrar_por_cliente(usuario_a) | self.filtrar_por_cliente(usuario_b)
+
+        print(qsAdmin)
+        print(qsCliente)
+        print(qsAdmin and qsCliente)
+        
+        #if(qsAdmin and qsCliente):
+        return qsAdmin and qsCliente
+        
+    
+
+
+
+
+class CanalManager(models.Manager):
+    def get_queryset(self, *args, **kwards):
+        return CanalQuerySet(self.model, using=self._db)
+
+    def filtrar_ms_por_privado(self, username_a, username_b):
+        return self.get_queryset().filtrar_por_usuario(username_a, username_b)
+
+    def obtener_o_crear_canal_ms(self, username_a, username_b):
+        qs = self.filtrar_ms_por_privado(username_a, username_b)
+        
+        if qs.exists():
+            return qs.order_by("tiempo").first(), False  # obj, Created
+
+        usuario_a, usuario_b = None, None
+        administrador,cliente=None,None
+        canal_usuario_a,canal_usuario_b=None,None
+
+        if(Empleado.objects.filter(cedula=username_a).exists()):
+            usuario_a=Empleado.objects.get(cedula=username_a)
+            administrador=usuario_a
+            print(str(usuario_a.rol)+"ROLES")
+            #obj_canal = Canal.objects.create()
+            #canal_usuario_a = CanalUsuario(usuario_admin=usuario_a, canal=obj_canal)
+            
+            
+            
+        elif(Cliente.objects.filter(usuario__cedula=username_a).exists()):
+            usuario_a=Cliente.objects.get(usuario__cedula=username_a)
+            cliente=usuario_a
+            print(str(usuario_a.usuario.rol)+"ROLES")
+            
+            #obj_canal = Canal.objects.create()
+            #canal_usuario_a = CanalUsuario(usuario=usuario_a, canal=obj_canal)
+            
+          
+            
+        
+            
+        if(Empleado.objects.filter(cedula=username_b).exists()):
+            usuario_b=Empleado.objects.get(cedula=username_b)
+            administrador=usuario_b
+            print(str(usuario_b.rol)+"ROLES")
+
+            #obj_canal = Canal.objects.create()        
+            #canal_usuario_b = CanalUsuario(usuario_admin=usuario_b, canal=obj_canal)
+            
+           
+       
+        elif(Cliente.objects.filter(usuario__cedula=username_b).exists()):
+            usuario_b=Cliente.objects.get(usuario__cedula=username_b)
+            cliente=usuario_b
+            print(str(usuario_b.usuario.rol)+"ROLES")
+
+            #obj_canal = Canal.objects.create()
+            #canal_usuario_b = CanalUsuario(usuario=usuario_b, canal=obj_canal)
+            
+        else:
+            return None, False
+
+
+        '''
+        try:
+            usuario_a = Usuario.objects.get(cedula=username_a)
+            
+        except Usuario.DoesNotExist:
+            return None, False
+
+        try:
+            usuario_b = Usuario.objects.get(cedula=username_b)
+
+        except Usuario.DoesNotExist:
+            return None, False
+        '''
+
+        if (usuario_a == None or usuario_b == None):
+            return None, False
+
+        '''
+        if(usuario_a.rol=="administrador" or usuario_a.usuario.rol=="administrador"):
+            print("usuario logeado es empleado")
+        else:
+            print("usuario logeado es cliente")
+            
+        if(usuario_b.rol=="administrador" or usuario_b.usuario.rol=="administrador"):
+            print("usuario receptor es empleado")
+        else:
+            print("usuario receppoor es cliente")
+        '''
+        print(administrador)
+        print(cliente)
+            
+        obj_canal = Canal.objects.create(
+            usuario_cliente=cliente,
+            usuario_admin=administrador
+        )
+        #canal_usuario_a = CanalUsuario(usuario=cliente, canal=obj_canal)
+        #canal_usuario_b = CanalUsuario(usuario=administrador, canal=obj_canal)
+        
+        #print(usuario_a.rol)
+        #print(usuario_b.rol)
+        
+        
+        #CanalUsuario.objects.bulk_create([canal_usuario_a, canal_usuario_b])
+        
+
+        return obj_canal, True
+    
+    def obtener_datos_usuario(id_usuario):
+        qs =Usuario.objects.filter(cedula=id_usuario)  
+        return qs
+  
+class Canal(ModelBase):
+    # para 1 o mas usuario  s conectados
+    usuario_cliente = models.ForeignKey(Cliente, blank=True,null=True,  on_delete=models.CASCADE)
+    usuario_admin=models.ForeignKey(Empleado,blank=True,null=True, on_delete=models.CASCADE)
+    objects = CanalManager()
+    

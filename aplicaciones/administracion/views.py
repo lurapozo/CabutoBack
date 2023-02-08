@@ -2517,3 +2517,94 @@ def detalle_premios(request,id_premioXcliente):
         data.save()
         return  redirect("/historial_premios")
     return HttpResponse(status=400)
+
+
+
+#@login_required(login_url='/login/')
+def verificar_y_crear_canal(request,usuario_receptor,usuario_actual):
+
+
+    if request.method == 'POST':
+        #mensaje_por_canal=JSONParser().parse(request.data)
+        data_json=dict(request.data)
+        print(data_json)
+        print("=============================")
+        canal_c=Canal.objects.get(id=data_json["canal"])
+        usuario_canal=Usuario.objects.get(cedula=data_json["usuario"])
+        
+        nuevo_mensaje=CanalMensaje(
+            canal=canal_c,
+            usuario=usuario_canal,
+            texto=data_json["texto"],
+            check_leido=data_json["check_leido"],
+            esAdmin=data_json["esAdmin"]
+
+        )
+        nuevo_mensaje.save()
+        return JsonResponse(data_json)
+        
+    elif request.method == 'GET':
+
+        
+        mi_username=usuario_actual
+
+        canal,_= Canal.objects.obtener_o_crear_canal_ms(mi_username,usuario_receptor)
+        #canal="hola"
+        if canal == None:
+            return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
+        
+        
+        if usuario_receptor == mi_username:
+            return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
+
+        
+        
+        #nombre_receptor=Usuario.objects.filter(correo=usuario_receptor).first().nombres
+        #apellido_receptor=Usuario.objects.filter(correo=usuario_receptor).first().apellidos
+        
+        #perfil_receptor=nombre_receptor+" "+apellido_receptor
+        
+        perfil_usuario_actual={}
+        perfil_admin={}
+        
+        '''
+        
+        if(Empleado.objects.filter(cedula=usuario_actual).exists):
+            print("usuario logeado es empleado")            
+        elif(Empleado.objects.filter(cedula=usuario_receptor).exists):
+            print("El usuario receptor es Administrador")
+        if(Cliente.objects.filter(usuario__cedula=usuario_actual).exists):
+            print("El usuario actual es cliente")
+        if(Cliente.objects.filter(usuario__cedula=usuario_receptor).exists):
+            print("El usuario receptor es cliente")
+        
+  
+        qs1=Empleado.objects.filter(correo=usuario_actual)
+        qs2=Empleado.objects.filter(correo=usuario_receptor)
+        qs3=Cliente.objects.filter(correo=usuario_actual)
+        qs4=Cliente.objects.filter(correo=usuario_receptor)
+        '''
+        
+        
+        mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
+
+        print()
+        return JsonResponse({
+            'canal':canal.id,
+            'receptor':usuario_receptor,
+            'usuario_logeado':mi_username,
+            #'perfil_receptor':perfil_receptor,
+            'mensajes':mensajes
+            
+            })
+
+def actualizar_sms_leido(request,id_mensaje):
+    if request.method == 'GET':
+        qs = CanalMensaje.verificar_leido(id_mensaje)
+    
+        return JsonResponse({
+            'data':qs,
+            },safe=False)
+def obtenerDataUsuario(request):
+    
+    pass

@@ -113,5 +113,11 @@ urlpatterns = [
 
 
 
+	#URLS PARA CHAT
+    path("api/chat/<str:usuario_receptor>/<str:usuario_actual>/",verificar_y_crear_canal),
+    #path("api/chat/inbox/<str:usuario_actual>/",obtener_ca_usuario_actual),
+    path("api/chat/sms_update/<str:id_mensaje>/",actualizar_sms_leido),
+    
+
 
 ]
