@@ -107,6 +107,10 @@ def getOferta(request):
         res = []
         ofertas = Oferta.objects.filter(fecha_inicio__lte=datetime.today()).exclude(estado="I").order_by("-cantidad")
         ofertas = ofertas.filter(fecha_fin__gte=datetime.today()).exclude(estado="I").order_by("-cantidad")
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
+        ofertas = ofertas.filter(id_establecimiento = establecimiento)
         for oferta in ofertas:
             id=oferta.nombre.replace(" ","_")+"_"+str(oferta.id_oferta)
             diccionario = {"id":oferta.id_oferta,"id_unico":id, "nombre":oferta.nombre,"descripcion":oferta.descripcion,
@@ -301,15 +305,19 @@ def getEstablecimiento(request):
 def getCategoria(request):
     if request.method== 'GET':
         res= []
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
         if request.GET.get("id")!=None:
             valor=request.GET.get("id")
             categoria= Categoria.objects.filter(nombre=valor).first()
             productos=Producto.objects.select_related().filter(id_categoria=categoria).exclude(estado="I")
             for product in productos:
-                id="P"+product.nombre.replace(" ","_")+"_"+str(product.id_producto)
-                diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,
-                "precio":product.precio,"estado":product.estado, "imagen":product.photo_url}
-                res.append(diccionario)
+                estab = Establecimiento_Producto.objects.filter(id_producto = product.id_producto, id_establecimiento = establecimiento)
+                if estab.count() != 0:
+                    id="P"+product.nombre.replace(" ","_")+"_"+str(product.id_producto)
+                    diccionario={"id":product.id_producto,"id_unico":id,"nombre":product.nombre,"descripcion":product.descripcion,"precio":product.precio,"estado":product.estado, "imagen":product.photo_url}
+                    res.append(diccionario)
             return JsonResponse(res,safe=False)
         categorias= Categoria.objects.values()
         data = list(categorias)
@@ -338,6 +346,44 @@ def getInicio(request):
             productos = Producto.objects.select_related().filter().annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma").values('nombre', 'image','precio','suma')[:6]
             productos = list(productos)
             ofertas = Oferta.objects.select_related().filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')[:6]
+            ofertas = list(ofertas)
+            res = {
+                'categorias': data,
+                'productos': productos,
+                'ofertas': ofertas,
+            }
+            return JsonResponse(res,safe=False)
+
+def getInicio2(request, establecimiento):
+    if request.method== 'GET':
+        res= []
+        if request.GET.get("nombre")!=None:
+            valor = request.GET.get("nombre")
+            categorias= Categoria.objects.filter(nombre__icontains=str(valor)).values()[:4]
+            data = list(categorias)
+            productos = Establecimiento_Producto.objects.select_related().filter(id_producto__nombre__icontains=str(valor)).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')
+            productos = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')[:6]
+            #productos = productos.filter(id_establecimiento = establecimiento)[:6]
+            productos = list(productos)
+            ofertas = Oferta.objects.select_related().filter(nombre__icontains=str(valor)).filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')
+            ofertas = ofertas.filter(id_establecimiento = establecimiento)[:6]
+            ofertas = list(ofertas)
+            res = {
+                'categorias': data,
+                'productos': productos,
+                'ofertas': ofertas,
+            }
+            return JsonResponse(res,safe=False)
+        else:
+            categorias= Categoria.objects.values()[:4]
+            data = list(categorias)
+            #productos = Producto.objects.select_related().filter().annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma").values('nombre', 'image','precio','suma')[:6]
+            productos = Establecimiento_Producto.objects.select_related().filter().annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')
+            productos = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')[:6]
+            #productos = productos.filter(id_establecimiento = establecimiento)[:6]
+            productos = list(productos)
+            ofertas = Oferta.objects.select_related().filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')
+            ofertas = ofertas.filter(id_establecimiento = establecimiento)[:6]
             ofertas = list(ofertas)
             res = {
                 'categorias': data,
@@ -2028,6 +2074,10 @@ def getCuponesPersonales(request, id):
         cupones = Cupones.objects.filter(cantidad__gt=0, estado="A")
         cupones = cupones.filter(fecha_inicio__lte=datetime.today())
         cupones = cupones.filter(fecha_fin__gte=datetime.today())
+        establecimiento = 1
+        if request.GET.get("establecimiento")!= None:
+            establecimiento = request.GET.get("establecimiento")
+        cupones = cupones.filter(id_establecimiento = establecimiento)
         for cupon in cupones:
             print(cupon.photo_url)
             diccionario = {"id":cupon.id_cupon,"nombre":cupon.nombre,"descripcion":cupon.descripcion,"cantidad":cupon.cantidad,
