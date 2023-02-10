@@ -317,6 +317,7 @@
           <th>Nombre</th>
           <th>Teléfono</th>
           <th>Correo</th>
+          <th>Chat</th>
           <th>Fecha de registro</th>
           <th>Imagen</th>
           <th>Ban</th>
@@ -333,6 +334,9 @@
               <td>N/A</td>
             {% endif %}
             <td>{{data.usuario.correo}}</td>
+            <td>
+                <a class="btn btn-sm " href="mensajeria/{{data.usuario.cedula}}/999999999"><h6>Ir a Chat</h6></a>
+            </td>
             <td>{{data.usuario.registro|date:"d/m/Y"}}</td>
             <td>
                 <img src={{data.usuario.photo_url}} height="100">

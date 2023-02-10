@@ -1,0 +1,125 @@
+{% load static %}
+{% load tz %}
+{% include 'Shared/header.html' %}
+{% include 'Shared/sidebar.html' %}
+{% include 'Shared/navbar.html' %}
+<style>
+    .mensajes{
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+
+    }
+    .item-mensaje{
+        width: 90%;
+        margin-bottom: 5px;
+        display: flex;            
+        
+    }
+    .item-mensaje .avatar{
+        padding: 15px 15px 15px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+    }
+    .avatar img{
+        width: 80px;
+    }
+    .detalles{
+        width: 100%;
+        border: gray 2px solid;
+        border-radius: 10px 10px 10px 0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        
+    }
+    .nombre{
+        color: rgb(97, 95, 95);
+        font-size: large;
+        
+    }
+    .tipo{
+        color: red;
+        font-size: small;
+    }
+
+    .texto{
+        color: gray;
+        font-weight: normal;
+
+    }
+
+    .tiempo{
+        display: flex;
+        justify-content: end;
+        color: red;
+        font-size: small;
+    }
+    
+
+    .mensajes  .emitido{
+        margin-left: auto;
+    }
+
+    .detalles{
+        background-color: rgb(190, 187, 187);
+    }
+    
+    .mensajes .recibido{
+        margin-right: auto;
+       
+    }
+       
+</style>
+
+{% for mensaje in data_mensajes %}
+
+<div id="mensajes" class="mensajes" >
+       
+        {% if mensaje.esAdmin == true %}
+        <div  class="item-mensaje emitido">
+            <div class="avatar">
+              <img src="../../../assets/img/avatar.png" alt="">
+        
+            </div>
+            <div class="detalles">
+              <div class="nombre">
+                <span>{{mensaje.usuario_admin__nombre}} {{mensaje.usuario_admin__apellido}}</span> <span class="tipo">( yo )</span>
+
+              </div>
+              <div class="texto">
+                {{mensaje.texto}}
+              </div>
+              <div class="tiempo">
+                {{ mensaje.tiempo |date:"d/m/Y" }}
+              </div>
+        
+            </div>
+          </div>
+        {% else %}
+        <div class="item-mensaje recibido">
+            <div class="avatar">
+              <img src="../../../assets/img/avatar.png" alt="">
+        
+            </div>
+            <div class="detalles">
+              <div class="nombre">
+                <span>{{mensaje.usuario_admin__nombre}} {{mensaje.usuario_admin__apellido}}</span> <span class="tipo">( cliente )</span>
+              </div>
+              <div class="texto">
+                {{mensaje.texto}}
+              </div>
+              <div class="tiempo">
+                {{ mensaje.tiempo | date:"d/m/Y, h:m"}}
+              </div>
+        
+            </div>
+        {% endif %}
+  
+          
+{% endfor %}
+
+</div>
+

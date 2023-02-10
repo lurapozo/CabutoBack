@@ -29,6 +29,8 @@ urlpatterns = [
 	path('web_push/', register_wp_notifications, name='register_wp_notifications'),
 	url(r'^clientes/ver_cliente/(?P<id_cliente>\d+)', ver_cliente, name="ver_cliente"),
 	url(r'^clientes/ban/(?P<id_cliente>\d+)', ban, name="ban"),
+ 	url(r'^clientes/mensajeria/(?P<cliente>\d+)/(?P<admin>\d+)', mensajeria_page, name="mensajeria_page"),
+ 
 	url(r'^notificaciones/add_notificaciones/', agregar_notificacion, name="add_notificaciones"),
 	url(r'^notificaciones/ver_notificacion/(?P<id_notificacion>\d+)', ver_notificacion, name="ver_notificacion"),
 	url(r'^notificaciones/enviar_notificacion/(?P<id_notificacion>\d+)', enviar_notificacion, name="enviar_notificacion"),
@@ -113,12 +115,6 @@ urlpatterns = [
     url(r'^detalle_premios/(?P<id_premioXcliente>\d+)', detalle_premios, name="detalle_premios"),
 
 
-
-	#URLS PARA CHAT
-    path("api/chat/<str:usuario_receptor>/<str:usuario_actual>/",verificar_y_crear_canal),
-    #path("api/chat/inbox/<str:usuario_actual>/",obtener_ca_usuario_actual),
-    path("api/chat/sms_update/<str:id_mensaje>/",actualizar_sms_leido),
-    
 
 
 ]

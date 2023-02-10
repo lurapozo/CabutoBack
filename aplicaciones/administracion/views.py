@@ -2523,79 +2523,64 @@ def detalle_premios(request,id_premioXcliente):
 
 
 #@login_required(login_url='/login/')
-def verificar_y_crear_canal(request,usuario_receptor,usuario_actual):
+'''
+@csrf_exempt
+def verificar_y_crear_canal(request,cliente,admin):
 
 
     if request.method == 'POST':
-        #mensaje_por_canal=JSONParser().parse(request.data)
-        data_json=dict(request.data)
-        print(data_json)
-        print("=============================")
-        canal_c=Canal.objects.get(id=data_json["canal"])
-        usuario_canal=Usuario.objects.get(cedula=data_json["usuario"])
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        canal_ = body['canal']
+        esAdmin_=body['esAdmin']
+        check_leido_=body['check_leido']
+        texto_=body['texto']
+        usuario_admin_=body['usuario_admin']
+        usuario_cliente_=body['usuario_cliente']
         
+        
+        print(body)
+
+        canal_c=Canal.objects.get(id=canal_)
+        usuario_cliente,usuario_admin=None,None
+        
+        if(esAdmin_==True):
+            usuario_admin=Empleado.objects.get(cedula=usuario_admin_)
+        else:
+            usuario_cliente=Cliente.objects.get(usuario__cedula=usuario_cliente_)
+
         nuevo_mensaje=CanalMensaje(
             canal=canal_c,
-            usuario=usuario_canal,
-            texto=data_json["texto"],
-            check_leido=data_json["check_leido"],
-            esAdmin=data_json["esAdmin"]
+            usuario_cliente=usuario_cliente,
+            usuario_admin=usuario_admin,
+            texto=texto_,
+            check_leido=check_leido_,
+            esAdmin=esAdmin_
 
         )
         nuevo_mensaje.save()
-        return JsonResponse(data_json)
+        return JsonResponse(body)
         
     elif request.method == 'GET':
 
-        
-        mi_username=usuario_actual
 
-        canal,_= Canal.objects.obtener_o_crear_canal_ms(mi_username,usuario_receptor)
-        #canal="hola"
+        canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
         if canal == None:
             return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
         
-        
-        if usuario_receptor == mi_username:
+        if admin == cliente:
             return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
 
-        
-        
-        #nombre_receptor=Usuario.objects.filter(correo=usuario_receptor).first().nombres
-        #apellido_receptor=Usuario.objects.filter(correo=usuario_receptor).first().apellidos
-        
-        #perfil_receptor=nombre_receptor+" "+apellido_receptor
-        
+   
         perfil_usuario_actual={}
         perfil_admin={}
-        
-        '''
-        
-        if(Empleado.objects.filter(cedula=usuario_actual).exists):
-            print("usuario logeado es empleado")            
-        elif(Empleado.objects.filter(cedula=usuario_receptor).exists):
-            print("El usuario receptor es Administrador")
-        if(Cliente.objects.filter(usuario__cedula=usuario_actual).exists):
-            print("El usuario actual es cliente")
-        if(Cliente.objects.filter(usuario__cedula=usuario_receptor).exists):
-            print("El usuario receptor es cliente")
-        
-  
-        qs1=Empleado.objects.filter(correo=usuario_actual)
-        qs2=Empleado.objects.filter(correo=usuario_receptor)
-        qs3=Cliente.objects.filter(correo=usuario_actual)
-        qs4=Cliente.objects.filter(correo=usuario_receptor)
-        '''
-        
-        
+         
         mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
 
-        print()
         return JsonResponse({
             'canal':canal.id,
-            'receptor':usuario_receptor,
-            'usuario_logeado':mi_username,
-            #'perfil_receptor':perfil_receptor,
+            'receptor':admin,
+            'usuario_logeado':cliente,
             'mensajes':mensajes
             
             })
@@ -2607,10 +2592,15 @@ def actualizar_sms_leido(request,id_mensaje):
         return JsonResponse({
             'data':qs,
             },safe=False)
-def obtenerDataUsuario(request):
-    
+        
+def obtener_data_empleado_admin(request):
+    if request.method == 'GET':
+        qs=Empleado.objects.all().values()
+        if(qs):
+            return JsonResponse({'data':list(qs)})
     pass
 
+'''
 @login_required(login_url='/login/')
 def ban(request,id_cliente):
     try:
@@ -2628,3 +2618,39 @@ def ban(request,id_cliente):
         response_data= 'Ha ocurrido un error, intente de nuevo'
         html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
         return JsonResponse({'html': html, 'result': "error"})
+
+
+@login_required(login_url='/login/')
+def mensajeria_page(request,cliente,admin):
+    if request.method=='GET':
+        
+        
+        #return render(request, "Reportes/view-clientes.html",{"data":notificacion})
+    
+        canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
+        if canal == None:
+            return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
+        
+        if admin == cliente:
+            return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
+
+
+        perfil_usuario_actual={}
+        perfil_admin={}
+            
+        mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
+        data= {
+                'canal':canal.id,
+                'receptor':admin,
+                'usuario_logeado':cliente,
+                'data_mensajes':mensajes
+                
+                }
+        return render(request, "Mensajeria/mensajeria.html",data)
+    
+    
+    
+    return HttpResponse(status=400)
+
+
+

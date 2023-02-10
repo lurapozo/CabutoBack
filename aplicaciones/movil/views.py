@@ -2964,3 +2964,83 @@ def revisarBan(request, id):
             response_data = {'valid':'NO'}
         return JsonResponse(response_data,safe=False)
     JsonResponse(response_data,safe=False)
+
+
+
+
+#@login_required(login_url='/login/')
+@csrf_exempt
+def verificar_y_crear_canal(request,cliente,admin):
+
+
+    if request.method == 'POST':
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        canal_ = body['canal']
+        esAdmin_=body['esAdmin']
+        check_leido_=body['check_leido']
+        texto_=body['texto']
+        usuario_admin_=body['usuario_admin']
+        usuario_cliente_=body['usuario_cliente']
+        
+        
+        print(body)
+
+        canal_c=Canal.objects.get(id=canal_)
+        usuario_cliente,usuario_admin=None,None
+        
+        if(esAdmin_==True):
+            usuario_admin=Empleado.objects.get(cedula=usuario_admin_)
+        else:
+            usuario_cliente=Cliente.objects.get(usuario__cedula=usuario_cliente_)
+
+        nuevo_mensaje=CanalMensaje(
+            canal=canal_c,
+            usuario_cliente=usuario_cliente,
+            usuario_admin=usuario_admin,
+            texto=texto_,
+            check_leido=check_leido_,
+            esAdmin=esAdmin_
+
+        )
+        nuevo_mensaje.save()
+        return JsonResponse(body)
+        
+    elif request.method == 'GET':
+
+
+        canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
+        if canal == None:
+            return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
+        
+        if admin == cliente:
+            return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
+
+   
+        perfil_usuario_actual={}
+        perfil_admin={}
+         
+        mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
+
+        return JsonResponse({
+            'canal':canal.id,
+            'receptor':admin,
+            'usuario_logeado':cliente,
+            'mensajes':mensajes
+            
+            })
+
+def actualizar_sms_leido(request,id_mensaje):
+    if request.method == 'GET':
+        qs = CanalMensaje.verificar_leido(id_mensaje)
+    
+        return JsonResponse({
+            'data':qs,
+            },safe=False)
+        
+def obtener_data_empleado_admin(request):
+    if request.method == 'GET':
+        qs=Empleado.objects.all().values()
+        if(qs):
+            return JsonResponse({'data':list(qs)})
+    pass

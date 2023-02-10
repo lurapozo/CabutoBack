@@ -600,9 +600,6 @@ class Premios_Cliente(models.Model):
     estado= models.CharField(max_length=10,choices=Estado,default='Recibido',)
     
     
-    
-    
-    
 #Modelos para Chat
 class ModelBase(models.Model):
     id = models.UUIDField(default=uuid.uuid4,
@@ -614,7 +611,8 @@ class ModelBase(models.Model):
 
 class CanalMensaje(ModelBase):
     canal = models.ForeignKey("Canal", on_delete=models.CASCADE)
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    usuario_cliente = models.ForeignKey(Cliente, null=True,blank=True, on_delete=models.CASCADE)
+    usuario_admin = models.ForeignKey(Empleado,null=True,blank=True, on_delete=models.CASCADE)
     texto = models.TextField()
     check_leido = models.BooleanField()
     esAdmin=models.BooleanField()
@@ -622,7 +620,7 @@ class CanalMensaje(ModelBase):
 
     def obtener_data_mensaje_usuarios(id_canal):
         qs = CanalMensaje.objects.filter(
-            canal_id=id_canal).values("id","esAdmin","check_leido","texto", "usuario","tiempo","usuario__rol","usuario__correo")
+            canal_id=id_canal).values("id","esAdmin","check_leido","texto", "usuario_admin__nombre", "usuario_admin__apellido", "usuario_admin__cedula","usuario_cliente__nombre", "usuario_cliente__apellido", "usuario_cliente__usuario__cedula","tiempo")
         mensajes = list(qs.order_by("tiempo"))
         return list(mensajes)
 
@@ -636,134 +634,97 @@ class CanalMensaje(ModelBase):
         return str(self.canal)
 
 
-class CanalUsuario(ModelBase):
-    canal = models.ForeignKey("Canal", null=True, on_delete=models.CASCADE)
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return str(self.canal)
-
-
 class CanalQuerySet(models.QuerySet):
 
-    def solo_uno(self):
-        return self.annotate(num_usuarios=Count("usuarios")).filter(num_usuarios=1)
-
-    def solo_dos(self):
-        return self.annotate(num_usuarios=Count("usuarios")).filter(num_usuarios=2)
-
+  
     def filtrar_por_admin(self, username):
-        return self.filter(usuario_admin__cedula=username)
+        return self.filter(usuario_admin__cedula=username) 
+    
     def filtrar_por_cliente(self, username):
         return self.filter(usuario_cliente__usuario__cedula=username)
     
+    def filtrar_por_username(self, username):
+        return  self.filtrar_por_admin(username) | self.filtrar_por_cliente(username)
+
 
     def filtrar_por_usuario(self, usuario_a, usuario_b):
-        
-        print("===============================================")
-        qsAdmin=self.filtrar_por_admin(usuario_a) | self.filtrar_por_admin(usuario_b)
-        qsCliente=self.filtrar_por_cliente(usuario_a) | self.filtrar_por_cliente(usuario_b)
-
-        print(qsAdmin)
-        print(qsCliente)
-        print(qsAdmin and qsCliente)
-        
-        #if(qsAdmin and qsCliente):
-        return qsAdmin and qsCliente
-        
+        #qsAdmin=self.filtrar_por_admin(usuario_a) | self.filtrar_por_admin(usuario_b)
+        #qsCliente=self.filtrar_por_cliente(usuario_a) | self.filtrar_por_cliente(usuario_b)      
+        #return qsAdmin and qsCliente
+        return self.filtrar_por_username(usuario_a).filtrar_por_username(usuario_b)
     
+    def verificar_existencia_usuario(self,usuario_c):
+        print(Empleado.objects.filter(cedula=usuario_c))
+        return Empleado.objects.filter(cedula=usuario_c).exists() or Usuario.objects.filter(cedula=usuario_c).exists()
 
-
-
-
+    def verificar_existencia_cliente(self, usuario_c):
+        print(Usuario.objects.filter(cedula=usuario_c))
+        return Usuario.objects.filter(cedula=usuario_c).exists()
+        
+    def verificar_existencia_admin(self, usuario_c):
+        print(Empleado.objects.filter(cedula=usuario_c))
+        return Empleado.objects.filter(cedula=usuario_c).exists()
+       
 class CanalManager(models.Manager):
     def get_queryset(self, *args, **kwards):
         return CanalQuerySet(self.model, using=self._db)
 
     def filtrar_ms_por_privado(self, username_a, username_b):
-        return self.get_queryset().filtrar_por_usuario(username_a, username_b)
+        return self.get_queryset().filtrar_por_cliente(username_a).filtrar_por_admin(username_b)
 
     def obtener_o_crear_canal_ms(self, username_a, username_b):
-        qs = self.filtrar_ms_por_privado(username_a, username_b)
+        qs0=self.get_queryset().verificar_existencia_cliente(username_a) and self.get_queryset().verificar_existencia_admin(username_b)
+        print(qs0)
+        print(Usuario.objects.filter(cedula=username_a))
+        print(Empleado.objects.filter(cedula=username_b))
+        print(Empleado.objects.all().values())
         
-        if qs.exists():
-            return qs.order_by("tiempo").first(), False  # obj, Created
+        
 
+        print("PRUEBAAAAAAAAAAAAAAAAA====")
+        if(qs0):
+            pass
+        else:
+            return None, False
+        
+        qs = self.filtrar_ms_por_privado(username_a, username_b)
+        print(qs)
+        if qs.exists():
+            print("El canal existe")
+            return qs.order_by("tiempo").first(), False  # obj, Created
+        print("el canal no existe")
         usuario_a, usuario_b = None, None
         administrador,cliente=None,None
         canal_usuario_a,canal_usuario_b=None,None
 
         if(Empleado.objects.filter(cedula=username_a).exists()):
-            usuario_a=Empleado.objects.get(cedula=username_a)
+            usuario_a=Empleado.objects.filter(cedula=username_a)[0]
             administrador=usuario_a
             print(str(usuario_a.rol)+"ROLES")
-            #obj_canal = Canal.objects.create()
-            #canal_usuario_a = CanalUsuario(usuario_admin=usuario_a, canal=obj_canal)
-            
-            
+  
             
         elif(Cliente.objects.filter(usuario__cedula=username_a).exists()):
-            usuario_a=Cliente.objects.get(usuario__cedula=username_a)
+            usuario_a=Cliente.objects.filter(usuario__cedula=username_a)[0]
             cliente=usuario_a
             print(str(usuario_a.usuario.rol)+"ROLES")
-            
-            #obj_canal = Canal.objects.create()
-            #canal_usuario_a = CanalUsuario(usuario=usuario_a, canal=obj_canal)
-            
-          
-            
-        
+
             
         if(Empleado.objects.filter(cedula=username_b).exists()):
-            usuario_b=Empleado.objects.get(cedula=username_b)
+            usuario_b=Empleado.objects.filter(cedula=username_b)[0]
             administrador=usuario_b
             print(str(usuario_b.rol)+"ROLES")
 
-            #obj_canal = Canal.objects.create()        
-            #canal_usuario_b = CanalUsuario(usuario_admin=usuario_b, canal=obj_canal)
-            
-           
-       
         elif(Cliente.objects.filter(usuario__cedula=username_b).exists()):
-            usuario_b=Cliente.objects.get(usuario__cedula=username_b)
+            usuario_b=Cliente.objects.filter(usuario__cedula=username_b)[0]
             cliente=usuario_b
             print(str(usuario_b.usuario.rol)+"ROLES")
-
-            #obj_canal = Canal.objects.create()
-            #canal_usuario_b = CanalUsuario(usuario=usuario_b, canal=obj_canal)
-            
+ 
         else:
             return None, False
-
-
-        '''
-        try:
-            usuario_a = Usuario.objects.get(cedula=username_a)
-            
-        except Usuario.DoesNotExist:
-            return None, False
-
-        try:
-            usuario_b = Usuario.objects.get(cedula=username_b)
-
-        except Usuario.DoesNotExist:
-            return None, False
-        '''
 
         if (usuario_a == None or usuario_b == None):
             return None, False
 
-        '''
-        if(usuario_a.rol=="administrador" or usuario_a.usuario.rol=="administrador"):
-            print("usuario logeado es empleado")
-        else:
-            print("usuario logeado es cliente")
-            
-        if(usuario_b.rol=="administrador" or usuario_b.usuario.rol=="administrador"):
-            print("usuario receptor es empleado")
-        else:
-            print("usuario receppoor es cliente")
-        '''
         print(administrador)
         print(cliente)
             
@@ -771,15 +732,7 @@ class CanalManager(models.Manager):
             usuario_cliente=cliente,
             usuario_admin=administrador
         )
-        #canal_usuario_a = CanalUsuario(usuario=cliente, canal=obj_canal)
-        #canal_usuario_b = CanalUsuario(usuario=administrador, canal=obj_canal)
-        
-        #print(usuario_a.rol)
-        #print(usuario_b.rol)
-        
-        
-        #CanalUsuario.objects.bulk_create([canal_usuario_a, canal_usuario_b])
-        
+   
 
         return obj_canal, True
     
@@ -788,7 +741,6 @@ class CanalManager(models.Manager):
         return qs
   
 class Canal(ModelBase):
-    # para 1 o mas usuario  s conectados
     usuario_cliente = models.ForeignKey(Cliente, blank=True,null=True,  on_delete=models.CASCADE)
     usuario_admin=models.ForeignKey(Empleado,blank=True,null=True, on_delete=models.CASCADE)
     objects = CanalManager()
