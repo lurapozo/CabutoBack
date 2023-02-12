@@ -3033,7 +3033,8 @@ def verificar_y_crear_canal(request,cliente,admin):
 def actualizar_sms_leido(request,id_mensaje):
     if request.method == 'GET':
         qs = CanalMensaje.verificar_leido(id_mensaje)
-    
+        print(qs)
+        print("===============")
         return JsonResponse({
             'data':qs,
             },safe=False)

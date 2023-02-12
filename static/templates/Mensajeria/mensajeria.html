@@ -3,123 +3,267 @@
 {% include 'Shared/header.html' %}
 {% include 'Shared/sidebar.html' %}
 {% include 'Shared/navbar.html' %}
+
 <style>
-    .mensajes{
-        padding: 5px;
-        display: flex;
-        flex-direction: column;
-
-    }
-    .item-mensaje{
-        width: 90%;
-        margin-bottom: 5px;
-        display: flex;            
-        
-    }
-    .item-mensaje .avatar{
-        padding: 15px 15px 15px 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-    }
-    .avatar img{
-        width: 80px;
-    }
-    .detalles{
-        width: 100%;
-        border: gray 2px solid;
-        border-radius: 10px 10px 10px 0;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        
-    }
-    .nombre{
-        color: rgb(97, 95, 95);
-        font-size: large;
-        
-    }
-    .tipo{
-        color: red;
-        font-size: small;
-    }
-
-    .texto{
-        color: gray;
-        font-weight: normal;
-
-    }
-
-    .tiempo{
-        display: flex;
-        justify-content: end;
-        color: red;
-        font-size: small;
-    }
-    
-
-    .mensajes  .emitido{
-        margin-left: auto;
-    }
-
-    .detalles{
-        background-color: rgb(190, 187, 187);
-    }
-    
-    .mensajes .recibido{
-        margin-right: auto;
-       
-    }
-       
+  .lista-mensajes {
+    height: 70%;
+    overflow-y: scroll;
+  }
+  .mensajes {
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+  }
+  .item-mensaje {
+    width: 90%;
+    margin-bottom: 5px;
+    display: flex;
+  }
+  .item-mensaje .avatar {
+    padding: 15px 15px 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .avatar img {
+    width: 80px;
+  }
+  .detalles {
+    width: 100%;
+    border: gray 2px solid;
+    border-radius: 10px 10px 10px 0;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  .nombre {
+    color: rgb(97, 95, 95);
+    font-size: large;
+    font-weight: bold;
+  }
+  .tipo {
+    color: red;
+    font-size: small;
+  }
+  
+  .texto {
+    color: gray;
+    font-weight: normal;
+  }
+  
+  .tiempo {
+    display: flex;
+    justify-content: end;
+    color: red;
+    font-size: small;
+  }
+  
+  .emitido {
+    margin-left: auto;
+  }
+  
+  .emitido .detalles {
+    background-color: rgb(190, 187, 187);
+  }
+  
+  .recibido {
+    margin-right: auto;
+  }
+  
+  .enviar {
+    position: absolute;
+    bottom: 5px;
+    display: flex;
+    justify-content: center;
+    width: 95%;
+  }
+  .enviar .text-input {
+    width: 90%;
+    padding-right: 10px;
+  }
+  .text-input input {
+    width: 100%;
+    border-radius: 16px;
+    padding: 8px;
+  }
+  
+  .enviar .btn-send {
+    width: auto;
+    display: flex;
+    align-items: center;
+  }
+  .btn-send input {
+    border-radius: 8px;
+    width: 100%;
+    background-color: orangered;
+    color: white;
+    border: solid gray 1px;
+    font-size: large;
+  }
+  .titulo {
+    margin: 5px auto;
+    text-align: center;
+    width: 95%;
+    font-size: x-large;
+    font-weight: bold;
+    background-color: orangered;
+    color: white;
+    border-radius: 16px;
+    padding: 10px 0;
+  }
 </style>
 
-{% for mensaje in data_mensajes %}
-
-<div id="mensajes" class="mensajes" >
-       
-        {% if mensaje.esAdmin == true %}
-        <div  class="item-mensaje emitido">
-            <div class="avatar">
-              <img src="../../../assets/img/avatar.png" alt="">
-        
-            </div>
-            <div class="detalles">
-              <div class="nombre">
-                <span>{{mensaje.usuario_admin__nombre}} {{mensaje.usuario_admin__apellido}}</span> <span class="tipo">( yo )</span>
-
-              </div>
-              <div class="texto">
-                {{mensaje.texto}}
-              </div>
-              <div class="tiempo">
-                {{ mensaje.tiempo |date:"d/m/Y" }}
-              </div>
-        
-            </div>
-          </div>
-        {% else %}
-        <div class="item-mensaje recibido">
-            <div class="avatar">
-              <img src="../../../assets/img/avatar.png" alt="">
-        
-            </div>
-            <div class="detalles">
-              <div class="nombre">
-                <span>{{mensaje.usuario_admin__nombre}} {{mensaje.usuario_admin__apellido}}</span> <span class="tipo">( cliente )</span>
-              </div>
-              <div class="texto">
-                {{mensaje.texto}}
-              </div>
-              <div class="tiempo">
-                {{ mensaje.tiempo | date:"d/m/Y, h:m"}}
-              </div>
-        
-            </div>
-        {% endif %}
+<script type="text/javascript">
+  let h = 'hola'
+  let c = 0
+  cliente = '{{cliente_}}'.replace('0', '0')
+  admin = '{{admin_}}'.replace('0', '0')
+  url_base = 'http://localhost:8000/movil/api/chat/' + cliente + '/' + admin + '/'
   
-          
-{% endfor %}
+  $.ajax({
+    url: url_base,
+    type: 'GET',
+    success: function (result) {
+      console.log(result)
+  
+      actualizarVista(result.mensajes)
+      marcarLeido(result.mensajes)
+    }
+  })
+  window.setInterval(function () {
+    $.ajax({
+      url: url_base,
+      type: 'GET',
+      success: function (result) {
+        actualizarVista(result.mensajes)
+      }
+    })
+  }, 2000)
+  
+  
 
-</div>
+  function actualizarVista(data_mensajes_) {
+    let lista_mensajes = document.getElementById('lista-mensajes')
+    lista_mensajes.innerHTML = ''
+  
+    for (let mensaje of data_mensajes_) {
+      let date = new Date(mensaje.tiempo)
+      let tiempo = date.getDay() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' , ' + date.getHours() + ':' + date.getMinutes()
+  
+      if (mensaje.esAdmin == true) {
+        let item_mensaje = document.createElement('div')
+        item_mensaje.className = 'item-mensaje emitido'
+        item_mensaje.innerHTML = '<div class="avatar">' + '<img src="{% static "img/iconos_administrador/avatar.png" %}">' + '</div>' + '<div class="detalles">' + '<div class="nombre">' + '<span id="nombre">' + mensaje.usuario_admin__nombre +mensaje.usuario_admin__nombre + ' ' + mensaje.usuario_admin__apellido+ '</span> <span class="tipo">( yo )</span>' + '</div>' + '<div id="texto" class="texto">' + mensaje.texto + '</div>' + '<div id="tiempo" class="tiempo">' + tiempo + '</div>' + '</div>'
+  
+        lista_mensajes.appendChild(item_mensaje)
+      } else {
+        let item_mensaje = document.createElement('div')
+        item_mensaje.className = 'item-mensaje recibido'
+        item_mensaje.innerHTML = '<div class="avatar">' + '<img src="{% static "img/iconos_administrador/avatar.png" %}">' + '</div>' + '<div class="detalles">' + '<div class="nombre">' + '<span id="nombre">' + mensaje.usuario_cliente__nombre + ' ' + mensaje.usuario_cliente__apellido + '</span> <span class="tipo">( cliente )</span>' + '</div>' + '<div id="texto" class="texto">' + mensaje.texto + '</div>' + '<div id="tiempo" class="tiempo">' + tiempo + '</div>' + '</div>'
+  
+        lista_mensajes.appendChild(item_mensaje)
+      }
+    }
+    lista_mensajes.scrollTo(0,lista_mensajes.scrollHeight)
 
+  }
+  
+  window.onload = function () {
+    var form = document.querySelector('form')
+    form.onsubmit = submitted.bind(form)
+  }
+  
+  function submitted(event) {
+    event.preventDefault()
+  }
+  function num_no_leido(mensajes_) {
+    let num_no_leido = 0
+    console.log('MENSAAAJESSSSS')
+    console.log(mensajes_)
+    let no_leidos = mensajes_.filter((res) => {
+      res.check_leido == false && res.esAdmin == true
+    })
+    for (mensaje of mensajes_) {
+      if (mensaje.check_leido == false && mensaje.esAdmin == true) {
+        console.log('acepta')
+        num_no_leido = num_no_leido + 1
+      }
+    }
+    return num_no_leido
+  }
+  
+  function marcarLeido(mensajes_) {
+    let num_no_leido = 0
+    console.log('MENSAAAJESSSSS')
+    console.log(mensajes_)
+    let no_leidos = mensajes_.filter((res) => {
+      res.check_leido == false && res.esAdmin == true
+    })
+    for (mensaje of mensajes_) {
+      if (mensaje.check_leido == false && mensaje.esAdmin == true) {
+        console.log('acepta')
+        num_no_leido = num_no_leido + 1
+        console.log(mensaje.id)
+        let url = 'http://localhost:8000/movil/sms_update/' + mensaje.id + '/'
+  
+        $.ajax({
+          url: url,
+          type: 'GET',
+          success: function (result) {
+            console.log(result)
+          }
+        })
+      }
+    }
+
+
+  }
+  
+  function sendMessage() {
+    let textoSms = document.getElementById('textSms')
+    if (textoSms.value.length != 0) {
+      
+      $.ajax({
+        url: url_base,
+        type: 'GET',
+        success: function (result) {
+          $.ajax({
+            url: url_base,
+            type: 'POST',
+            headers: {
+              Accept: 'application/json,application/x-www-form-urlencoded',
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: JSON.stringify({
+              texto: textoSms.value,
+              usuario_cliente: cliente,
+              usuario_admin: admin,
+              canal: result.canal,
+              check_leido: false,
+              esAdmin: true
+            }),
+            success: function (result) {
+              textoSms.value = ''
+
+            }
+          })
+        }
+      })
+    }
+  }
+</script>
+
+<div class="titulo">Chat Administrador</div>
+
+<div id="lista-mensajes" class="lista-mensajes"></div>
+
+<form>
+  <div class="enviar">
+    <div class="text-input">
+      <input id="textSms" type="text" />
+    </div>
+    <div class="btn-send">
+      <input type="submit" value="Enviar" onclick="sendMessage()" />
+    </div>
+  </div>
+</form>

@@ -200,6 +200,18 @@
       white-space: nowrap;
     }
 </style>
+<script>
+    function hola(){
+        console.log("HOLAAAAAA")
+    }
+
+    $(document).ready(function(){
+        let e=document.getElementById("_usuario")
+        console.log(e.innerText)
+        localStorage.setItem("usuario",e.innerText)
+     });
+    
+</script>
 <!DOCTYPE html>
 <html>
 
@@ -232,8 +244,9 @@
                     <img id="logo-principal" src="{% static 'img/iconos_administrador/avatar.png' %}">
                 </div>
                 {% if user.is_authenticated %}
+                
                 <div class="col-12 form-group contenedor-correo">
-                    <label>{{ user}}</label>
+                    <label id="_usuario" >{{ user}}</label>
                 </div>
                 {% endif %}
 

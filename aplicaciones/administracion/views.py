@@ -813,6 +813,7 @@ def cliente_page(request):
 def ver_cliente(request,id_cliente):
     if request.method=='GET':
         notificacion=Cliente.objects.get(id_cliente=id_cliente)
+        
         return render(request, "Reportes/view-clientes.html",{"data":notificacion})
     return HttpResponse(status=400)
 
@@ -2637,20 +2638,34 @@ def mensajeria_page(request,cliente,admin):
 
         perfil_usuario_actual={}
         perfil_admin={}
-            
+        u_cliente=Usuario.objects.filter(cedula=cliente).first().photo_url
+
         mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
+       
         data= {
-                'canal':canal.id,
-                'receptor':admin,
-                'usuario_logeado':cliente,
-                'data_mensajes':mensajes
-                
+                'canal_':canal.id,
+                'admin_':admin,
+                'cliente_':cliente,
+                'data_mensajes':mensajes,
+                'usuario_cliente_photo':u_cliente
                 }
+        print(data)
+        print("=========================================================================")
+        
         return render(request, "Mensajeria/mensajeria.html",data)
-    
-    
     
     return HttpResponse(status=400)
 
 
+@login_required(login_url='/login/')
+def get_info_admin(request,usuario_admin):
+        print("holaaa")
 
+        if request.method=='GET':
+            print("holaaa")
+            qs=Empleado.objects.filter(usuario__username=usuario_admin).values()
+            if(qs):
+                print(qs)
+            return JsonResponse({'data':list(qs)})
+
+        return HttpResponse(status=400)
