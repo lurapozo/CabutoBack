@@ -125,10 +125,10 @@ WSGI_APPLICATION = 'cabuto.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'marketdb',
-        'USER': 'root',
-        'PASSWORD': 'Admin',
-        'HOST': 'localhost',
+        'NAME': 'CabutoShop$marketdb',
+        'USER': 'CabutoShop',
+        'PASSWORD': 'market2020',
+        'HOST': 'CabutoShop.mysql.pythonanywhere-services.com',
         'PORT': '3306',
         'OPTIONS': {
             'sql_mode': 'traditional',
@@ -137,13 +137,7 @@ DATABASES = {
     }
 }
 
-'''
-'NAME': 'CabutoShop$marketdb',
-        'USER': 'CabutoShop',
-        'PASSWORD': 'market2020',
-        'HOST': 'CabutoShop.mysql.pythonanywhere-services.com',
-        'PORT': '3306',
-'''
+
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
