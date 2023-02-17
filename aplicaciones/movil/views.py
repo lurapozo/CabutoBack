@@ -1010,8 +1010,6 @@ def getCliente2(request):
             for user in users:
                 try:
                     id_usuario=user.usuario.id_usuario
-                    if id_usuario == 167:
-                        return HttpResponse(status=400)
                     cedula=user.usuario.cedula
                     imagen=user.usuario.photo_url
                     codigoUser=user.usuario.codigo_unico
@@ -1178,12 +1176,12 @@ def registro2(request):
                 'valid': 'EMAIL'
                 }
                 return JsonResponse(response_data,safe=False)
-            '''if cedula!=" " and cedula == cd:
+            if cedula!=" " and cedula == cd:
                 print("cedula repetida")
                 response = {
                     'valid': 'CED'
                     }
-                return JsonResponse(response,safe=False)'''
+                return JsonResponse(response,safe=False)
         msj2 = 'Bienvenido a Cabutos, es un placer que se una a nosotros'
         u =Usuario(cedula=cedula,correo=email,contrasena=contra)
         u =Usuario(cedula=cedula,correo=email,contrasena=contra,codigo_unico=codigo)
@@ -2982,17 +2980,17 @@ def verificar_y_crear_canal(request,cliente,admin):
         texto_=body['texto']
         usuario_admin_=body['usuario_admin']
         usuario_cliente_=body['usuario_cliente']
-        
-        
+
+
         print(body)
 
         canal_c=Canal.objects.get(id=canal_)
         usuario_cliente,usuario_admin=None,None
-        
-        if(esAdmin_==True):
-            usuario_admin=Empleado.objects.get(cedula=usuario_admin_)
-        else:
-            usuario_cliente=Cliente.objects.get(usuario__cedula=usuario_cliente_)
+
+        #if(esAdmin_==True):
+        usuario_admin=Empleado.objects.get(cedula=usuario_admin_)
+        #else:
+        usuario_cliente=Cliente.objects.get(usuario__cedula=usuario_cliente_)
 
         nuevo_mensaje=CanalMensaje(
             canal=canal_c,
@@ -3005,21 +3003,21 @@ def verificar_y_crear_canal(request,cliente,admin):
         )
         nuevo_mensaje.save()
         return JsonResponse(body)
-        
+
     elif request.method == 'GET':
 
 
         canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
         if canal == None:
             return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
-        
+
         if admin == cliente:
             return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
 
-   
+
         perfil_usuario_actual={}
         perfil_admin={}
-         
+
         mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
 
         return JsonResponse({
@@ -3027,7 +3025,7 @@ def verificar_y_crear_canal(request,cliente,admin):
             'receptor':admin,
             'usuario_logeado':cliente,
             'mensajes':mensajes
-            
+
             })
 
 def actualizar_sms_leido(request,id_mensaje):
@@ -3038,7 +3036,7 @@ def actualizar_sms_leido(request,id_mensaje):
         return JsonResponse({
             'data':qs,
             },safe=False)
-        
+
 def obtener_data_empleado_admin(request):
     if request.method == 'GET':
         qs=Empleado.objects.all().values()

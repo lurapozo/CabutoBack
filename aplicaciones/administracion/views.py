@@ -562,11 +562,12 @@ def get_pedido(request,id_pedido):
 @login_required(login_url='/login/')
 def detalle_pedido(request,id_pedido):
 	pedido=Pedido.objects.select_related().filter(id_pedido=id_pedido).first()
+	sinDelivery = pedido.subtotal + pedido.iva
 	producto_pedido=Producto_Pedido.objects.select_related().filter(pedido=pedido)
 	oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
 	combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
 	cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
-	context={"data": pedido,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido}
+	context={"data": pedido,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido, "sinDelivery": sinDelivery}
 	return render(request, "Pedidos/detalle-pedido.html",context)
 
 @login_required(login_url='/login/')
@@ -619,6 +620,8 @@ def get_ventas(request):
 	    print(orden)
 	    desde=request.GET.get("from")
 	    hasta=request.GET.get("to")
+	    #pedido=Pedido.objects.select_related().filter(id_pedido=id_pedido).first()
+	    #sinDelivery = pedido.subtotal + pedido.iva
 	    data_clientes=Pedido.objects.select_related().filter(pagado=True)
 	    if desde!=None and hasta!=None:
 	        data_clientes=data_clientes.filter(fecha__range=[desde, hasta])
@@ -813,7 +816,7 @@ def cliente_page(request):
 def ver_cliente(request,id_cliente):
     if request.method=='GET':
         notificacion=Cliente.objects.get(id_cliente=id_cliente)
-        
+
         return render(request, "Reportes/view-clientes.html",{"data":notificacion})
     return HttpResponse(status=400)
 
@@ -2538,13 +2541,13 @@ def verificar_y_crear_canal(request,cliente,admin):
         texto_=body['texto']
         usuario_admin_=body['usuario_admin']
         usuario_cliente_=body['usuario_cliente']
-        
-        
+
+
         print(body)
 
         canal_c=Canal.objects.get(id=canal_)
         usuario_cliente,usuario_admin=None,None
-        
+
         if(esAdmin_==True):
             usuario_admin=Empleado.objects.get(cedula=usuario_admin_)
         else:
@@ -2561,21 +2564,21 @@ def verificar_y_crear_canal(request,cliente,admin):
         )
         nuevo_mensaje.save()
         return JsonResponse(body)
-        
+
     elif request.method == 'GET':
 
 
         canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
         if canal == None:
             return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
-        
+
         if admin == cliente:
             return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
 
-   
+
         perfil_usuario_actual={}
         perfil_admin={}
-         
+
         mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
 
         return JsonResponse({
@@ -2583,17 +2586,17 @@ def verificar_y_crear_canal(request,cliente,admin):
             'receptor':admin,
             'usuario_logeado':cliente,
             'mensajes':mensajes
-            
+
             })
 
 def actualizar_sms_leido(request,id_mensaje):
     if request.method == 'GET':
         qs = CanalMensaje.verificar_leido(id_mensaje)
-    
+
         return JsonResponse({
             'data':qs,
             },safe=False)
-        
+
 def obtener_data_empleado_admin(request):
     if request.method == 'GET':
         qs=Empleado.objects.all().values()
@@ -2624,14 +2627,14 @@ def ban(request,id_cliente):
 @login_required(login_url='/login/')
 def mensajeria_page(request,cliente,admin):
     if request.method=='GET':
-        
-        
+
+
         #return render(request, "Reportes/view-clientes.html",{"data":notificacion})
-    
+
         canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
         if canal == None:
             return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
-        
+
         if admin == cliente:
             return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
 
@@ -2641,7 +2644,7 @@ def mensajeria_page(request,cliente,admin):
         u_cliente=Usuario.objects.filter(cedula=cliente).first().photo_url
 
         mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
-       
+
         data= {
                 'canal_':canal.id,
                 'admin_':admin,
@@ -2651,9 +2654,9 @@ def mensajeria_page(request,cliente,admin):
                 }
         print(data)
         print("=========================================================================")
-        
+
         return render(request, "Mensajeria/mensajeria.html",data)
-    
+
     return HttpResponse(status=400)
 
 
