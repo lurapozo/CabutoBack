@@ -606,13 +606,22 @@ def guardarPedido(request):
     if request.method == 'POST':
         response = json.loads(request.body)
         value=response["id"]
-        carrito=response["carrito"]
+        try:
+            carrito=response["carrito"]
+        except:
+            clienteNuevo = Cliente.objects.get(id_cliente=int(value))
         tipoEntrega=response["tipoEntrega"]
         direccion=response["direccion"]
         tipoPago=response["tipoPago"]
         subtotal=response["subtotal"]
+        subtotal2=response["subtotal"]
         envio=response["envio"]
         descuento=response["descuento"]
+        estadopedido=response["tarjetaRegalo"]
+        nombreTarjeta=response["nombreTarjeta"]
+        numeroTarjeta=response["numeroTarjeta"]
+        tarjeta=response["tarj"]
+
         total=(subtotal-descuento+envio)
         subtotal=round(subtotal/1.12,2)
         iva=round(subtotal*0.12,2)
@@ -628,17 +637,98 @@ def guardarPedido(request):
         user=Cliente.objects.filter(id_cliente=value).first()
         try:
             pedido=Pedido(tipo_entrega=tipoEntrega,tipo_pago=tipoPago,subtotal=subtotal,iva=iva,descuento=descuento,
-            envio=envio,total=total,cliente=user,direccion=direccion,establecimiento=establecimiento,observacion="",fecha=timezone.now())
+            envio=envio,total=total,cliente=user,direccion=direccion,establecimiento=establecimiento,observacion="",fecha=timezone.now(),
+            nombreTarjeta=nombreTarjeta,numeroTarjeta=numeroTarjeta)
+            if(tarjeta=="monto" or tarjeta=="producto"):
+                pedido.estado="Regalo"
+            puntos = Puntos.objects.get(id_puntos = 1)
+            pedido.puntos=subtotal2 * (puntos.puntosADolar / puntos.dolarAPuntos)
             pedido.save()
-            carrito=Carrito.objects.filter(id_carrito=carrito).first()
-            detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
-            detalle_oferta=Carrito_Oferta.objects.filter(id_carrito=carrito)
-            detalle_combo=Carrito_Combo.objects.filter(id_carrito=carrito)
-            detalle_cupon=Carrito_Cupones.objects.filter(id_carrito=carrito)
-            detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
-            detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
-            #dtm=Carrito_Tarjeta_Monto.objects.get(id_carrito=carrito)
-            detallePedido(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto)
+            if(tarjeta=="monto"):
+                receptor=response["receptor"]
+                descripcion=response["descripcion"]
+                clienteEmisor = Cliente.objects.get(id_cliente=int(value))
+                clienteReceptor = Cliente.objects.get(usuario__correo=receptor)
+
+                tarjetaMonto=Tarjeta_Monto(id_cliente=clienteEmisor, monto=float(total),descripcion=descripcion,id_pedido=pedido)
+                tarjetaMonto.save()
+                tarjetaMontoCliente=Tarjeta_Monto_Cliente(id_cliente=clienteReceptor, id_tarjeta=tarjetaMonto, fecha=timezone.now())
+                tarjetaMontoCliente.save()
+
+                devices=GCMDevice.objects.filter(user=clienteReceptor.usuario)
+                mensaje= "¡Alguien te ha enviado un regalo!"
+
+                data = {"title":"Regalo recibido","icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "titulo": "Nuevo regalo", "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
+                #devices.send_message(mensaje, extra=data)
+
+                datasend={"to": clienteReceptor.usuario.token,
+                        "notification": {
+                            "title": "Regalo recibido",
+                            "body": mensaje
+                        },
+                        "data": data
+                    }
+                response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
+
+                msj = 'Ha recibido un regalo de: '+str(clienteEmisor.nombre)+' '+str(clienteEmisor.apellido)+', abra la app Cabuto`s para reclamarlo.'
+                email = EmailMessage('Nuevo regalo recibido: ', msj, to=[clienteReceptor.usuario.correo])
+                email.send()
+
+            elif(tarjeta=="producto"):
+                receptor=response["receptor"]
+                descripcion=response["descripcion"]
+                detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
+                clienteEmisor = Cliente.objects.get(id_cliente=int(value))
+                clienteReceptor = Cliente.objects.get(usuario__correo=receptor)
+                tarjetaProducto=Tarjeta_Producto(id_cliente=clienteEmisor, descripcion=descripcion,id_pedido=pedido)
+                tarjetaProducto.save()
+                tarjetaProductoCliente=Tarjeta_Producto_Cliente(id_cliente=clienteReceptor, id_tarjeta=tarjetaProducto, fecha=timezone.now())
+                tarjetaProductoCliente.save()
+
+                devices=GCMDevice.objects.filter(user=clienteReceptor.usuario)
+                mensaje= "¡Alguien te ha enviado un regalo!"
+                data = {"title":"Regalo recibido","icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "titulo": "Nuevo regalo", "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
+                '''devices.send_message(mensaje, extra=data)'''
+
+                datasend={"to": clienteReceptor.usuario.token,
+                        "notification": {
+                            "title": "Regalo recibido",
+                            "body": mensaje
+                        },
+                        "data": data
+                    }
+
+                response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
+                msj = 'Ha recibido un regalo de: '+str(clienteEmisor.nombre)+' '+str(clienteEmisor.apellido)+', abra la app Cabuto`s para reclamarlo.'
+                email = EmailMessage('Nuevo regalo recibido: ', msj, to=[clienteReceptor.usuario.correo])
+                email.send()
+
+                for producto in detalle_producto:
+                    '''pro=Producto.objects.filter(id_producto=producto.id_producto.id_producto).annotate(suma=Sum('establecimiento_producto__stock_disponible')).first()
+                    if(pro.suma-producto.cantidad>=0):
+                        productoxpedido=Producto_Pedido(cantidad=producto.cantidad,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
+                        productoxpedido.save()
+                        producto.delete()
+                    elif(pro.suma>0):
+                        productoxpedido=Producto_Pedido(cantidad=pro.suma,precio=producto.precio,producto=producto.id_producto,pedido=pedido)
+                        productoxpedido.save()
+                        producto.delete()'''
+                    tarjetaProductoProducto=Tarjeta_Producto_Producto(id_tarjeta=tarjetaProducto, id_producto=producto.id_producto, cantidad=producto.cantidad)
+                    tarjetaProductoProducto.save()
+                    producto.delete()
+
+            else:
+                carrito=Carrito.objects.filter(id_carrito=carrito).first()
+                detalle_producto=Detalle_Carrito.objects.filter(id_carrito=carrito)
+                detalle_oferta=Carrito_Oferta.objects.filter(id_carrito=carrito)
+                detalle_combo=Carrito_Combo.objects.filter(id_carrito=carrito)
+                detalle_cupon=Carrito_Cupones.objects.filter(id_carrito=carrito)
+                detalle_tarjeta_monto=Carrito_Tarjeta_Monto.objects.filter(id_carrito=carrito)
+                detalle_tarjeta_producto=Carrito_Tarjeta_Producto.objects.filter(id_carrito=carrito)
+
+
+                #dtm=Carrito_Tarjeta_Monto.objects.get(id_carrito=carrito)
+                detallePedido2(pedido,carrito,detalle_producto,detalle_oferta,detalle_combo,detalle_cupon,detalle_tarjeta_monto,detalle_tarjeta_producto)
             res = {
             'valid': 'ok',
             'pedido': pedido.id_pedido
@@ -649,9 +739,11 @@ def guardarPedido(request):
                 "message": f'Usuario {user.nombre} ha realizado un nuevo pedido.',
                 "vibrate": "[200, 100, 200, 100, 200, 100, 200]"
             })
+            #datasend={"to": "/topics/CAMBIAR", "notification": {"title": f'¡Nuevo pedido!',"subtitle": f'¡Nuevo pedido!',"body": f'Usuario {user.nombre} ha realizado un nuevo pedido.'},"data":data}
             for device in devices:
                 try:
                     device.send_message(message=data)
+                    #response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
                 except WebPushError as e:
                     print(e)
                     device.delete()

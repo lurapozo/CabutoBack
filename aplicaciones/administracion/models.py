@@ -185,6 +185,8 @@ class Pedido(models.Model):
     establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
     direccion=models.ForeignKey(DireccionEntrega, on_delete=models.SET_NULL, null=True)
     puntos=models.IntegerField(default=0)
+    nombreTarjeta=models.CharField(max_length=100, default = "", null=True)
+    numeroTarjeta=models.CharField(max_length=100, default = "", null=True)
 
 class TransaccionPedido(models.Model):
     id_transaccion=models.AutoField(primary_key=True)
