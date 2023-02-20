@@ -2902,8 +2902,6 @@ def addToken(request):
         id_usuario=response["id"]
         token  = response["token"]
         usuario=Usuario.objects.get(id_usuario=id_usuario)
-        if user.id_usuario == 167:
-            return HttpResponse(status=400)
         usuario.token=token
         usuario.save()
         response_data = {
@@ -3055,7 +3053,29 @@ def revisarBan(request, id):
         return JsonResponse(response_data,safe=False)
     JsonResponse(response_data,safe=False)
 
+@csrf_exempt
+def modContra(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        id=response["id"]
+        usuario=Usuario.objects.select_related().filter(id_usuario=id).first()
+        vContra = response["vContra"]
+        nContra = response["nContra"]
+        try:
+            if usuario.contrasena == vContra:
+                usuario.contrasena = nContra
+                usuario.save()
+                response_data = {'valid':'OK'}
 
+            else:
+                response_data = {'valid':'contra'}
+
+            return JsonResponse(response_data,safe=False)
+        except:
+            response_data = {'valid':'NO'}
+            return JsonResponse(response_data,safe=False)
+
+    return HttpResponse(status=400)
 
 
 #@login_required(login_url='/login/')

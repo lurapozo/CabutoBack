@@ -78,10 +78,12 @@ urlpatterns = [
     path('reclamarPremio/', recalmarPremio),
     path('restarPuntos/', restarPuntos),
     path('revisarBan/<int:id>', revisarBan),
-    
+    path('modContra/', modContra),
+
 	#URLS PARA CHAT
     path("api/chat/<str:cliente>/<str:admin>/",verificar_y_crear_canal),
+    #path("api/chat/inbox/<str:usuario_actual>/",obtener_ca_usuario_actual),
     path("sms_update/<str:id_mensaje>/",actualizar_sms_leido),
     path("obtenerAdmin",obtener_data_empleado_admin),
-    
+
 ]
