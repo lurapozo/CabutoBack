@@ -185,6 +185,7 @@ class Pedido(models.Model):
     establecimiento=models.ForeignKey(Establecimiento, on_delete=models.SET_NULL, null=True)
     direccion=models.ForeignKey(DireccionEntrega, on_delete=models.SET_NULL, null=True)
     puntos=models.IntegerField(default=0)
+    direccion=models.ForeignKey(DireccionEntrega, on_delete=models.SET_NULL, null=True)
     nombreTarjeta=models.CharField(max_length=100, default = "", null=True)
     numeroTarjeta=models.CharField(max_length=100, default = "", null=True)
 
@@ -600,8 +601,8 @@ class Premios_Cliente(models.Model):
     id_premio = models.ForeignKey(Premios,on_delete=models.SET_NULL,null=True)
     id_cliente = models.ForeignKey(Cliente,on_delete=models.SET_NULL,null=True)
     estado= models.CharField(max_length=10,choices=Estado,default='Recibido',)
-    
-    
+
+
 #Modelos para Chat
 class ModelBase(models.Model):
     id = models.UUIDField(default=uuid.uuid4,
@@ -638,23 +639,23 @@ class CanalMensaje(ModelBase):
 
 class CanalQuerySet(models.QuerySet):
 
-  
+
     def filtrar_por_admin(self, username):
-        return self.filter(usuario_admin__cedula=username) 
-    
+        return self.filter(usuario_admin__cedula=username)
+
     def filtrar_por_cliente(self, username):
         return self.filter(usuario_cliente__usuario__cedula=username)
-    
+
     def filtrar_por_username(self, username):
         return  self.filtrar_por_admin(username) | self.filtrar_por_cliente(username)
 
 
     def filtrar_por_usuario(self, usuario_a, usuario_b):
         #qsAdmin=self.filtrar_por_admin(usuario_a) | self.filtrar_por_admin(usuario_b)
-        #qsCliente=self.filtrar_por_cliente(usuario_a) | self.filtrar_por_cliente(usuario_b)      
+        #qsCliente=self.filtrar_por_cliente(usuario_a) | self.filtrar_por_cliente(usuario_b)
         #return qsAdmin and qsCliente
         return self.filtrar_por_username(usuario_a).filtrar_por_username(usuario_b)
-    
+
     def verificar_existencia_usuario(self,usuario_c):
         print(Empleado.objects.filter(cedula=usuario_c))
         return Empleado.objects.filter(cedula=usuario_c).exists() or Usuario.objects.filter(cedula=usuario_c).exists()
@@ -662,11 +663,11 @@ class CanalQuerySet(models.QuerySet):
     def verificar_existencia_cliente(self, usuario_c):
         print(Usuario.objects.filter(cedula=usuario_c))
         return Usuario.objects.filter(cedula=usuario_c).exists()
-        
+
     def verificar_existencia_admin(self, usuario_c):
         print(Empleado.objects.filter(cedula=usuario_c))
         return Empleado.objects.filter(cedula=usuario_c).exists()
-       
+
 class CanalManager(models.Manager):
     def get_queryset(self, *args, **kwards):
         return CanalQuerySet(self.model, using=self._db)
@@ -680,15 +681,15 @@ class CanalManager(models.Manager):
         print(Usuario.objects.filter(cedula=username_a))
         print(Empleado.objects.filter(cedula=username_b))
         print(Empleado.objects.all().values())
-        
-        
+
+
 
         print("PRUEBAAAAAAAAAAAAAAAAA====")
         if(qs0):
             pass
         else:
             return None, False
-        
+
         qs = self.filtrar_ms_por_privado(username_a, username_b)
         print(qs)
         if qs.exists():
@@ -703,14 +704,14 @@ class CanalManager(models.Manager):
             usuario_a=Empleado.objects.filter(cedula=username_a)[0]
             administrador=usuario_a
             print(str(usuario_a.rol)+"ROLES")
-  
-            
+
+
         elif(Cliente.objects.filter(usuario__cedula=username_a).exists()):
             usuario_a=Cliente.objects.filter(usuario__cedula=username_a)[0]
             cliente=usuario_a
             print(str(usuario_a.usuario.rol)+"ROLES")
 
-            
+
         if(Empleado.objects.filter(cedula=username_b).exists()):
             usuario_b=Empleado.objects.filter(cedula=username_b)[0]
             administrador=usuario_b
@@ -720,7 +721,7 @@ class CanalManager(models.Manager):
             usuario_b=Cliente.objects.filter(usuario__cedula=username_b)[0]
             cliente=usuario_b
             print(str(usuario_b.usuario.rol)+"ROLES")
- 
+
         else:
             return None, False
 
@@ -729,21 +730,20 @@ class CanalManager(models.Manager):
 
         print(administrador)
         print(cliente)
-            
+
         obj_canal = Canal.objects.create(
             usuario_cliente=cliente,
             usuario_admin=administrador
         )
-   
+
 
         return obj_canal, True
-    
+
     def obtener_datos_usuario(id_usuario):
-        qs =Usuario.objects.filter(cedula=id_usuario)  
+        qs =Usuario.objects.filter(cedula=id_usuario)
         return qs
-  
+
 class Canal(ModelBase):
     usuario_cliente = models.ForeignKey(Cliente, blank=True,null=True,  on_delete=models.CASCADE)
     usuario_admin=models.ForeignKey(Empleado,blank=True,null=True, on_delete=models.CASCADE)
     objects = CanalManager()
-    

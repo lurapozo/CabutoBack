@@ -215,6 +215,9 @@
             <th>Código</th>
             <th>Fecha</th>
             <th>Local</th>
+            <th>Subtotal</th>
+            <th>Envio</th>
+            <th>IVA</th>
             <th>Total</th>
             <th>Lugar de entrega</th>
             <th>Forma de pago</th>
@@ -227,10 +230,14 @@
             <td>{{data.id_pedido|stringformat:"03d"}}</td>
             <td>{{data.fecha|date:"d/m/Y"}}</td>
             <td>{{data.establecimiento.nombre}}</td>
+            <td>${{data.subtotal |floatformat:2}}</td>
+            <td>${{data.envio |floatformat:2}}</td>
+            <td>${{data.iva |floatformat:2}}</td>
             <td>${{data.total |floatformat:2}}</td>
             <td>{{data.tipo_entrega}}</td>
             <td>{{data.tipo_pago}}</td>
             <td>{{data.observacion}}</td>
+
           </tr>
         {% endfor %}
       </tbody>

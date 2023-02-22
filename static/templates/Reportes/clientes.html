@@ -286,21 +286,11 @@
         });
     }
 
-    function getInfoAdminlogeado(){
-        url_get_info_admin="http://localhost:8000/administracion/getAdminInfo/"
 
-        $.ajax({
-          url: url_get_info_admin,
-          type: 'GET',
-          success: function (result) {
-            console.log(result)
-          }
-        })
-      }
       function irMensajeria(cliente_){
         console.log(typeof(cliente_))
         let usuario=localStorage.getItem("usuario")
-        let url_get_info_admin="http://localhost:8000/administracion/getAdminInfo/"+usuario
+        let url_get_info_admin="https://cabutoshop.pythonanywhere.com/administracion/getAdminInfo/"+usuario
         console.log(url_get_info_admin)
 
         $.ajax({
@@ -310,18 +300,18 @@
             let admin=result.data[0].cedula.replace('0', '0')
             cliente = `${cliente_}`
             cliente = cliente_.replace('$', '')
-  
+
             let element=document.getElementById("ir_mensajeria")
             let href="mensajeria/"+cliente+"/"+admin
             element.setAttribute("href",href)
-            
+
             console.log(href)
             window.location = href;
-            
+
           }
         })
-        
-        
+
+
         //href="mensajeria/{{data.usuario.cedula}}/999999999"
       }
 </script>

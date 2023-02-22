@@ -109,12 +109,15 @@
         font-weight: bolder;
         font-size: 10px;
         width: 9rem;
+        text-decoration: none;
         height: 2.5rem;
     }
     .boton a{
+        text-decoration: none;
         display:flex;
         justify-content: center;
         align-items:center;
+        color=white;
     }
 
     .pagination li:first-child a,
@@ -132,6 +135,13 @@
     }
     .img-publicidad{
       width: 3.5rem;
+    }
+    .contenedor-filtro2{
+        width: 100%;
+        display:flex;
+        justify-content: end;
+        align-items:center;
+        padding-right: 7vw;
     }
 
 </style>
@@ -168,10 +178,12 @@
     <div class="row contenedor-filtro">
         <h2><span class="azul">Dolares:</span> {{dolarAPuntos}} ->   <span class="azul">Puntos:</span> {{puntosADolar}} </h2>
         <h2><span class="azul">Puntos:</span> {{puntosATarjeta}}  ->   <span class="azul">Dolares en Tarjetas:</span> {{tarjetaAPuntos}} </h2>
-        <div class="boton"> <a class="btn btn-sm open-modal"data-url="puntosxpuntos/">Cambiar relacion </a></div>
+        <div class="boton"> <a class="btn btn-sm open-modal"data-url="puntosxpuntos/"><span style="color:white">Cambiar relacion</span></a></div>
+    </div>
+    <div class="row contenedor-filtro2">
         <div class="contenedor-searchbar">
             <input type="text" class="form-control" id="buscar" placeholder="Buscar">
-            <div class="boton"> <a class="btn btn-sm open-modal" data-url="add_puntos/">Añadir producto </a> </div>
+            <div class="boton"> <a class="btn btn-sm open-modal" data-url="add_puntos/"><span style="color:white">Añadir producto</span></a> </div>
         </div>
     </div>
 

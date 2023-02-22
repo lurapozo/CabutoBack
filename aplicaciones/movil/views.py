@@ -670,9 +670,18 @@ def guardarPedido(request):
                     }
                 response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
 
-                msj = 'Ha recibido un regalo de: '+str(clienteEmisor.nombre)+' '+str(clienteEmisor.apellido)+', abra la app Cabuto`s para reclamarlo.'
-                email = EmailMessage('Nuevo regalo recibido: ', msj, to=[clienteReceptor.usuario.correo])
-                email.send()
+                autorizacion="SDFGTBHR"
+                redes=RedSocial.objects.filter()
+                html = render_to_string("Correos/tarjetaDeRegalo.html",{"data":tarjetaMonto, "autorizacion":autorizacion,"usuario": clienteReceptor,"redes":redes}).strip()
+                msg = EmailMultiAlternatives('Nueva Tarjeta De Regalo', html, 'cabutosoftware1@gmail.com', to=[clienteReceptor.usuario.correo])
+                msg.content_subtype = 'html'  # set the primary content to be text/html
+                msg.mixed_subtype = 'related'
+                try:
+                    msg.send()
+                    print("type error: ")
+                except Exception as e:
+                    print("Error al enviar correo")
+                    print("type error: " + str(e))
 
             elif(tarjeta=="producto"):
                 receptor=response["receptor"]
@@ -699,9 +708,19 @@ def guardarPedido(request):
                     }
 
                 response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
-                msj = 'Ha recibido un regalo de: '+str(clienteEmisor.nombre)+' '+str(clienteEmisor.apellido)+', abra la app Cabuto`s para reclamarlo.'
-                email = EmailMessage('Nuevo regalo recibido: ', msj, to=[clienteReceptor.usuario.correo])
-                email.send()
+
+                autorizacion="SDFGTBHR"
+                redes=RedSocial.objects.filter()
+                html = render_to_string("Correos/tarjetaDeRegalo2.html",{"data":tarjetaProducto, "autorizacion":autorizacion,"usuario": clienteReceptor,"redes":redes, "productos":detalle_producto}).strip()
+                msg = EmailMultiAlternatives('Nueva Tarjeta De Regalo', html, 'cabutosoftware1@gmail.com', to=[clienteReceptor.usuario.correo])
+                msg.content_subtype = 'html'  # set the primary content to be text/html
+                msg.mixed_subtype = 'related'
+                try:
+                    msg.send()
+                    print("type error: ")
+                except Exception as e:
+                    print("Error al enviar correo")
+                    print("type error: " + str(e))
 
                 for producto in detalle_producto:
                     '''pro=Producto.objects.filter(id_producto=producto.id_producto.id_producto).annotate(suma=Sum('establecimiento_producto__stock_disponible')).first()
@@ -1021,15 +1040,15 @@ def modCliente(request):
 def getCliente(request):
     if request.method == 'GET':
         res = []
-        if request.GET.get("correo") == "gregorylopezjordan80@gmail.com":
-            return HttpResponse(status=400)
+        #if request.GET.get("correo") == "gregorylopezjordan80@gmail.com":
+            #return HttpResponse(status=400)
         if request.GET.get("correo")!=None:
             correo=request.GET.get("correo")
-            if correo == "gregorylopezjordan80@gmail.com":
-                return HttpResponse(status=400)
+            #if correo == "gregorylopezjordan80@gmail.com":
+                #return HttpResponse(status=400)
             user = Cliente.objects.select_related("usuario").filter(usuario__correo=correo).first()
-            if user.id_cliente == 165:
-                return HttpResponse(status=400)
+            #if user.id_cliente == 165:
+                #return HttpResponse(status=400)
             try:
                 id_usuario=user.usuario.id_usuario
                 cedula=user.usuario.cedula
@@ -1039,8 +1058,8 @@ def getCliente(request):
                 cedula=""
                 imagen=""
             if id_usuario!="":
-                if user.id_cliente == 165:
-                    return HttpResponse(status=400)
+                #if user.id_cliente == 165:
+                    #return HttpResponse(status=400)
                 diccionario={"id":user.id_cliente,"nombre":user.nombre,"apellido":user.apellido,"telefono":user.telefono,
                 "correo":correo,"direccion":user.direccion,"fechaNac":user.fecha_Nac,"cedula":cedula,"imagen":imagen}
                 res.append(diccionario)
@@ -1061,10 +1080,10 @@ def getCliente(request):
                     imagen=""
                     correo=""
                 if id_usuario!="":
-                    if correo == "gregorylopezjordan80@gmail.com":
-                        return HttpResponse(status=400)
-                    if user.id_cliente == 165:
-                        return HttpResponse(status=400)
+                    #if correo == "gregorylopezjordan80@gmail.com":
+                        #return HttpResponse(status=400)
+                    #if user.id_cliente == 165:
+                        #return HttpResponse(status=400)
                     diccionario={"id":user.id_cliente,"id_usuario":id_usuario,"nombre":user.nombre,"apellido":user.apellido,
                     "telefono":user.telefono,"direccion":user.direccion,"fechaNac":user.fecha_Nac,"cedula":cedula,"imagen":imagen,"correo":correo}
                     res.append(diccionario)
@@ -1077,8 +1096,8 @@ def getCliente2(request):
         if request.GET.get("correo")!=None:
             correo=request.GET.get("correo")
             user = Cliente.objects.select_related("usuario").filter(usuario__correo=correo).first()
-            if user.id_cliente == 165:
-                return HttpResponse(status=400)
+            #if user.id_cliente == 165:
+                #return HttpResponse(status=400)
             codigoUser=user.usuario.codigo_unico
             try:
                 id_usuario=user.usuario.id_usuario
@@ -1091,8 +1110,8 @@ def getCliente2(request):
                 imagen=""
                 codigoUser=""
             if id_usuario!="":
-                if user.id_cliente == 165:
-                    return HttpResponse(status=400)
+                #if user.id_cliente == 165:
+                    #return HttpResponse(status=400)
                 diccionario={"id":user.id_cliente,"nombre":user.nombre,"apellido":user.apellido,"telefono":user.telefono,
                 "correo":correo,"direccion":user.direccion,"fechaNac":user.fecha_Nac,"cedula":cedula,"imagen":imagen,"codigo_unico":codigoUser}
                 res.append(diccionario)

@@ -224,8 +224,16 @@
                         {% endif %}
                     </div>
                     <div class="campos">
-                      <label class="left">Fecha: </label>
-                      <label class="right">{{ data.fecha | date:"d/m/Y" }}</label>
+                        <label class="left">Fecha: </label>
+                        <label class="right">{{ data.fecha | date:"d/m/Y" }}</label>
+                    </div>
+                    <div class="campos">
+                        <label class="left">Nombre Tarjeta: </label>
+                        <label class="right">{{ data.nombreTarjeta }}</label>
+                    </div>
+                    <div class="campos">
+                        <label class="left">Numero Tarjeta: </label>
+                        <label class="right">{{ data.numeroTarjeta }}</label>
                     </div>
                 </div>
             </div>

@@ -45,31 +45,31 @@
     color: red;
     font-size: small;
   }
-  
+
   .texto {
     color: gray;
     font-weight: normal;
   }
-  
+
   .tiempo {
     display: flex;
     justify-content: end;
     color: red;
     font-size: small;
   }
-  
+
   .emitido {
     margin-left: auto;
   }
-  
+
   .emitido .detalles {
     background-color: rgb(190, 187, 187);
   }
-  
+
   .recibido {
     margin-right: auto;
   }
-  
+
   .enviar {
     position: absolute;
     bottom: 5px;
@@ -86,7 +86,7 @@
     border-radius: 16px;
     padding: 8px;
   }
-  
+
   .enviar .btn-send {
     width: auto;
     display: flex;
@@ -118,14 +118,14 @@
   let c = 0
   cliente = '{{cliente_}}'.replace('0', '0')
   admin = '{{admin_}}'.replace('0', '0')
-  url_base = 'http://localhost:8000/movil/api/chat/' + cliente + '/' + admin + '/'
-  
+  url_base = 'https://cabutoshop.pythonanywhere.com/movil/api/chat/' + cliente + '/' + admin + '/'
+
   $.ajax({
     url: url_base,
     type: 'GET',
     success: function (result) {
       console.log(result)
-  
+
       actualizarVista(result.mensajes)
       marcarLeido(result.mensajes)
     }
@@ -139,40 +139,40 @@
       }
     })
   }, 2000)
-  
-  
+
+
 
   function actualizarVista(data_mensajes_) {
     let lista_mensajes = document.getElementById('lista-mensajes')
     lista_mensajes.innerHTML = ''
-  
+
     for (let mensaje of data_mensajes_) {
       let date = new Date(mensaje.tiempo)
       let tiempo = date.getDay() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' , ' + date.getHours() + ':' + date.getMinutes()
-  
+
       if (mensaje.esAdmin == true) {
         let item_mensaje = document.createElement('div')
         item_mensaje.className = 'item-mensaje emitido'
         item_mensaje.innerHTML = '<div class="avatar">' + '<img src="{% static "img/iconos_administrador/avatar.png" %}">' + '</div>' + '<div class="detalles">' + '<div class="nombre">' + '<span id="nombre">' + mensaje.usuario_admin__nombre +mensaje.usuario_admin__nombre + ' ' + mensaje.usuario_admin__apellido+ '</span> <span class="tipo">( yo )</span>' + '</div>' + '<div id="texto" class="texto">' + mensaje.texto + '</div>' + '<div id="tiempo" class="tiempo">' + tiempo + '</div>' + '</div>'
-  
+
         lista_mensajes.appendChild(item_mensaje)
       } else {
         let item_mensaje = document.createElement('div')
         item_mensaje.className = 'item-mensaje recibido'
         item_mensaje.innerHTML = '<div class="avatar">' + '<img src="{% static "img/iconos_administrador/avatar.png" %}">' + '</div>' + '<div class="detalles">' + '<div class="nombre">' + '<span id="nombre">' + mensaje.usuario_cliente__nombre + ' ' + mensaje.usuario_cliente__apellido + '</span> <span class="tipo">( cliente )</span>' + '</div>' + '<div id="texto" class="texto">' + mensaje.texto + '</div>' + '<div id="tiempo" class="tiempo">' + tiempo + '</div>' + '</div>'
-  
+
         lista_mensajes.appendChild(item_mensaje)
       }
     }
     lista_mensajes.scrollTo(0,lista_mensajes.scrollHeight)
 
   }
-  
+
   window.onload = function () {
     var form = document.querySelector('form')
     form.onsubmit = submitted.bind(form)
   }
-  
+
   function submitted(event) {
     event.preventDefault()
   }
@@ -191,7 +191,7 @@
     }
     return num_no_leido
   }
-  
+
   function marcarLeido(mensajes_) {
     let num_no_leido = 0
     console.log('MENSAAAJESSSSS')
@@ -204,8 +204,8 @@
         console.log('acepta')
         num_no_leido = num_no_leido + 1
         console.log(mensaje.id)
-        let url = 'http://localhost:8000/movil/sms_update/' + mensaje.id + '/'
-  
+        let url = 'https://cabutoshop.pythonanywhere.com/movil/sms_update/' + mensaje.id + '/'
+
         $.ajax({
           url: url,
           type: 'GET',
@@ -218,11 +218,11 @@
 
 
   }
-  
+
   function sendMessage() {
     let textoSms = document.getElementById('textSms')
     if (textoSms.value.length != 0) {
-      
+
       $.ajax({
         url: url_base,
         type: 'GET',

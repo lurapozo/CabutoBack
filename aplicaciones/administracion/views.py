@@ -649,6 +649,8 @@ def get_ventas(request):
 	    	clientes = paginator.page(1)
 	    except EmptyPage:
 	    	clientes = paginator.page(paginator.num_pages)
+
+
 	    return render(request, "Reportes/ventas.html",{"datos":clientes,"ventas":ventas,"filtro":orden,"desde":desde,"hasta":hasta})
     return HttpResponse(status=400)
 
