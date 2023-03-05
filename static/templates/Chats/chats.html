@@ -1,0 +1,389 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body>{% load static %}
+{% include 'Shared/header.html' %}
+{% include 'Shared/sidebar.html' %}
+{% include 'Shared/navbar.html' %}
+<link rel="stylesheet" href="chats_files/bootstrap-select.min.css">
+<script src="chats_files/moment.min.js"></script>
+<script src="chats_files/bootstrap-select.min.js"></script>
+<script src="chats_files/defaults-es_ES.js"></script>
+
+
+<style>
+    h3 {
+        padding: 5% 0% 5% 5%;
+        font-weight: bold;
+        color: #0F195E;
+        margin: auto;
+    }
+    .contenedor-clientes{
+        margin:auto;
+        padding: 20px 10px;
+        background-color: #EDEEF0;
+        border-radius:15px;
+        min-width: min-content;
+        max-width: 85%;
+    }
+    .clientes{
+        text-align: center;
+    }
+    thead th{
+        background-color: #FE3A00;
+        color:white;
+        padding: 7px !important;
+        vertical-align: middle !important;
+        line-height: 1rem;
+        border:0px:
+    }
+    tr th:first-child {
+      border-top-left-radius: 7px;
+      border-bottom-left-radius: 7px;
+    }
+    tr th:last-child {
+      border-top-right-radius: 7px;
+      border-bottom-right-radius: 7px;
+    }
+    tr th:last-child,
+    tr td:last-child{
+      width:20%;
+    }
+    tbody td{
+        border-top: 2px solid rgba(15,25,94,0.3) !important;
+        border-bottom: 1px solid rgba(15,25,94,0.3);
+        padding: 1.1rem !important;
+        vertical-align: middle !important;
+        color:#444242;
+    }
+    tr:first-child td {
+        border-top: none !important;
+    }
+    table th{
+        border: none !important;
+    }
+    .btn-new{
+        font-weight: bold;
+        color: #0F195E;
+        background: #D8D9DD;
+        padding: 5px 20px 5px 20px;
+        border-radius: 5px;
+        vertical-align: middle;
+        height: 40px;
+        font-size: 1rem;
+        width: 40%;
+    }
+
+    .img-ver{
+        width: 1.3rem;
+    }
+
+    .contenedor-filtro{
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 50px;
+    }
+    .contenedor-fecha{
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 10px;
+        margin-bottom: 20px;
+    }
+    #fromDate, #toDate{
+        width: min-content;
+        color: #0F195E;
+        background: #D8D9DD;
+    }
+    #buscar{
+        width:10rem;
+        height: 2.5rem;
+        margin: auto 0px auto 10px;
+    }
+    #buscarIcon{
+        width:1rem;
+        height: 1rem;
+        margin: auto 0px auto 10px;
+    }
+    .texto-filtro{
+        margin: auto 15px auto 10px;
+    }
+    .total-clientes{
+        width: 90%;
+        border-top: 3px solid #0F195E;
+        padding-top: 10px;
+        margin-top: 2rem;
+        color: #444242;
+    }
+    .total-clientes span:first-child{
+        font-weight: bold;
+        padding-right: 25px;
+        padding-left: 35%;
+        color: #0F195E;
+    }
+    .pagination{
+        justify-content: center;
+        margin-top:10px;
+    }
+    .pagination .active{
+        width: 1.6rem;
+        background: #0f195e;
+        color: white;
+        text-align: center;
+        border-radius: 0.5rem;
+        margin: 0px 20px;
+        height: 1.5rem;
+        font-weight: bolder;
+        font-size: 14px;
+        padding-top: 2px;
+    }
+    .pagination li:first-child a,
+    .pagination li:last-child a,
+    .pagination li:first-child span,
+    .pagination li:last-child span{
+        color: #0f195e;
+        font-size: 13px;
+    }
+    .buscar{
+        margin-bottom= 10px;
+    }
+
+    .switch > input{
+        opacity: 0;
+    }
+    .switch > div {
+      width: 60px;
+      height: 30px;
+      background: #9A9A9A;
+      z-index: 0;
+      cursor: pointer;
+      position: relative;
+      border-radius: 50px;
+      line-height: 40px;
+      text-align: right;
+      padding: 0 10px;
+      color: rgba(0,0,0,.5);
+      transition: all 250ms;
+    }
+
+    .switch > input:checked + div {
+      background: lime;
+      text-align: left;
+    }
+
+    .switch > div:before {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        left: 4px;
+        top: 3px;
+        height: 24px;
+        width: 24px;
+        background: white;
+        border-radius: 50%;
+        transition: all 200ms;
+    }
+
+    .switch > input:checked + div:before {
+      content: '';
+      position: absolute;
+      left: 32px;
+      border-radius: 50%;
+    }
+</style>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var input = document.getElementById("buscar");
+        input.value="";
+        input.addEventListener("keyup", function(event) {
+          if (event.keyCode === 13) {
+           location = '?busqueda='+input.value;
+          }
+        });
+        var modalDiv = $("#modal-div2");
+        $(".open-modal").on("click", function () {
+            $.ajax({
+                beforeSend: function () {
+                    $('.ajax-loader').css("visibility", "visible");
+                },
+                url: $(this).attr("data-url"),
+                success: function (data) {
+                    modalDiv.html(data);
+                    $("#myModal2").modal();
+                },
+                complete: function () {
+                    $('.ajax-loader').css("visibility", "hidden");
+                }
+            });
+        });
+        $('.selectpicker').selectpicker();
+        var now = new Date();
+        var month = (now.getMonth() + 1);
+        var day = now.getDate();
+        if (month < 10)
+            month = "0" + month;
+        if (day < 10)
+            day = "0" + day;
+        var today = now.getFullYear() + '-' + month + '-' + day;
+        var to = document.getElementById("toDate");
+        to.setAttribute("max", today);
+        var from = document.getElementById("fromDate");
+        from.setAttribute("max", today);
+        document.getElementById("fromDate").onchange = function () {
+            var input = document.getElementById("toDate");
+            input.setAttribute("min", this.value);
+        }
+        document.getElementById("toDate").onchange = function () {
+            var input = document.getElementById("fromDate");
+            input.setAttribute("max", this.value);
+        }
+
+        $('#filtro').val("{{filtro}}");
+        $('.selectpicker').selectpicker('refresh')
+    });
+    function buscarClientes(){
+        var fromDate = document.getElementById("fromDate").value;
+        var toDate = document.getElementById("toDate").value;
+        var filtro = document.getElementById("filtro").value;
+        if("{{filtro}}"!="None"){
+            if(fromDate!=""){
+                if(toDate!=""){
+                    location = '?filtro='+"{{filtro}}"+'&from='+fromDate+'&to='+toDate;
+                }else{
+                    location = '?filtro='+"{{filtro}}"+'&from='+fromDate;
+                }
+            }else if(toDate!=""){
+                location = '?filtro='+"{{filtro}}"+'&to='+toDate;
+            }
+        }else{
+            if(fromDate!=""){
+                if(toDate!=""){
+                    location = '?from='+fromDate+'&to='+toDate;
+                }else{
+                    location = '?from='+fromDate;
+                }
+            }else if(toDate!=""){
+                location = '?to='+toDate;
+            }
+        }
+    }
+    function cambiarEstado(id){
+        console.log(id)
+        $.ajax({
+            beforeSend: function(){
+                $('.ajax-loader').css("visibility", "visible");
+            },
+            url: "ban/"+id,
+            success: function(data) {
+                var modalDiv = $("#modal-div");
+                modalDiv.html(data.html);
+                $("#myModal").modal();
+            },
+            complete: function(){
+                $('.ajax-loader').css("visibility", "hidden");
+            }
+        });
+    }
+    function irMensajeria(cliente_){
+        console.log(typeof(cliente_))
+        let usuario=localStorage.getItem("usuario")
+        let url_get_info_admin="https://cabutoshop.pythonanywhere.com/administracion/getAdminInfo/"+usuario
+        console.log(url_get_info_admin)
+
+        $.ajax({
+          url: url_get_info_admin,
+          type: 'GET',
+          success: function (result) {
+            let admin=result.data[0].cedula.replace('0', '0')
+            cliente = `${cliente_}`
+            cliente = cliente_.replace('$', '')
+
+            let element=document.getElementById("ir_mensajeria")
+            let href="../clientes/mensajeria/"+cliente+"/"+admin
+            element.setAttribute("href",href)
+
+            console.log(href)
+            window.location = href;
+          }
+        })
+    }
+</script>
+<div class="col-12">
+  <div class="col-md-12">
+    <div class="row">
+        <h3 class="col-md-6">CHATS</h3>
+        <div class="col-md-6">
+            <div class="row contenedor-filtro">
+                <div class="col-md-6">
+                <form method="get">
+                  <h6 class="texto-filtro">Buscar por:</h6>
+                  <input type="text" class="form-control busqueda" name="nombre" placeholder="Nombre">
+                  <input type="text" class="form-control busqueda" name="apellido" placeholder="Apellido">
+                  <button type="submit">Buscar </button>
+                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="contenedor-clientes">
+        
+        {% for data in datos %}
+          
+        {% endfor %}
+      <table class="table clientes">
+      <thead>
+        <tr>
+          <th>Imagen</th>
+          <th>Nombre</th>
+          <th>Chat</th>
+        </tr>
+      </thead>
+      <tbody><tr>
+            <td>
+                <a class="btn btn-sm" id="ir_mensajeria" onclick="irMensajeria(`${{data.usuario_cliente.usuario.cedula}}`)"><img src="chats_files/%7B%7Bdata.usuario_cliente.usuario.photo_url%7D%7D" height="100"></a>
+            </td>
+            <td>
+                <a class="btn btn-sm" id="ir_mensajeria" onclick="irMensajeria(`${{data.usuario_cliente.usuario.cedula}}`)">{{data.usuario_cliente.nombre}} {{data.usuario_cliente.apellido}}</a>
+            </td>
+            <td>
+                <a class="btn btn-sm" id="ir_mensajeria" onclick="irMensajeria(`${{data.usuario_cliente.usuario.cedula}}`)">
+                    <h6>
+                        {% for mensaje in data_mensajes %}
+                            {% if mensaje.usuario_cliente == data.usuario_cliente %}
+                            {{mensaje.texto}}
+                            {% endif %}
+                        {% endfor %}
+                    </h6>
+                </a>
+            </td>
+          </tr></tbody>
+    </table>
+    <div class="total-clientes">
+        <span>Total Clientes: </span><span>{{datos.paginator.count}}</span>
+    </div>
+    </div>
+    {% if datos.has_other_pages %}
+      <ul class="pagination">
+        {% if datos.has_previous %}
+            {% if filtro == None %}
+                <li><a href="https://www.pythonanywhere.com/user/CabutoShop/files/home/CabutoShop/cabuto/static/templates/Chats/%7B%7Bid_Admin%7D%7D?page={{%20datos.previous_page_number%20}}">Anterior</a></li>
+            {% else %}
+                <li><a href="https://www.pythonanywhere.com/user/CabutoShop/files/home/CabutoShop/cabuto/static/templates/Chats/%7B%7Bid_Admin%7D%7D?page={{%20datos.previous_page_number%20}}&amp;filtro={{%20filtro%20}}">Anterior</a></li>
+            {% endif %}
+        {% else %}
+          <li class="disabled"><span>Anterior</span></li>
+        {% endif %}
+        <li class="active"><span>{{ datos.number }} <span class="sr-only">(current)</span></span></li>
+        {% if datos.has_next %}
+            {% if filtro == None %}
+                <li><a href="https://www.pythonanywhere.com/user/CabutoShop/files/home/CabutoShop/cabuto/static/templates/Chats/%7B%7Bid_Admin%7D%7D?page={{%20datos.next_page_number%20}}">Siguiente</a></li>
+            {% else %}
+                <li><a href="https://www.pythonanywhere.com/user/CabutoShop/files/home/CabutoShop/cabuto/static/templates/Chats/%7B%7Bid_Admin%7D%7D?page={{%20datos.next_page_number%20}}&amp;filtro={{%20filtro%20}}">Siguiente</a></li>
+            {% endif %}
+        {% else %}
+          <li class="disabled"><span>Siguiente</span></li>
+        {% endif %}
+      </ul>
+    {% endif %}
+  </div>
+</div></body></html>
