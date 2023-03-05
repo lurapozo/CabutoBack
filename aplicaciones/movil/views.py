@@ -3133,6 +3133,22 @@ def verificar_y_crear_canal(request,cliente,admin):
 
         )
         nuevo_mensaje.save()
+        if esAdmin_ == True:
+            mensaje= "Has recibido un mensaje del administrador"
+            data = {"title":"Mensaje enviado","titulo": "Mensaje enviado", "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
+            devices=GCMDevice.objects.filter(user=usuario_cliente.usuario)
+            devices.send_message(mensaje, extra=data)
+            datasend={"to": usuario_cliente.usuario.token,
+            "notification": {
+                "title": "Mensaje enviado",
+                "subtitle": "Mensaje enviado",
+                "body": mensaje,
+                },
+                "data": data
+            }
+            response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
+        canal_c.tiempo=datetime.now()
+        canal_c.save()
         return JsonResponse(body)
 
     elif request.method == 'GET':
