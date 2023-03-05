@@ -633,6 +633,10 @@ def get_ventas(request):
 	        data_clientes= data_clientes.filter(fecha__gte = datetime.now().replace(hour=0,minute=0,second=0))
 	    data_clientes=data_clientes.order_by("-id_pedido")
 	    ventas=data_clientes.aggregate(ventas=Sum('total'))
+	    subtotal = data_clientes.aggregate(ventas=Sum('subtotal'))
+	    iva = data_clientes.aggregate(ventas=Sum('iva'))
+	    envio = data_clientes.aggregate(ventas=Sum('envio'))
+
 	    if orden != None:
 	        if orden == 'fecha':
 	            data_clientes=data_clientes.order_by('-fecha',"-id_pedido")
@@ -650,8 +654,12 @@ def get_ventas(request):
 	    except EmptyPage:
 	    	clientes = paginator.page(paginator.num_pages)
 
+	    valor = []
+	    for cliente in clientes:
+	        res = {"id_pedido": cliente.id_pedido, "fecha": cliente.fecha, "establecimiento": cliente.establecimiento, "subtotal": cliente.subtotal, "envio": cliente.envio, "sinDelivery":cliente.subtotal + cliente.iva, "iva": cliente.iva, "total": cliente.total, "tipo_entrega": cliente.tipo_entrega, "tipo_pago": cliente.tipo_pago, "observacion": cliente.observacion}
+	        valor.append(res)
 
-	    return render(request, "Reportes/ventas.html",{"datos":clientes,"ventas":ventas,"filtro":orden,"desde":desde,"hasta":hasta})
+	    return render(request, "Reportes/ventas.html",{"datos":clientes,"ventas":ventas,"filtro":orden,"desde":desde,"hasta":hasta, "valor": valor, "subtotal": subtotal, "iva": iva, "envio": envio})
     return HttpResponse(status=400)
 
 
@@ -2629,10 +2637,7 @@ def ban(request,id_cliente):
 @login_required(login_url='/login/')
 def mensajeria_page(request,cliente,admin):
     if request.method=='GET':
-
-
         #return render(request, "Reportes/view-clientes.html",{"data":notificacion})
-
         canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
         if canal == None:
             return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
@@ -2658,7 +2663,17 @@ def mensajeria_page(request,cliente,admin):
         print("=========================================================================")
 
         return render(request, "Mensajeria/mensajeria.html",data)
+    else:
+        canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
+        if canal == None:
+            return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
 
+        if admin == cliente:
+            return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
+        canal.tiempo=datetime.now()
+        canal.save()
+        canal,_.tiempo=datetime.now()
+        canal,_.save()
     return HttpResponse(status=400)
 
 
@@ -2674,3 +2689,39 @@ def get_info_admin(request,usuario_admin):
             return JsonResponse({'data':list(qs)})
 
         return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def chats_page(request,admin):
+	if request.method=='GET':
+	    nombre=request.GET.get("nombre")
+	    apellido=request.GET.get("apellido")
+	    orden=request.GET.get("filtro")
+	    data_chats=Canal.objects.select_related()
+	    data_mensajes=CanalMensaje.objects.all()
+	    data_chats=data_chats.filter(usuario_admin_id__id_empleado__icontains=admin)
+	    data_mensajes=data_mensajes.filter(usuario_admin_id__id_empleado__icontains=admin)
+	    if nombre!=None:
+	        data_chats=data_chats.filter(usuario_cliente_id__nombre__icontains=nombre)
+	        data_mensajes=data_mensajes.filter(usuario_cliente_id__nombre__icontains=nombre)
+	    if apellido!=None:
+	        data_chats=data_chats.filter(usuario_cliente_id__apellido__icontains=apellido)
+	        data_mensajes=data_mensajes.filter(usuario_cliente_id__apellido__icontains=apellido)
+	    data_chats=data_chats.order_by("-tiempo")
+	    data_mensajes=data_mensajes.order_by("-tiempo")
+	    mensajes=[]
+	    clientes=Cliente.objects.select_related()
+	    for cli in clientes:
+	        mensaje=data_mensajes.filter(usuario_cliente=cli.id_cliente).order_by("-tiempo").first()
+	        if mensaje != None:
+	            mensajes.append(mensaje)
+	    page = request.GET.get('page', 1)
+	    paginator = Paginator(data_chats, 10)
+	    try:
+	    	clientes = paginator.page(page)
+	    except PageNotAnInteger:
+	    	clientes = paginator.page(1)
+	    except EmptyPage:
+	    	clientes = paginator.page(paginator.num_pages)
+
+	    return render(request, "Chats/chats.html",{"datos":clientes,"data_mensajes":mensajes,"filtro":orden,"id_Admin":admin})
+	return HttpResponse(status=400)
