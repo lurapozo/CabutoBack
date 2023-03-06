@@ -1,12 +1,11 @@
-<html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body>{% load static %}
+{% load static %}
 {% include 'Shared/header.html' %}
 {% include 'Shared/sidebar.html' %}
 {% include 'Shared/navbar.html' %}
-<link rel="stylesheet" href="chats_files/bootstrap-select.min.css">
-<script src="chats_files/moment.min.js"></script>
-<script src="chats_files/bootstrap-select.min.js"></script>
-<script src="chats_files/defaults-es_ES.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.14/js/bootstrap-select.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/i18n/defaults-es_ES.js"></script>
 
 
 <style>
@@ -317,8 +316,8 @@
                 <div class="col-md-6">
                 <form method="get">
                   <h6 class="texto-filtro">Buscar por:</h6>
-                  <input type="text" class="form-control busqueda" name="nombre" placeholder="Nombre">
-                  <input type="text" class="form-control busqueda" name="apellido" placeholder="Apellido">
+                  <input type='text' class="form-control busqueda" name='nombre' placeholder="Nombre">
+                  <input type='text' class="form-control busqueda" name='apellido' placeholder="Apellido">
                   <button type="submit">Buscar </button>
                 </form>
                 </div>
@@ -326,11 +325,7 @@
         </div>
     </div>
     <div class="contenedor-clientes">
-        
-        {% for data in datos %}
-          
-        {% endfor %}
-      <table class="table clientes">
+        <table class="table clientes">
       <thead>
         <tr>
           <th>Imagen</th>
@@ -338,9 +333,11 @@
           <th>Chat</th>
         </tr>
       </thead>
-      <tbody><tr>
+      <tbody>
+        {% for data in datos %}
+          <tr>
             <td>
-                <a class="btn btn-sm" id="ir_mensajeria" onclick="irMensajeria(`${{data.usuario_cliente.usuario.cedula}}`)"><img src="chats_files/%7B%7Bdata.usuario_cliente.usuario.photo_url%7D%7D" height="100"></a>
+                <a class="btn btn-sm" id="ir_mensajeria" onclick="irMensajeria(`${{data.usuario_cliente.usuario.cedula}}`)"><img src={{data.usuario_cliente.usuario.photo_url}} height="100"></a>
             </td>
             <td>
                 <a class="btn btn-sm" id="ir_mensajeria" onclick="irMensajeria(`${{data.usuario_cliente.usuario.cedula}}`)">{{data.usuario_cliente.nombre}} {{data.usuario_cliente.apellido}}</a>
@@ -356,7 +353,9 @@
                     </h6>
                 </a>
             </td>
-          </tr></tbody>
+          </tr>
+        {% endfor %}
+      </tbody>
     </table>
     <div class="total-clientes">
         <span>Total Clientes: </span><span>{{datos.paginator.count}}</span>
@@ -366,9 +365,9 @@
       <ul class="pagination">
         {% if datos.has_previous %}
             {% if filtro == None %}
-                <li><a href="https://www.pythonanywhere.com/user/CabutoShop/files/home/CabutoShop/cabuto/static/templates/Chats/%7B%7Bid_Admin%7D%7D?page={{%20datos.previous_page_number%20}}">Anterior</a></li>
+                <li><a href="./{{id_Admin}}?page={{ datos.previous_page_number }}">Anterior</a></li>
             {% else %}
-                <li><a href="https://www.pythonanywhere.com/user/CabutoShop/files/home/CabutoShop/cabuto/static/templates/Chats/%7B%7Bid_Admin%7D%7D?page={{%20datos.previous_page_number%20}}&amp;filtro={{%20filtro%20}}">Anterior</a></li>
+                <li><a href="./{{id_Admin}}?page={{ datos.previous_page_number }}&filtro={{ filtro }}">Anterior</a></li>
             {% endif %}
         {% else %}
           <li class="disabled"><span>Anterior</span></li>
@@ -376,9 +375,9 @@
         <li class="active"><span>{{ datos.number }} <span class="sr-only">(current)</span></span></li>
         {% if datos.has_next %}
             {% if filtro == None %}
-                <li><a href="https://www.pythonanywhere.com/user/CabutoShop/files/home/CabutoShop/cabuto/static/templates/Chats/%7B%7Bid_Admin%7D%7D?page={{%20datos.next_page_number%20}}">Siguiente</a></li>
+                <li><a href="./{{id_Admin}}?page={{ datos.next_page_number }}">Siguiente</a></li>
             {% else %}
-                <li><a href="https://www.pythonanywhere.com/user/CabutoShop/files/home/CabutoShop/cabuto/static/templates/Chats/%7B%7Bid_Admin%7D%7D?page={{%20datos.next_page_number%20}}&amp;filtro={{%20filtro%20}}">Siguiente</a></li>
+                <li><a href="./{{id_Admin}}?page={{ datos.next_page_number }}&filtro={{ filtro }}">Siguiente</a></li>
             {% endif %}
         {% else %}
           <li class="disabled"><span>Siguiente</span></li>
@@ -386,4 +385,4 @@
       </ul>
     {% endif %}
   </div>
-</div></body></html>
+</div>

@@ -216,8 +216,9 @@
             <th>Fecha</th>
             <th>Local</th>
             <th>Subtotal</th>
-            <th>Envio</th>
             <th>IVA</th>
+            <th>Sin Envío</th>
+            <th>Envío</th>
             <th>Total</th>
             <th>Lugar de entrega</th>
             <th>Forma de pago</th>
@@ -225,14 +226,15 @@
         </tr>
       </thead>
       <tbody>
-        {% for data in datos %}
+        {% for data in valor %}
           <tr>
             <td>{{data.id_pedido|stringformat:"03d"}}</td>
             <td>{{data.fecha|date:"d/m/Y"}}</td>
             <td>{{data.establecimiento.nombre}}</td>
             <td>${{data.subtotal |floatformat:2}}</td>
-            <td>${{data.envio |floatformat:2}}</td>
             <td>${{data.iva |floatformat:2}}</td>
+            <td>${{data.sinDelivery |floatformat:2}}</td>
+            <td>${{data.envio |floatformat:2}}</td>
             <td>${{data.total |floatformat:2}}</td>
             <td>{{data.tipo_entrega}}</td>
             <td>{{data.tipo_pago}}</td>
@@ -242,9 +244,14 @@
         {% endfor %}
       </tbody>
     </table>
+
     <div class="total-clientes">
         <span>Total Ventas: </span><span>{{datos.paginator.count}}</span>
-        <p><span>Valor Ventas: </span><span>${{ventas.ventas|floatformat:2}}</span></p>
+        <p style="margin-bottom: 0;"><span>Valor Subtotal de Ventas: </span><span>${{subtotal.ventas|floatformat:2}}</span></p>
+        <p style="margin-bottom: 0;"><span>Valor Total de IVA: </span><span>${{iva.ventas|floatformat:2}}</span></p>
+        <p style="margin-bottom: 0;"><span>Valor Total de Envío: </span><span>${{envio.ventas|floatformat:2}}</span></p>
+        <p style="margin-bottom: 0;"><span>Valor Total de Ventas: </span><span>${{ventas.ventas|floatformat:2}}</span></p>
+
     </div>
     </div>
     {% else %}

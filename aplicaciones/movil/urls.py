@@ -79,6 +79,7 @@ urlpatterns = [
     path('restarPuntos/', restarPuntos),
     path('revisarBan/<int:id>', revisarBan),
     path('modContra/', modContra),
+    path('getMes/<int:id>', getMes),
 
 	#URLS PARA CHAT
     path("api/chat/<str:cliente>/<str:admin>/",verificar_y_crear_canal),

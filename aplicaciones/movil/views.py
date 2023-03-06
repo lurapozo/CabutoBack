@@ -13,7 +13,7 @@ from django.template.loader import render_to_string
 from push_notifications.models import WebPushDevice
 from push_notifications.models import GCMDevice
 from django.db.models import Count, Sum, Avg
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
 import requests
 import json
@@ -182,7 +182,7 @@ def getProductoParcial(request, page):
             return JsonResponse(res,safe=False)
         else:
             #arrProducto= Producto.objects.filter(establecimiento_producto__stock_disponible__isnull=False).exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("suma", "id_producto")
-            arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma")
+            arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma")
             paginator = Paginator(arrProducto, per_page = 10)
             page_object = paginator.get_page(page)
 
@@ -207,7 +207,7 @@ def getProductoAaZ(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
-        arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("id_producto__nombre")
+        arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("id_producto__nombre")
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
         for product in page_object:
@@ -230,7 +230,7 @@ def getProductoZaA(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
-        arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-id_producto__nombre")
+        arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-id_producto__nombre")
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
         for product in page_object:
@@ -249,7 +249,7 @@ def getProductoPrecioMenor(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
-        arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-id_producto__precio")
+        arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-id_producto__precio")
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
         for product in page_object:
@@ -268,7 +268,7 @@ def getProductoPrecioMayor(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
-        arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("id_producto__precio")
+        arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("id_producto__precio")
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
         for product in page_object:
@@ -330,7 +330,7 @@ def getInicio(request):
             valor = request.GET.get("nombre")
             categorias= Categoria.objects.filter(nombre__icontains=str(valor)).values()[:4]
             data = list(categorias)
-            productos = Producto.objects.select_related().filter(nombre__icontains=str(valor)).annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma").values('nombre', 'image','precio','suma')[:6]
+            productos = Producto.objects.select_related().exclude(estado="I").filter(nombre__icontains=str(valor)).annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma").values('nombre', 'image','precio','suma')[:6]
             productos = list(productos)
             ofertas = Oferta.objects.select_related().filter(nombre__icontains=str(valor)).filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')[:6]
             ofertas = list(ofertas)
@@ -343,7 +343,7 @@ def getInicio(request):
         else:
             categorias= Categoria.objects.values()[:4]
             data = list(categorias)
-            productos = Producto.objects.select_related().filter().annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma").values('nombre', 'image','precio','suma')[:6]
+            productos = Producto.objects.select_related().filter().exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma").values('nombre', 'image','precio','suma')[:6]
             productos = list(productos)
             ofertas = Oferta.objects.select_related().filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')[:6]
             ofertas = list(ofertas)
@@ -361,8 +361,8 @@ def getInicio2(request, establecimiento):
             valor = request.GET.get("nombre")
             categorias= Categoria.objects.filter(nombre__icontains=str(valor)).values()[:4]
             data = list(categorias)
-            productos = Establecimiento_Producto.objects.select_related().filter(id_producto__nombre__icontains=str(valor)).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')
-            productos = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')[:6]
+            #productos = Establecimiento_Producto.objects.select_related().filter(id_producto__nombre__icontains=str(valor)).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')
+            productos = Establecimiento_Producto.objects.filter(id_producto__nombre__icontains=str(valor)).filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')[:6]
             #productos = productos.filter(id_establecimiento = establecimiento)[:6]
             productos = list(productos)
             ofertas = Oferta.objects.select_related().filter(nombre__icontains=str(valor)).filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')
@@ -379,7 +379,7 @@ def getInicio2(request, establecimiento):
             data = list(categorias)
             #productos = Producto.objects.select_related().filter().annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma").values('nombre', 'image','precio','suma')[:6]
             productos = Establecimiento_Producto.objects.select_related().filter().annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')
-            productos = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')[:6]
+            productos = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')[:6]
             #productos = productos.filter(id_establecimiento = establecimiento)[:6]
             productos = list(productos)
             ofertas = Oferta.objects.select_related().filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')
@@ -3190,3 +3190,30 @@ def obtener_data_empleado_admin(request):
         if(qs):
             return JsonResponse({'data':list(qs)})
     pass
+
+@csrf_exempt
+def getMes(request, id):
+    if request.method == 'GET':
+        cliente = Cliente.objects.get(id_cliente=id)
+        fechaActual=timezone.now().date()
+        fechaAnterior=cliente.monthCard
+        if cliente.monthCard:
+            nuevaFechaAnterior=cliente.monthCard+timedelta(days=61)
+            if nuevaFechaAnterior <= fechaActual:
+                cliente.numTarjetas=1
+                cliente.monthCard = fechaActual
+            else:
+                if cliente.numTarjetas >= 2:
+                    #res="Por razones de seguridad, solo puede ingresar hasta 2 tarjetas cada 2 meses."
+                    res = {"estado":"NO"}
+                    return JsonResponse(res, safe = False)
+                else:
+                    cliente.numTarjetas=cliente.numTarjetas+1
+                    cliente.monthCard = fechaActual
+        else:
+            cliente.numTarjetas=1
+            cliente.monthCard = timezone.now().date()
+        cliente.save()
+        res={"estado":"OK"}
+        return JsonResponse(res, safe = False)
+    return HttpResponse(status=400)

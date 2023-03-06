@@ -800,7 +800,6 @@ def cliente_page(request):
 	    elif hasta!=None:
 	        data_clientes= data_clientes.filter(usuario__registro__lte=hasta)
 	    data_clientes=data_clientes.annotate(tot=Count('pedido'),suma=Sum('pedido__total')).order_by("id_cliente")
-	    print("Data clientes",data_clientes)
 	    if orden != None:
 	        if orden == 'fecha':
 	            data_clientes=data_clientes.order_by('-usuario__registro','id_cliente')
@@ -1556,7 +1555,7 @@ def editar_cupon(request, id_cupon):
     return HttpResponse(status=400)
 
 @login_required(login_url='/login/')
-def eliminar_cupon(request,id_cupon):
+pon(request,id_cupon):
     data_cupon= Cupones.objects.get(id_cupon=id_cupon)
     tipo=data_cupon.tipo
     if tipo == 'P':

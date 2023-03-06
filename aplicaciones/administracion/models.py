@@ -136,6 +136,8 @@ class Cliente(models.Model):
 	usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
 	puntos=models.IntegerField(default = 0)
 	ban=models.IntegerField(default = 0)
+	numTarjetas=models.IntegerField(default = 0,null=True)
+	monthCard=models.DateField(default=now,null=True)
 	def __str__(self):
 		return '%s %s' %(self.nombre, self.apellido)
 

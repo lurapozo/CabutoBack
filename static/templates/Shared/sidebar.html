@@ -201,13 +201,31 @@
     }
 </style>
 <script>
-    
+
     $(document).ready(function(){
         let e=document.getElementById("_usuario")
         console.log(e.innerText)
         localStorage.setItem("usuario",e.innerText)
-     });
-    
+    });
+    function irChat(){
+        let usuario=localStorage.getItem("usuario")
+        let url_get_info_admin="https://cabutoshop.pythonanywhere.com/administracion/getAdminInfo/"+usuario
+        console.log(url_get_info_admin)
+
+        $.ajax({
+          url: url_get_info_admin,
+          type: 'GET',
+          success: function (result) {
+            let admin=result.data[0].id_empleado
+            let element=document.getElementById("ir_chat")
+            let href="https://cabutoshop.pythonanywhere.com/chats/"+admin
+            element.setAttribute("href",href)
+
+            console.log(href)
+            window.location = href;
+          }
+        })
+    }
 </script>
 <!DOCTYPE html>
 <html>
@@ -241,7 +259,7 @@
                     <img id="logo-principal" src="{% static 'img/iconos_administrador/avatar.png' %}">
                 </div>
                 {% if user.is_authenticated %}
-                
+
                 <div class="col-12 form-group contenedor-correo">
                     <label id="_usuario" >{{ user}}</label>
                 </div>
@@ -257,6 +275,9 @@
                         <li>
                             <a href="/clientes/">Clientes registrados</a>
                         </li>
+                        <!--<li>
+                            <a onclick="irChat()" id="ir_chat">Chats</a>
+                        </li>-->
                         <li>
                             <a href="/usuarios/">Usuarios del Sistema</a>
                         </li>

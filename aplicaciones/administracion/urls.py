@@ -31,7 +31,7 @@ urlpatterns = [
 	url(r'^clientes/ban/(?P<id_cliente>\d+)', ban, name="ban"),
  	url(r'^clientes/mensajeria/(?P<cliente>\d+)/(?P<admin>\d+)', mensajeria_page, name="mensajeria_page"),
    	path('getAdminInfo/<str:usuario_admin>', get_info_admin, name="get_info_admin"),
-  
+
 	url(r'^notificaciones/add_notificaciones/', agregar_notificacion, name="add_notificaciones"),
 	url(r'^notificaciones/ver_notificacion/(?P<id_notificacion>\d+)', ver_notificacion, name="ver_notificacion"),
 	url(r'^notificaciones/enviar_notificacion/(?P<id_notificacion>\d+)', enviar_notificacion, name="enviar_notificacion"),
@@ -115,6 +115,7 @@ urlpatterns = [
     path('historial_premios/', historial_premios_page),
     url(r'^detalle_premios/(?P<id_premioXcliente>\d+)', detalle_premios, name="detalle_premios"),
 
+    url('chats/(?P<admin>\d+)', chats_page),
 
 
 
