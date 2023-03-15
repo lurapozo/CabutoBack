@@ -117,6 +117,9 @@ urlpatterns = [
 
     url('chats/(?P<admin>\d+)', chats_page),
 
-
+    path('tarjetasregalo/', tarjetasRegalo_page),
+    url(r'^buscar_tarjeta_monto/(?P<id_tarjetaxcliente>\d+)', get_tarjeta_monto, name="buscar_tarjeta_monto"),
+    path('tarjetasregalo2/', tarjetasRegalo2_page),
+    url(r'^buscar_tarjeta_producto/(?P<id_tarjetaxcliente>\d+)', get_tarjeta_producto, name="buscar_tarjeta_producto"),
 
 ]

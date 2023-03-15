@@ -18,12 +18,15 @@ from django.shortcuts import redirect
 from django.db.models import Count, Sum, Avg
 from django.contrib.auth.models import User
 from datetime import datetime
+from itertools import chain
 import requests
 import pytz
 import json
 import re
+import functools
 from django.core import serializers
 from .models import *
+
 
 notificacion_URL = "https://fcm.googleapis.com/fcm/send"
 notificacion_header = {"Authorization": "key=AAAAfK-HTLc:APA91bHkgzXZbzKIhpfreDv215qmTHJjhq1A2GPPm4R9Qc4VGjuTHkuYpsq6bike4TI7zraeehle2Uakv7CWfsp4zzjeKj8NBuOSNvmZigHnybD7a2CdITlJYfMJGjr0R2Gr_eks2CnE"}
@@ -553,10 +556,11 @@ def devueltos_page(request):
 def get_pedido(request,id_pedido):
 	pedido=Pedido.objects.select_related().filter(id_pedido=id_pedido).first()
 	producto_pedido=Producto_Pedido.objects.select_related().filter(pedido=pedido)
+	sinDelivery = pedido.subtotal + pedido.iva
 	oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
 	combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
 	cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
-	context={"data": pedido,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido}
+	context={"data": pedido,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido, "sinDelivery":sinDelivery}
 	return render(request, "Pedidos/modal-pedido.html",context)
 
 @login_required(login_url='/login/')
@@ -632,11 +636,13 @@ def get_ventas(request):
 	    else:
 	        data_clientes= data_clientes.filter(fecha__gte = datetime.now().replace(hour=0,minute=0,second=0))
 	    data_clientes=data_clientes.order_by("-id_pedido")
+	    subIVA = 0
+	    for cliente in data_clientes:
+	        subIVA += cliente.subtotal + cliente.iva
 	    ventas=data_clientes.aggregate(ventas=Sum('total'))
 	    subtotal = data_clientes.aggregate(ventas=Sum('subtotal'))
 	    iva = data_clientes.aggregate(ventas=Sum('iva'))
 	    envio = data_clientes.aggregate(ventas=Sum('envio'))
-
 	    if orden != None:
 	        if orden == 'fecha':
 	            data_clientes=data_clientes.order_by('-fecha',"-id_pedido")
@@ -659,7 +665,7 @@ def get_ventas(request):
 	        res = {"id_pedido": cliente.id_pedido, "fecha": cliente.fecha, "establecimiento": cliente.establecimiento, "subtotal": cliente.subtotal, "envio": cliente.envio, "sinDelivery":cliente.subtotal + cliente.iva, "iva": cliente.iva, "total": cliente.total, "tipo_entrega": cliente.tipo_entrega, "tipo_pago": cliente.tipo_pago, "observacion": cliente.observacion}
 	        valor.append(res)
 
-	    return render(request, "Reportes/ventas.html",{"datos":clientes,"ventas":ventas,"filtro":orden,"desde":desde,"hasta":hasta, "valor": valor, "subtotal": subtotal, "iva": iva, "envio": envio})
+	    return render(request, "Reportes/ventas.html",{"datos":clientes,"ventas":ventas,"filtro":orden,"desde":desde,"hasta":hasta, "valor": valor, "subtotal": subtotal, "iva": iva, "subIVA": subIVA, "envio": envio})
     return HttpResponse(status=400)
 
 
@@ -1555,7 +1561,7 @@ def editar_cupon(request, id_cupon):
     return HttpResponse(status=400)
 
 @login_required(login_url='/login/')
-pon(request,id_cupon):
+def eliminar_cupon(request,id_cupon):
     data_cupon= Cupones.objects.get(id_cupon=id_cupon)
     tipo=data_cupon.tipo
     if tipo == 'P':
@@ -1566,6 +1572,9 @@ pon(request,id_cupon):
         relaciones=Codigo_Cliente.objects.filter(id_codigo=data_codigo)
         for element in relaciones:
             element.delete()
+    carCupones= Carrito_Cupones.objects.filter(id_cupon=data_cupon)
+    for element in carCupones:
+        element.delete()
     data_cupon.delete()
     return redirect("/cupones")
 
@@ -2724,3 +2733,176 @@ def chats_page(request,admin):
 
 	    return render(request, "Chats/chats.html",{"datos":clientes,"data_mensajes":mensajes,"filtro":orden,"id_Admin":admin})
 	return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def tarjetasRegalo_page(request):
+    if request.method=='GET':
+        orden=request.GET.get("filtro")
+        desde=request.GET.get("from")
+        hasta=request.GET.get("to")
+        data_clientes=Tarjeta_Monto_Cliente.objects.all().order_by("-id_tarjetaxcliente")
+        data_productos=Tarjeta_Producto_Cliente.objects.all().order_by("-id_tarjetaxcliente")
+        data_clientesfin= data_clientes.union(data_productos)
+        if request.GET.get("from")!=None and request.GET.get("to")!=None:
+            data_clientes=data_clientes.filter(fecha__range=[desde, hasta]).order_by("-id_tarjetaxcliente")
+        elif request.GET.get("from")!=None:
+            data_clientes= data_clientes.select_related().filter(fecha__gte=desde).order_by("-id_tarjetaxcliente")
+        elif request.GET.get("to")!=None:
+            data_clientes= data_clientes.filter(fecha__lte=hasta).order_by("-id_tarjetaxcliente")
+        if orden != None:
+            if orden == 'fecha':
+                data_clientes=data_clientes.order_by('-fecha',"-id_tarjetaxcliente")
+            elif orden == 'cliente':
+                data_clientes=data_clientes.order_by('id_cliente__nombre','id_cliente__apellido',"-id_tarjetaxcliente")
+
+        todos=data_clientes.select_related()
+        espera=data_clientes.select_related().filter(estado__in=['A'])
+        if orden != None:
+            if orden == 'fecha':
+                espera=espera.order_by("-estado",'-fecha',"-id_tarjetaxcliente")
+            elif orden == 'cliente':
+                espera=espera.order_by("-estado",'id_cliente__nombre','id_cliente__apellido',"-id_tarjetaxcliente")
+        else:
+            espera=espera.order_by("-estado","-id_tarjetaxcliente")
+        entregados=data_clientes.select_related().filter(estado="I")
+        devueltos=data_clientes.select_related().filter(estado="Anulado")
+        pagina="THome"
+        page = request.GET.get('page', 1)
+        page0 = request.GET.get('page0', 1)
+        if request.GET.get('page0') != None:
+            pagina="tMenu0"
+        page1 = request.GET.get('page1', 1)
+        if request.GET.get('page1') != None:
+            pagina="tMenu1"
+        page3 = request.GET.get('page3', 1)
+        if request.GET.get('page3') != None:
+            pagina="tMenu3"
+        page4 = request.GET.get('page4', 1)
+        if request.GET.get('page4') != None:
+            pagina="tMenu4"
+        paginator = Paginator(todos, 15)
+        paginator0 = Paginator(espera, 15)
+        paginator3 = Paginator(entregados, 15)
+        paginator4 = Paginator(devueltos, 15)
+        try:
+            tarjetas = paginator.page(page)
+            espera = paginator0.page(page0)
+            entregados = paginator3.page(page3)
+            devueltos = paginator4.page(page4)
+        except PageNotAnInteger:
+            tarjetas = paginator.page(1)
+            espera = paginator0.page(1)
+            entregados = paginator3.page(1)
+            devueltos = paginator4.page(1)
+        except EmptyPage:
+            tarjetas = paginator.page(paginator.num_pages)
+            espera = paginator0.page(paginator0.num_pages)
+            entregados = paginator3.page(paginator3.num_pages)
+            devueltos = paginator4.page(paginator4.num_pages)
+        diccionario={
+           "datos":tarjetas, "espera":espera,"entregados":entregados,
+           "devueltos":devueltos,"filtro":orden,
+           "desde":desde,"hasta":hasta,
+           "tab":pagina, "data_clientesfin":data_clientesfin}
+        return render(request, "TarjetasRegalo/tarjetasRegalo.html",diccionario)
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def get_tarjeta_monto(request,id_tarjetaxcliente):
+	tarjeta=Tarjeta_Monto_Cliente.objects.select_related().filter(id_tarjetaxcliente=id_tarjetaxcliente).first()
+	pedido=Tarjeta_Monto_Pedido.objects.select_related().filter(id_tarjeta=tarjeta.id_tarjeta)
+	#oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
+	#combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
+	#cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
+	context={"data": tarjeta, "pedido":pedido}
+	#,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido
+	return render(request, "TarjetasRegalo/modal-tarjeta-monto.html",context)
+
+@login_required(login_url='/login/')
+def tarjetasRegalo2_page(request):
+    if request.method=='GET':
+        orden=request.GET.get("filtro")
+        desde=request.GET.get("from")
+        hasta=request.GET.get("to")
+        data_clientes=Tarjeta_Producto_Cliente.objects.all().order_by("-id_tarjetaxcliente")
+        if request.GET.get("from")!=None and request.GET.get("to")!=None:
+            data_clientes=data_clientes.filter(fecha__range=[desde, hasta]).order_by("-id_tarjetaxcliente")
+        elif request.GET.get("from")!=None:
+            data_clientes= data_clientes.select_related().filter(fecha__gte=desde).order_by("-id_tarjetaxcliente")
+        elif request.GET.get("to")!=None:
+            data_clientes= data_clientes.filter(fecha__lte=hasta).order_by("-id_tarjetaxcliente")
+        if orden != None:
+            if orden == 'fecha':
+                data_clientes=data_clientes.order_by('-fecha',"-id_tarjetaxcliente")
+            elif orden == 'cliente':
+                data_clientes=data_clientes.order_by('id_cliente__nombre','id_cliente__apellido',"-id_tarjetaxcliente")
+
+        todos=data_clientes.select_related()
+        espera=data_clientes.select_related().filter(estado__in=['A'])
+        if orden != None:
+            if orden == 'fecha':
+                espera=espera.order_by("-estado",'-fecha',"-id_tarjetaxcliente")
+            elif orden == 'cliente':
+                espera=espera.order_by("-estado",'id_cliente__nombre','id_cliente__apellido',"-id_tarjetaxcliente")
+        else:
+            espera=espera.order_by("-estado","-id_tarjetaxcliente")
+        entregados=data_clientes.select_related().filter(estado="I")
+        devueltos=data_clientes.select_related().filter(estado="Anulado")
+        pagina="THome"
+        page = request.GET.get('page', 1)
+        page0 = request.GET.get('page0', 1)
+        if request.GET.get('page0') != None:
+            pagina="tMenu0"
+        page1 = request.GET.get('page1', 1)
+        if request.GET.get('page1') != None:
+            pagina="tMenu1"
+        page3 = request.GET.get('page3', 1)
+        if request.GET.get('page3') != None:
+            pagina="tMenu3"
+        page4 = request.GET.get('page4', 1)
+        if request.GET.get('page4') != None:
+            pagina="tMenu4"
+        paginator = Paginator(todos, 15)
+        paginator0 = Paginator(espera, 15)
+        paginator3 = Paginator(entregados, 15)
+        paginator4 = Paginator(devueltos, 15)
+        try:
+            tarjetas = paginator.page(page)
+            espera = paginator0.page(page0)
+            entregados = paginator3.page(page3)
+            devueltos = paginator4.page(page4)
+        except PageNotAnInteger:
+            tarjetas = paginator.page(1)
+            espera = paginator0.page(1)
+            entregados = paginator3.page(1)
+            devueltos = paginator4.page(1)
+        except EmptyPage:
+            tarjetas = paginator.page(paginator.num_pages)
+            espera = paginator0.page(paginator0.num_pages)
+            entregados = paginator3.page(paginator3.num_pages)
+            devueltos = paginator4.page(paginator4.num_pages)
+        diccionario={
+           "datos":tarjetas, "espera":espera,"entregados":entregados,
+           "devueltos":devueltos,"filtro":orden,
+           "desde":desde,"hasta":hasta,
+           "tab":pagina}
+        return render(request, "TarjetasRegalo/tarjetasRegaloProducto.html",diccionario)
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def get_tarjeta_producto(request,id_tarjetaxcliente):
+	tarjeta=Tarjeta_Producto_Cliente.objects.select_related().filter(id_tarjetaxcliente=id_tarjetaxcliente).first()
+	pedido=Pedido.objects.select_related().filter(id_pedido=tarjeta.id_tarjeta.id_pedido.id_pedido).first()
+	producto=Tarjeta_Producto_Producto.objects.select_related().filter(id_tarjeta=tarjeta.id_tarjeta)
+	#oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
+	#combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
+	#cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
+	context={"data": tarjeta, "pedido":pedido, "productos":producto}
+	#,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido
+	return render(request, "TarjetasRegalo/modal-tarjeta-producto.html",context)
+
+
+
+
+
+

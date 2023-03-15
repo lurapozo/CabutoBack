@@ -56,8 +56,12 @@
         align-items:start;
     }
     .imagen{
+        display:flex;
+        flex-direction: column;
+        justify-content: space-between;
+margin-left: 30px;
         width:25%;
-        text-align: center;
+
     }
     .datos{
         width:75%;
@@ -182,50 +186,31 @@
         <div id="body-modal" class="modal-body mCustomScrollbar">
             <div class="contener-datos">
                 <div class="imagen">
-                    {% if data.cliente.usuario.foto != " " and data.cliente.usuario.photo_url %}
-                        <img src={{data.cliente.usuario.photo_url}}>
+                    {% if data.id_tarjeta.id_cliente.usuario.foto != " " and data.id_tarjeta.id_cliente.usuario.photo_url %}
+                        <img src={{data.id_tarjeta.id_cliente.usuario.photo_url}}>
+                    {% else %}
+                        <img src="{% static 'img/iconos_administrador/avatar.png' %}">
+                    {% endif %}
+                    <br>
+                    {% if data.id_cliente.usuario.foto != " " and data.id_cliente.usuario.photo_url %}
+                        <img src={{data.id_cliente.usuario.photo_url}}>
                     {% else %}
                         <img src="{% static 'img/iconos_administrador/avatar.png' %}">
                     {% endif %}
                 </div>
+
                 <div class="datos">
                     <div class="campos" >
-                      <label class="left">Estado: </label>
-                      <label class="right">{{data.estado}}</label>
-                    </div>
-                    <div class="campos" >
-                      <label class="left">Nombres: </label>
-                      <label class="right">{{data.cliente.nombre}} {{data.cliente.apellido}}</label>
+                      <label class="left">Emisor: </label>
+                      <label class="right">{{data.id_tarjeta.id_cliente.nombre}} {{data.id_tarjeta.id_cliente.apellido}}</label>
                     </div>
                     <div class="campos" >
                       <label class="left">RUC/Cédula: </label>
-                      <label class="right">{{data.cliente.usuario.cedula}}</label>
+                      <label class="right">{{data.id_tarjeta.id_cliente.usuario.cedula}}</label>
                     </div>
                     <div class="campos" >
                       <label class="left">Teléfono: </label>
-                      <label class="right">{{data.cliente.telefono}}</label>
-                    </div>
-                    <div class="campos">
-                      <label class="left">Tipo de entrega: </label>
-                      <label class="right">{{data.tipo_entrega}}</label>
-                    </div>
-                    <div class="campos">
-                        <label class="left">Dirección: </label>
-                        {% if data.direccion %}
-                        <label class="right">
-                            {{data.direccion.direccion}}
-                            <a class="direccion" data-toggle="modal" data-target="#modalDireccion" onclick='ubicacion("{{data.direccion.direccion}}",{{data.direccion.latitud}},{{data.direccion.longitud}})'>Ver mapa</a>
-                        </label>
-                        {% else %}
-                            <label class="right">
-                                {{data.establecimiento.direccion}}
-                                <a class="direccion" data-toggle="modal" data-target="#modalDireccion" onclick='ubicacion("{{data.establecimiento.direccion}}",{{data.establecimiento.latitud}},{{data.establecimiento.longitud}})'>Ver mapa</a>
-                            </label>
-                        {% endif %}
-                    </div>
-                    <div class="campos">
-                        <label class="left">Fecha: </label>
-                        <label class="right">{{ data.fecha | date:"d/m/Y" }}</label>
+                      <label class="right">{{data.id_tarjeta.id_cliente.telefono}}</label>
                     </div>
                     <div class="campos">
                         <label class="left">Nombre Tarjeta: </label>
@@ -235,76 +220,29 @@
                         <label class="left">Número Tarjeta: </label>
                         <label class="right">{{ data.numeroTarjeta }}</label>
                     </div>
+                    <div class="campos">
+                      <label class="left">Receptor: </label>
+                      <label class="right">{{data.id_cliente.nombre}} {{data.id_cliente.apellido}}</label>
+                    </div>
+                    <div class="campos" >
+                      <label class="left">RUC/Cédula: </label>
+                      <label class="right">{{data.id_cliente.usuario.cedula}}</label>
+                    </div>
+                    <div class="campos" >
+                      <label class="left">Teléfono: </label>
+                      <label class="right">{{data.id_cliente.telefono}}</label>
+                    </div>
+                    <div class="campos">
+                        <label class="left">Fecha: </label>
+                        <label class="right">{{ data.fecha | date:"d/m/Y" }}</label>
+                    </div>
                 </div>
             </div>
             <div class="div-producto">
-                <h4 class="nombre-cliente">Productos</h4>
-                <table class="table productos">
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for data in productos %}
-                        <tr>
-                            <td>{{data.producto.nombre}}</td>
-                            <td>{{data.cantidad}}</td>
-                            <td>${{data.precio}}</td>
-                        </tr>
-                        {% endfor %}
-                        {% for data in ofertas %}
-                        <tr>
-                            <td>{{data.oferta.nombre}}</td>
-                            <td>{{data.cantidad}}</td>
-                            <td>${{data.precio}}</td>
-                        </tr>
-                        {% endfor %}
-                        {% for data in combos %}
-                        <tr>
-                            <td>{{data.combo.nombre}}</td>
-                            <td>{{data.cantidad}}</td>
-                            <td>${{data.precio}}</td>
-                        </tr>
-                        {% endfor %}
-                        {% for data in cupones %}
-                        <tr>
-                            <td>{{data.cupon.nombre}}</td>
-                            <td>{{data.cantidad}}</td>
-                            <td>${{data.precio}}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <h4 class="nombre-cliente">MONTO: ${{data.id_tarjeta.monto|floatformat:2 }}</h4>
+
             </div>
-            <div class="valores">
-              <label class="left">Subtotal: </label>
-              <label class="right">${{data.subtotal |floatformat:2 }} </label>
-            </div>
-            <div class="valores">
-              <label class="left">IVA 12%: </label>
-              <label class="right">${{data.iva |floatformat:2 }}</label>
-            </div>
-            <div class="valores">
-              <label class="left">Sin delivery: </label>
-              <label class="right">${{sinDelivery |floatformat:2 }}</label>
-            </div>
-            <div class="valores">
-              <label class="left">Delivery: </label>
-              <label class="right">${{data.envio |floatformat:2 }}</label>
-            </div>
-            <div class="valores">
-              <label class="left">Total: </label>
-              <label class="right">${{ data.total |floatformat:2  }}</label>
-            </div>
-            {% if data.estado == "Devuelto" %}
-                <div class="div-producto">
-                    <h4 class="nombre-cliente">Justificación</h4>
-                    <textarea disabled class="justificacion" rows="4">{{data.observacion}}</textarea>
-                </div>
-            {% endif %}
+
             <div class="footer">
                 <button class="btn btn-sucess" id="guardar-btn" data-dismiss="modal">Cerrar</button>
             </div>

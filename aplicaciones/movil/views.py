@@ -110,6 +110,8 @@ def getOferta(request):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
+
         ofertas = ofertas.filter(id_establecimiento = establecimiento)
         for oferta in ofertas:
             id=oferta.nombre.replace(" ","_")+"_"+str(oferta.id_oferta)
@@ -131,6 +133,8 @@ def getProducto(request):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
         if request.GET.get("nombre")!=None:
             res = []
             valor = request.GET.get("nombre")
@@ -168,6 +172,8 @@ def getProductoParcial(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
+
         if request.GET.get("nombre")!=None:
             res = []
             valor = request.GET.get("nombre")
@@ -207,6 +213,8 @@ def getProductoAaZ(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
         arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("id_producto__nombre")
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
@@ -230,6 +238,8 @@ def getProductoZaA(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
         arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-id_producto__nombre")
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
@@ -249,6 +259,8 @@ def getProductoPrecioMenor(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
         arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-id_producto__precio")
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
@@ -268,6 +280,8 @@ def getProductoPrecioMayor(request, page):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
         arrProducto = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("id_producto__precio")
         paginator = Paginator(arrProducto, per_page = 10)
         page_object = paginator.get_page(page)
@@ -308,6 +322,8 @@ def getCategoria(request):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
         if request.GET.get("id")!=None:
             valor=request.GET.get("id")
             categoria= Categoria.objects.filter(nombre=valor).first()
@@ -357,6 +373,7 @@ def getInicio(request):
 def getInicio2(request, establecimiento):
     if request.method== 'GET':
         res= []
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
         if request.GET.get("nombre")!=None:
             valor = request.GET.get("nombre")
             categorias= Categoria.objects.filter(nombre__icontains=str(valor)).values()[:4]
@@ -644,6 +661,8 @@ def guardarPedido(request):
             puntos = Puntos.objects.get(id_puntos = 1)
             pedido.puntos=subtotal2 * (puntos.puntosADolar / puntos.dolarAPuntos)
             pedido.save()
+            backupPedido=Backup_Pedido(id_pedido=pedido, id_direccion=direccion, fecha=timezone.now(), tipo_entrega=tipoEntrega, tipo_pago=tipoPago, total=total, nombreTarjeta=nombreTarjeta,numeroTarjeta=numeroTarjeta, clienteid=user.id_cliente,clientenombre=user.nombre,clienteapellido=user.apellido,telefono=user.telefono,cedula=user.usuario.cedula)
+            backupPedido.save()
             if(tarjeta=="monto"):
                 receptor=response["receptor"]
                 descripcion=response["descripcion"]
@@ -659,7 +678,7 @@ def guardarPedido(request):
                 mensaje= "¡Alguien te ha enviado un regalo!"
 
                 data = {"title":"Regalo recibido","icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "titulo": "Nuevo regalo", "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
-                #devices.send_message(mensaje, extra=data)
+                devices.send_message(mensaje, extra=data)
 
                 datasend={"to": clienteReceptor.usuario.token,
                         "notification": {
@@ -697,7 +716,7 @@ def guardarPedido(request):
                 devices=GCMDevice.objects.filter(user=clienteReceptor.usuario)
                 mensaje= "¡Alguien te ha enviado un regalo!"
                 data = {"title":"Regalo recibido","icon": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png", "titulo": "Nuevo regalo", "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true", "image": "https://cdn.discordapp.com/attachments/1009846868806729738/1014286378298777670/cabuto_IUVHKai2.png"}
-                '''devices.send_message(mensaje, extra=data)'''
+                devices.send_message(mensaje, extra=data)
 
                 datasend={"to": clienteReceptor.usuario.token,
                         "notification": {
@@ -815,6 +834,8 @@ def guardarPedido2(request):
             puntos = Puntos.objects.get(id_puntos = 1)
             pedido.puntos=subtotal2 * (puntos.puntosADolar / puntos.dolarAPuntos)
             pedido.save()
+            backupPedido=Backup_Pedido(id_pedido=pedido, id_direccion=direccion, fecha=timezone.now(),tipo_entrega=tipoEntrega,tipo_pago=tipoPago,total=total, nombreTarjeta=nombreTarjeta,numeroTarjeta=numeroTarjeta, clienteid=user.id_cliente,clientenombre=user.nombre,clienteapellido=user.apellido,telefono=user.telefono,cedula=user.usuario.cedula)
+            backupPedido.save()
             if(tarjeta=="monto"):
                 receptor=response["receptor"]
                 descripcion=response["descripcion"]
@@ -1701,10 +1722,10 @@ def getCarrito(request):
                 esValidoProducto= True
                 totalNecesarioMonto=0.0
                 restaMonto=0.0
-                if total_cupon > 0:
+                if total_cupon == 1:
                     for cup in detalle_cupon:
                         if cup.id_cupon.tipo =='P':
-                            if total_producto > 0:
+                            if total_producto >= 0:
                                 estaEnCarrito=False
                                 cuponesProductos= Cupones_Producto.objects.get(id_cupon=cup.id_cupon.id_cupon)
                                 productoTemp = Producto.objects.get(id_producto = cuponesProductos.id_producto.id_producto)
@@ -1716,6 +1737,32 @@ def getCarrito(request):
                                 #if not estaEnCarrito:
                                 productoNecesario = productoTemp.id_producto
                                 esValidoProducto= "Se necesita " + str(cuponesProductos.cantidad) + " " + str(productoTemp.nombre) + " para canjear el cupón"
+                                #else:
+                                #esValidoProducto= True
+                            else:
+                                esValidoProducto=total_producto
+                        if cup.id_cupon.tipo =='M':
+                            cuponesMonto= Cupones_Monto.objects.get(id_cupon=cup.id_cupon.id_cupon)
+                            if cuponesMonto.monto > totalNecesarioMonto:
+                                totalNecesarioMonto = cuponesMonto.monto
+
+                        #cuponesMonto= Cupones.objects.filter(id_cupon=e.id_cupon,tipo='M')
+                if total_cupon > 1:
+                    for cup in detalle_cupon:
+                        if cup.id_cupon.tipo =='P':
+                            if total_producto >= 0:
+                                estaEnCarrito=False
+                                cuponesProductos= Cupones_Producto.objects.get(id_cupon=cup.id_cupon.id_cupon)
+                                productoTemp = Producto.objects.get(id_producto = cuponesProductos.id_producto.id_producto)
+                                #productoNecesario = productoTemp.nombre
+                                for prod in detalle_producto:
+                                    if productoTemp.id_producto == prod.id_producto.id_producto:
+                                        if prod.cantidad >= cuponesProductos.cantidad:
+                                            estaEnCarrito=True
+                                #if not estaEnCarrito:
+                                if estaEnCarrito == False:
+                                    productoNecesario = productoTemp.id_producto
+                                    esValidoProducto= "Se necesita " + str(cuponesProductos.cantidad) + " " + str(productoTemp.nombre) + " para canjear el cupón"
                                 #else:
                                 #esValidoProducto= True
                             else:
@@ -1951,7 +1998,7 @@ def getTarjetaMontoxCarrito(detalle_tarjeta_monto):
             if tarjeta.id_tarjeta != None:
                 id="Tarjeta_Monto_"+str(tarjeta.id_tarjeta.id_tarjeta)
                 diccionario={"id_tarjeta":tarjeta.id_tarjeta.id_tarjeta,"id_unico":id,"imagen_tarjeta":"https://cdn-icons-png.flaticon.com/512/3663/3663716.png","cantidad_tarjeta":"1",
-                            "monto_tarjeta":tarjeta.id_tarjeta.monto,
+                            "monto_tarjeta":"consumo por "+tarjeta.id_tarjeta.id_cliente.nombre+" "+tarjeta.id_tarjeta.id_cliente.apellido+"\n",
                             "subtotal_tarjeta":tarjeta.precio}
                 res.append(diccionario)
             else:
@@ -1971,7 +2018,7 @@ def getTarjetaProductoxCarrito(detalle_tarjeta_producto):
             if tarjeta.id_tarjeta != None:
                 id="Tarjeta_Monto_"+str(tarjeta.id_tarjeta.id_tarjeta)
                 diccionario={"id_tarjeta":tarjeta.id_tarjeta.id_tarjeta,"id_unico":id,"imagen_tarjeta":"https://cdn-icons-png.flaticon.com/512/3663/3663716.png","cantidad_tarjeta":"1",
-                            "monto_tarjeta":0,
+                            "monto_tarjeta":"productos por "+tarjeta.id_tarjeta.id_cliente.nombre+" "+tarjeta.id_tarjeta.id_cliente.apellido+"\n",
                             "subtotal_tarjeta":0}
                 res.append(diccionario)
             else:
@@ -2186,6 +2233,8 @@ def getCuponesPersonales(request, id):
         establecimiento = 1
         if request.GET.get("establecimiento")!= None:
             establecimiento = request.GET.get("establecimiento")
+
+        establecimiento = 1 #BORRAR LINEA CUANDO SE HAGA LO DE LOS ESTABLECIMIENTOS
         cupones = cupones.filter(id_establecimiento = establecimiento)
         for cupon in cupones:
             print(cupon.photo_url)
@@ -3147,6 +3196,23 @@ def verificar_y_crear_canal(request,cliente,admin):
                 "data": data
             }
             response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
+
+        else:
+            devices = WebPushDevice.objects.all()
+            data = json.dumps({
+                "title": f'¡Nuevo mensaje!',
+                "message": f'Usuario {usuario_cliente.nombre} ha enviado un mensaje.',
+                "vibrate": "[200, 100, 200, 100, 200, 100, 200]"
+            })
+            #datasend={"to": "/topics/CAMBIAR", "notification": {"title": f'¡Nuevo pedido!',"subtitle": f'¡Nuevo pedido!',"body": f'Usuario {user.nombre} ha realizado un nuevo pedido.'},"data":data}
+            for device in devices:
+                try:
+                    device.send_message(message=data)
+                    #response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
+                except WebPushError as e:
+                    print(e)
+                    device.delete()
+
         canal_c.tiempo=datetime.now()
         canal_c.save()
         return JsonResponse(body)
@@ -3194,7 +3260,7 @@ def obtener_data_empleado_admin(request):
 @csrf_exempt
 def getMes(request, id):
     if request.method == 'GET':
-        cliente = Cliente.objects.get(id_cliente=id)
+        cliente = Cliente.objects.get(usuario=id)
         fechaActual=timezone.now().date()
         fechaAnterior=cliente.monthCard
         if cliente.monthCard:

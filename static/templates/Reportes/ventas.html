@@ -94,6 +94,8 @@
         margin: auto 15px auto 10px;
     }
     .total-clientes{
+        margin-left: auto;
+        margin-right: auto;
         width: 90%;
         border-top: 3px solid #0F195E;
         padding-top: 10px;
@@ -102,8 +104,6 @@
     }
     .total-clientes span:first-child{
         font-weight: bold;
-        padding-right: 25px;
-        padding-left: 35%;
         color: #0F195E;
     }
     .pagination{
@@ -128,6 +128,12 @@
     .pagination li:last-child span{
         color: #0f195e;
         font-size: 13px;
+    }
+    .rowss{
+        display:flex;
+        flex-direction: row;
+        justify-content: center;
+        width: 100%;
     }
 </style>
 <script type="text/javascript">
@@ -246,12 +252,19 @@
     </table>
 
     <div class="total-clientes">
-        <span>Total Ventas: </span><span>{{datos.paginator.count}}</span>
-        <p style="margin-bottom: 0;"><span>Valor Subtotal de Ventas: </span><span>${{subtotal.ventas|floatformat:2}}</span></p>
-        <p style="margin-bottom: 0;"><span>Valor Total de IVA: </span><span>${{iva.ventas|floatformat:2}}</span></p>
-        <p style="margin-bottom: 0;"><span>Valor Total de Envío: </span><span>${{envio.ventas|floatformat:2}}</span></p>
-        <p style="margin-bottom: 0;"><span>Valor Total de Ventas: </span><span>${{ventas.ventas|floatformat:2}}</span></p>
+        <div class="rowss">
+            <p style="margin-bottom: 0; margin-right: 20px;"><span>Total Ventas: </span><span>{{datos.paginator.count}}</span></p>
+            <p style="margin-bottom: 0; margin-right: 20px;"><span>Valor Subtotal de Ventas: </span><span>${{subtotal.ventas|floatformat:2}}</span></p>
+        </div>
+        <div class="rowss">
+            <p style="margin-bottom: 0; margin-right: 20px;"><span>Valor Total de IVA: </span><span>${{iva.ventas|floatformat:2}}</span></p>
 
+            <p style="margin-bottom: 0;margin-left: 20px;"><span>Valor Subtotal + IVA: </span><span>${{ subIVA|floatformat:2 }}</span></p>
+        </div>
+        <div class="rowss">
+            <p style="margin-bottom: 0;margin-right: 20px;"><span>Valor Total de Envío: </span><span>${{envio.ventas|floatformat:2}}</span></p>
+            <p style="margin-bottom: 0;margin-left: 20px;"><span>Valor Total de Ventas: </span><span>${{ventas.ventas|floatformat:2}}</span></p>
+        </div>
     </div>
     </div>
     {% else %}

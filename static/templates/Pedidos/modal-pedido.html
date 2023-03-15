@@ -228,6 +228,14 @@
                       <label class="left">Fecha: </label>
                       <label class="right">{{ data.fecha | date:"d/m/Y" }}</label>
                     </div>
+                    <div class="campos">
+                        <label class="left">Nombre Tarjeta: </label>
+                        <label class="right">{{ data.nombreTarjeta }}</label>
+                    </div>
+                    <div class="campos">
+                        <label class="left">Número Tarjeta: </label>
+                        <label class="right">{{ data.numeroTarjeta }}</label>
+                    </div>
                 </div>
             </div>
             <div class="div-producto">
@@ -279,6 +287,10 @@
             <div class="valores">
               <label class="left">IVA 12%: </label>
               <label class="right">${{data.iva |floatformat:2 }}</label>
+            </div>
+            <div class="valores">
+              <label class="left">Sin delivery: </label>
+              <label class="right">${{sinDelivery |floatformat:2 }}</label>
             </div>
             <div class="valores">
               <label class="left">Delivery: </label>

@@ -749,3 +749,27 @@ class Canal(ModelBase):
     usuario_cliente = models.ForeignKey(Cliente, blank=True,null=True,  on_delete=models.CASCADE)
     usuario_admin=models.ForeignKey(Empleado,blank=True,null=True, on_delete=models.CASCADE)
     objects = CanalManager()
+
+class Backup_Pedido(models.Model):
+    EstadoPedido = (
+        ('Enviado', 'Enviado'),
+        ('Entregado', 'Entregado'),
+        ('Recibido', 'Recibido'),
+        ('Proceso', 'Proceso'),
+        ('Devuelto', 'Devuelto'),
+        ('Anulado', 'Anulado'),
+    )
+    id_backpedido=models.AutoField(primary_key=True)
+    id_pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True)
+    id_direccion=models.ForeignKey(DireccionEntrega, on_delete=models.SET_NULL, null=True)
+    fecha=models.DateTimeField(default=now)
+    tipo_entrega= models.CharField(max_length=100, default = "Domicilio")
+    tipo_pago= models.CharField(max_length=100, default = "Efectivo")
+    total=models.FloatField()
+    nombreTarjeta=models.CharField(max_length=100, default = "", null=True)
+    numeroTarjeta=models.CharField(max_length=100, default = "", null=True)
+    clienteid = models.IntegerField()
+    clientenombre=models.CharField(max_length=100)
+    clienteapellido=models.CharField(max_length=100)
+    telefono =models.CharField(max_length=100, default = "NONE")
+    cedula=models.CharField(max_length=10)
