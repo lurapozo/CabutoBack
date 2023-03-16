@@ -81,6 +81,7 @@ urlpatterns = [
     path('modContra/', modContra),
     path('getMes/<int:id>', getMes),
 
+    path('revisarVersion/<int:id>', revisarVersion),
 	#URLS PARA CHAT
     path("api/chat/<str:cliente>/<str:admin>/",verificar_y_crear_canal),
     #path("api/chat/inbox/<str:usuario_actual>/",obtener_ca_usuario_actual),
