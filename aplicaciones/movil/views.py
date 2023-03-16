@@ -1702,6 +1702,8 @@ def getCarrito(request):
         print(res)
         usuario=Usuario.objects.get(correo=response["correo"])
         cliente=Cliente.objects.get(usuario=usuario)
+        if(cliente.version != 2):
+            return HttpResponse(status=400)
         try:
             carrito=Carrito.objects.get(id_cliente=cliente)
             try:
