@@ -3122,6 +3122,16 @@ def revisarBan(request, id):
     JsonResponse(response_data,safe=False)
 
 @csrf_exempt
+def revisarVersion(request, id):
+    if request.method == 'GET':
+        if id == 2:
+            response_data = {'valid':'OK'}
+        else:
+            response_data = {'valid':'NO'}
+        return JsonResponse(response_data,safe=False)
+    JsonResponse(response_data,safe=False)
+
+@csrf_exempt
 def modContra(request):
     if request.method == 'POST':
         response = json.loads(request.body)
