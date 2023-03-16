@@ -126,20 +126,21 @@ class Producto(models.Model):
 
 
 class Cliente(models.Model):
-	id_cliente = models.AutoField(primary_key=True)
-	nombre=models.CharField(max_length=100)
-	apellido=models.CharField(max_length=100)
-	metodo_pago= models.CharField(max_length=100, default = "Efectivo")
-	telefono =models.CharField(max_length=100, default = "NONE")
-	direccion = models.CharField(max_length=100, default = "NONE")
-	fecha_Nac=models.DateField(default=datetime.now)
-	usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
-	puntos=models.IntegerField(default = 0)
-	ban=models.IntegerField(default = 0)
-	numTarjetas=models.IntegerField(default = 0,null=True)
-	monthCard=models.DateField(default=now,null=True)
-	def __str__(self):
-		return '%s %s' %(self.nombre, self.apellido)
+    id_cliente = models.AutoField(primary_key=True)
+    nombre=models.CharField(max_length=100)
+    apellido=models.CharField(max_length=100)
+    metodo_pago= models.CharField(max_length=100, default = "Efectivo")
+    telefono =models.CharField(max_length=100, default = "NONE")
+    direccion = models.CharField(max_length=100, default = "NONE")
+    fecha_Nac=models.DateField(default=datetime.now)
+    usuario = models.ForeignKey(Usuario,on_delete=models.SET_NULL,null=True)
+    puntos=models.IntegerField(default = 0)
+    ban=models.IntegerField(default = 0)
+    numTarjetas=models.IntegerField(default = 0,null=True)
+    monthCard=models.DateField(default=now,null=True)
+    version =models.IntegerField(default = 0,null=True)
+    def __str__(self):
+        return '%s %s' %(self.nombre, self.apellido)
 
 class DireccionEntrega(models.Model):
     id_direccion=models.AutoField(primary_key=True)

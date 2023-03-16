@@ -3293,3 +3293,14 @@ def getMes(request, id):
         res={"estado":"OK"}
         return JsonResponse(res, safe = False)
     return HttpResponse(status=400)
+
+@csrf_exempt
+def actualizarVersion(request,id):
+    if request.method == 'GET':
+        usser = Usuario.objects.get(id_usuario = id)
+        cliente = Cliente.objects.get(usuario= usser)
+        cliente.version=2
+        cliente.save()
+        response_data = {'valid':'OK'}
+        return JsonResponse(response_data,safe=False)
+    JsonResponse(response_data,safe=False)

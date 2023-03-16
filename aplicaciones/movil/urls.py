@@ -87,5 +87,6 @@ urlpatterns = [
     #path("api/chat/inbox/<str:usuario_actual>/",obtener_ca_usuario_actual),
     path("sms_update/<str:id_mensaje>/",actualizar_sms_leido),
     path("obtenerAdmin",obtener_data_empleado_admin),
+    path('actualizarVersion/<int:id>', actualizarVersion),
 
 ]
