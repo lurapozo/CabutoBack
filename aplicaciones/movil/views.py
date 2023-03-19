@@ -1401,7 +1401,7 @@ def login(request):
         print(response)
         email = response['correo']
         contra =response['contrasena']
-        users = Usuario.objects.filter()
+        users = Usuario.objects.filter(correo = email)
         print(users)
         for u in users :
 
