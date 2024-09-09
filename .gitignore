@@ -20,6 +20,8 @@ env/
 # Ignorar el entorno virtual
 myenv/
 
+# Bases de datos
+*.sql
 
 # Archivos de configuración local
 .env
