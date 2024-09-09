@@ -80,6 +80,10 @@ urlpatterns = [
     path('revisarBan/<int:id>', revisarBan),
     path('modContra/', modContra),
     path('getMes/<int:id>', getMes),
+    path('checkNumValidacion/',checkNumValidacion),
+    path('checkEstaVal/',checkEstaVal),
+    path('checkFaltaVal/',checkFaltaVal),
+    path('resetNumValidacion/',resetNumValidacion),
 
     path('revisarVersion/<int:id>', revisarVersion),
 	#URLS PARA CHAT
@@ -89,4 +93,5 @@ urlpatterns = [
     path("obtenerAdmin",obtener_data_empleado_admin),
     path('actualizarVersion/<int:id>', actualizarVersion),
 
+    path('threeds/', threeds),
 ]

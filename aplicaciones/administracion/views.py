@@ -2,8 +2,8 @@ from operator import itemgetter
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.core.mail import EmailMultiAlternatives
 from email.mime.image import MIMEImage
+from django.core.mail import EmailMessage, EmailMultiAlternatives, BadHeaderError, send_mail
 from pathlib import Path
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
@@ -24,8 +24,12 @@ import pytz
 import json
 import re
 import functools
+import time
+import hashlib
+from base64 import b64encode
 from django.core import serializers
 from .models import *
+
 
 
 notificacion_URL = "https://fcm.googleapis.com/fcm/send"
@@ -39,13 +43,13 @@ def principal(request):
             correo = request.session['correo']
             contra = request.session['contrasena']
             usuario = Empleado.objects.filter(usuario__username=correo).first()
-            print("Usuario",usuario)
+            #print("Usuario",usuario)
             if usuario.rol == "superadmin":
-                print("vamos a cargar al superadmin")
+                #print("vamos a cargar al superadmin")
                 #sesion = not sesion
                 return redirect("/principalSuperAdmin")
             elif usuario.rol == "administrador":
-                print("vamos a cargar al admin")
+                #print("vamos a cargar al admin")
                 #sesion = not sesion
                 return redirect("/principalAdmin")
         except:
@@ -55,26 +59,26 @@ def principal(request):
 @csrf_exempt
 def inicio(request):
     if request.method == "POST":
-        print("Request",request)
+        #print("Request",request)
         email = request.POST.get('correo', None)
         contra = request.POST.get('contrasena', None)
         user = authenticate(username=email, password=contra)
-        print("User",user)
+        #print("User",user)
         if user is not None:
             login(request, user)
             request.session['correo'] = email
             request.session['contrasena'] = contra
             usuario = Empleado.objects.filter(usuario__username=email).first()
-            print("Usuario",usuario)
+            #print("Usuario",usuario)
             next=request.GET.get("next")
             if next is not None:
                 return redirect(next)
             if usuario.rol == "superadmin":
-                print("vamos a cargar al superadmin")
+                #print("vamos a cargar al superadmin")
                 #sesion = not sesion
                 return redirect("/principalSuperAdmin")
             elif usuario.rol == "administrador":
-                print("vamos a cargar al admin")
+                #print("vamos a cargar al admin")
                 #sesion = not sesion
                 return redirect("/principalAdmin")
         else:
@@ -295,13 +299,13 @@ def update_producto(request,id_producto):
 def eliminar_producto(request,id_producto):
     try:
         data_producto=Producto.objects.get(id_producto=id_producto)
-        print(data_producto)
+        #print(data_producto)
         if(data_producto.estado == "A"):
             data_producto.estado="I"
         else:
             data_producto.estado="A"
         data_producto.save()
-        print(data_producto)
+        #print(data_producto)
         response_data= 'El producto ha cambiado su estado'
         html = render_to_string("Avisos/correcto.html",{"data":response_data})
         return JsonResponse({'html': html, 'result': "ok"})
@@ -413,7 +417,7 @@ def pedido_page(request):
             data_clientes= data_clientes.select_related().filter(fecha__gte=desde).order_by("-id_pedido")
         elif request.GET.get("to")!=None:
             data_clientes= data_clientes.filter(fecha__lte=hasta).order_by("-id_pedido")
-        print(data_clientes)
+        #print(data_clientes)
         if orden != None:
             if orden == 'fecha':
                 data_clientes=data_clientes.order_by('-fecha',"-id_pedido")
@@ -437,7 +441,7 @@ def pedido_page(request):
                 espera=espera.order_by("-estado",'cliente__nombre','cliente__apellido',"-id_pedido")
         else:
             espera=espera.order_by("-estado","-id_pedido")
-        print(data_clientes)
+        #print(data_clientes)
 
         if(espera.count()!=0):
             total0=round(espera.aggregate(suma=Sum('total'))["suma"],2)
@@ -585,7 +589,7 @@ def get_calificacion(request,id_pedido):
 def get_entregas(request):
     if request.method=='GET':
 	    orden=request.GET.get("filtro")
-	    print(orden)
+	    #print(orden)
 	    desde=request.GET.get("from")
 	    hasta=request.GET.get("to")
 	    data_clientes=Pedido.objects.select_related()
@@ -621,7 +625,7 @@ def get_entregas(request):
 def get_ventas(request):
     if request.method=='GET':
 	    orden=request.GET.get("filtro")
-	    print(orden)
+	    #print(orden)
 	    desde=request.GET.get("from")
 	    hasta=request.GET.get("to")
 	    #pedido=Pedido.objects.select_related().filter(id_pedido=id_pedido).first()
@@ -683,7 +687,7 @@ def confirmar_pedido(request, id_pedido):
 	    devices=GCMDevice.objects.filter(user=pedido.cliente.usuario)
 	    ec=pytz.timezone("America/Guayaquil")
 	    fecha=pedido.fecha.astimezone(ec)
-	    print(fecha)
+	    #print(fecha)
 	    print(fecha.strftime("%d/%m/%Y"))
 	    mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" está siendo despachado."
 	    data = {"title":"Pedido despachado","titulo": "Pedido enviado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
@@ -698,13 +702,13 @@ def confirmar_pedido(request, id_pedido):
     	        "data": data
 	        }
 	    response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
-
+        #ocupar_repartidores(request,1,pedido.id_pedido)
     elif pedido.estado == "Proceso":
         pedido.estado="Enviado"
         devices=GCMDevice.objects.filter(user=pedido.cliente.usuario)
         ec=pytz.timezone("America/Guayaquil")
         fecha=pedido.fecha.astimezone(ec)
-        print(fecha)
+        #print(fecha)
         print(fecha.strftime("%d/%m/%Y"))
         mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" se encuentra en camino."
         data = {"title":"Pedido enviado","titulo": "Pedido enviado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
@@ -722,7 +726,7 @@ def confirmar_pedido(request, id_pedido):
 	    devices=GCMDevice.objects.filter(user=pedido.cliente.usuario)
 	    ec=pytz.timezone("America/Guayaquil")
 	    fecha=pedido.fecha.astimezone(ec)
-	    print(fecha)
+	    #print(fecha)
 	    print(fecha.strftime("%d/%m/%Y"))
 	    mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" ha sido entregado, en la ventana historial de compras puede calificar su compra, esto nos ayudará a brindarle un mejor servicio."
 	    data = {"title":"Pedido entregado","titulo": "Pedido entregado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
@@ -732,6 +736,52 @@ def confirmar_pedido(request, id_pedido):
     pedido.save()
     pedido.save()
     return redirect("/pedidos")
+
+@login_required(login_url='/login/')
+def anular_pedido(request, id_pedido):
+    """
+    Cambia el estado del pedido a ANULADO.
+    trata de reversar todas las transacciones realizadas
+    """
+
+    pedido=Pedido.objects.filter(id_pedido=id_pedido).first()
+    user=Cliente.objects.get(id_cliente=pedido.cliente.id_cliente)
+    if pedido.tipo_pago == "Tarjeta":
+        transaccion = TransaccionPedido.objects.filter(pedido=id_pedido).first()
+        if transaccion != None:
+            try:
+                msj= "Estimado Cliente, se reversó el pago realizado por usted. En caso de existir alguna observación, comunicarse con la administración... atte: Team Cabutos"
+                application_code="CABUTO-EC-SERVER"
+                application_key="VV4D4KSzpjF279wqLrPoE9Ae21cqdC"
+                unix_timestamp = str(int(time.time()))
+                uniq_token_string= application_key + unix_timestamp
+                uniq_token_hash = hashlib.sha256(uniq_token_string.encode('utf-8')).hexdigest()
+                auth_token = b64encode(bytes('%s;%s;%s' % (application_code,unix_timestamp, uniq_token_hash), 'utf-8'))
+                headers = {
+                     'Content-Type': 'application/json',
+                     'Auth-Token': str(auth_token)
+                }
+                r_params = { "transaction": { "id": str(transaccion.transaccion) }}
+                respuesta = requests.post('https://ccapi.paymentez.com/v2/transaction/refund/', json=r_params, headers=headers)
+                data = json.loads(response.text)
+                if data['status'] == 'success':
+                    email = EmailMessage('Transacción reversada', msj, to=[user.usuario.correo])
+                    email.send()
+                    pedido.estado="Anulado"
+                    pedido.pagado=False
+                    pedido.save()
+                    print("======> " + data)
+                    print("======> "+ str(transaccion.json()))
+                else:
+                    print("Error en la respuesta de paymentez")
+            except:
+                print("Error al enviar correo o quizas error en la respuesta de paymentez")
+    else:
+        pedido.estado="Anulado"
+        pedido.pagado=False
+        pedido.save()
+    return redirect("/pedidos")
+
 
 @login_required(login_url='/login/')
 def pagosPedido_page(request):
@@ -778,7 +828,7 @@ def agregar_politica(request):
 		return render(request,"Politicas/politica.html",{"detalle": data_politica.detalle})
 	if request.method=="GET":
 	    pol = Politica.objects.last()
-	    print(pol)
+	    #print(pol)
 	    if pol != None:
 	        print(pol.detalle)
 	        return render(request, "Politicas/politica.html", {"detalle": pol.detalle})
@@ -791,7 +841,7 @@ def cliente_page(request):
 	    nombre=request.GET.get("nombre")
 	    apellido=request.GET.get("apellido")
 	    orden=request.GET.get("filtro")
-	    print(orden)
+	    #print(orden)
 	    desde=request.GET.get("from")
 	    hasta=request.GET.get("to")
 	    data_clientes=Cliente.objects.select_related()
@@ -919,7 +969,7 @@ def enviar_notificacion(request,id_notificacion):
 	    response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
 	    return  redirect("/notificaciones")
 	    response_data= '!La notificación ha sido creada y enviada con éxito!'
-	    print(response_data)
+	    #print(response_data)
 	    html = render_to_string("Avisos/correcto.html",{"data":response_data})
 	    return JsonResponse({'result': "ok"})
 	    print("okay")
@@ -1022,7 +1072,7 @@ def agregar_establecimiento(request):
 @login_required(login_url='/login/')
 @csrf_exempt
 def horario_page(request,id_establecimiento):
-    print(request)
+    #print(request)
     if request.method=='POST':
         establecimiento=Establecimiento.objects.filter(id_establecimiento=id_establecimiento).first()
         horario=Horario.objects.filter(establecimiento=establecimiento)
@@ -1300,7 +1350,7 @@ def oferta_page(request):
             if request.GET.get("estable")!='0':
                 data_ofertas=data_ofertas.filter(id_establecimiento=request.GET.get("estable"))
         data_ofertas=data_ofertas.order_by("-id_oferta")
-        print(data_ofertas)
+        #print(data_ofertas)
         page = request.GET.get('page', 1)
         paginator = Paginator(data_ofertas, 5)
         try:
@@ -1415,7 +1465,7 @@ def cupon_page(request):
             if request.GET.get("estable")!='0':
                 data_cupon=data_cupon.filter(id_establecimiento=request.GET.get("estable"))
         data_cupon=data_cupon.order_by("-id_cupon")
-        print(data_cupon)
+        #print(data_cupon)
         page = request.GET.get('page', 1)
         paginator = Paginator(data_cupon, 5)
         try:
@@ -1606,10 +1656,10 @@ def combo_page(request):
 @csrf_exempt
 def reclamo_page(request):
     data_estab= Reclamo.objects.all()
-    print(data_estab)
+    #print(data_estab)
     if request.method=='GET':
         data_estab=data_estab.order_by("-id_reclamo")
-        print(data_estab)
+        #print(data_estab)
         page = request.GET.get('page', 1)
         paginator = Paginator(data_estab, 5)
         try:
@@ -2022,7 +2072,7 @@ def estadisticas_page(request):
             mes2=1
             mesesDiccionario2={}
             while mes2<13:
-                print(mes2)
+                #print(mes2)
                 if mes2 ==1 or mes2==3 or mes2==5 or mes2==7 or mes2==8:
                     myTuple1 = (str(actualAnnus), "-0", str(mes2), "-01")
                     myTuple2 = (str(actualAnnus), "-0", str(mes2),"-31")
@@ -2477,6 +2527,857 @@ def historial_premios_page(request):
             data_premio= data_premio.select_related().filter(fecha_canje__gte=desde).order_by("-id_premioXcliente")
         elif request.GET.get("to")!=None:
             data_premio= data_premio.filter(fecha_canje__lte=hasta).order_by("-id_premioXcliente")
+        #print(data_premio)
+        if orden != None:
+            if orden == 'fecha':
+                data_premio=data_premio.order_by('-fecha_canje',"-id_premioXcliente")
+            elif orden == 'cliente':
+                data_premio=data_premio.order_by('id_cliente__nombre','id_cliente__apellido',"-id_premioXcliente")
+        todos=data_premio.select_related()
+        espera=data_premio.select_related().filter(estado__in=['Recibido'])
+
+        if orden != None:
+            if orden == 'fecha':
+                espera=espera.order_by("-estado",'-fecha_canje',"-id_premioXcliente")
+            elif orden == 'cliente':
+                espera=espera.order_by("-estado",'id_cliente__nombre','id_cliente__apellido',"-id_premioXcliente")
+        else:
+            espera=espera.order_by("-id_premioXcliente")
+        print(data_premio)
+
+        entregados=data_premio.select_related().filter(estado="Entregado")
+
+        pagina="THome"
+        page = request.GET.get('page', 1)
+        page0 = request.GET.get('page0', 1)
+        if request.GET.get('page0') != None:
+            pagina="tMenu0"
+        page1 = request.GET.get('page1', 1)
+        if request.GET.get('page1') != None:
+            pagina="tMenu1"
+
+        paginator = Paginator(todos, 15)
+        paginator0 = Paginator(espera, 1000000)
+        paginator1 = Paginator(entregados, 15)
+        try:
+            pedidos = paginator.page(page)
+            espera = paginator0.page(page0)
+            entregados = paginator1.page(page1)
+        except PageNotAnInteger:
+            pedidos = paginator.page(1)
+            espera = paginator0.page(1)
+            entregados = paginator1.page(1)
+        except EmptyPage:
+            pedidos = paginator.page(paginator.num_pages)
+            espera = paginator0.page(paginator0.num_pages)
+            entregados = paginator1.page(paginator3.num_pages)
+        diccionario={
+           "datos":pedidos, "espera":espera, "entregados":entregados,
+           "filtro":orden,"desde":desde,"hasta":hasta,"tab":pagina}
+        return render(request, "HistorialPremios/historialPremios.html",diccionario)
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def detalle_premios(request,id_premioXcliente):
+    if request.method=='GET':
+        cliente_premio=Premios_Cliente.objects.get(id_premioXcliente=id_premioXcliente)
+        premio=Premios.objects.get(id_premio=cliente_premio.id_premio.id_premio)
+        cliente=Cliente.objects.get(id_cliente=cliente_premio.id_cliente.id_cliente)
+        context={"data": cliente_premio,"premio":premio,"cliente":cliente}
+        return render(request, "HistorialPremios/detalle-premios.html",context)
+    elif request.method == 'POST':
+        data= Premios_Cliente.objects.get(id_premioXcliente=id_premioXcliente)
+        data.fecha_entrega=datetime.now().replace(hour=0,minute=0,second=0)
+        data.estado="Entregado"
+        data.save()
+        return  redirect("/historial_premios")
+    return HttpResponse(status=400)
+
+
+#@login_required(login_url='/login/')
+'''
+@csrf_exempt
+def verificar_y_crear_canal(request,cliente,admin):
+
+
+    if request.method == 'POST':
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+        canal_ = body['canal']
+        esAdmin_=body['esAdmin']
+        check_leido_=body['check_leido']
+        texto_=body['texto']
+        usuario_admin_=body['usuario_admin']
+        usuario_cliente_=body['usuario_cliente']
+
+
+        print(body)
+
+        canal_c=Canal.objects.get(id=canal_)
+        usuario_cliente,usuario_admin=None,None
+
+        if(esAdmin_==True):
+            usuario_admin=Empleado.objects.get(cedula=usuario_admin_)
+        else:
+            usuario_cliente=Cliente.objects.get(usuario__cedula=usuario_cliente_)
+
+        nuevo_mensaje=CanalMensaje(
+            canal=canal_c,
+            usuario_cliente=usuario_cliente,
+            usuario_admin=usuario_admin,
+            texto=texto_,
+            check_leido=check_leido_,
+            esAdmin=esAdmin_
+
+        )
+        nuevo_mensaje.save()
+        return JsonResponse(body)
+
+    elif request.method == 'GET':
+
+
+        canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
+        if canal == None:
+            return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
+
+        if admin == cliente:
+            return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
+
+
+        perfil_usuario_actual={}
+        perfil_admin={}
+
+        mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
+
+        return JsonResponse({
+            'canal':canal.id,
+            'receptor':admin,
+            'usuario_logeado':cliente,
+            'mensajes':mensajes
+
+            })
+
+def actualizar_sms_leido(request,id_mensaje):
+    if request.method == 'GET':
+        qs = CanalMensaje.verificar_leido(id_mensaje)
+
+        return JsonResponse({
+            'data':qs,
+            },safe=False)
+
+def obtener_data_empleado_admin(request):
+    if request.method == 'GET':
+        qs=Empleado.objects.all().values()
+        if(qs):
+            return JsonResponse({'data':list(qs)})
+    pass
+
+'''
+@login_required(login_url='/login/')
+def ban(request,id_cliente):
+    try:
+        data=Cliente.objects.get(id_cliente=id_cliente)
+        if(data.ban == 1):
+            data.ban=0
+            response_data= 'El cliente ha sido baneado'
+        else:
+            data.ban=1
+            response_data= 'El cliente no esta baneado'
+        data.save()
+        html = render_to_string("Avisos/correcto.html",{"data":response_data})
+        return JsonResponse({'html': html, 'result': "ok"})
+    except:
+        response_data= 'Ha ocurrido un error, intente de nuevo'
+        html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+        return JsonResponse({'html': html, 'result': "error"})
+
+
+@login_required(login_url='/login/')
+def mensajeria_page(request,cliente,admin):
+    if request.method=='GET':
+        #return render(request, "Reportes/view-clientes.html",{"data":notificacion})
+        canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
+        if canal == None:
+            return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
+
+        if admin == cliente:
+            return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
+
+
+        perfil_usuario_actual={}
+        perfil_admin={}
+        u_cliente=Usuario.objects.filter(cedula=cliente).first().photo_url
+
+        mensajes=CanalMensaje.obtener_data_mensaje_usuarios(canal.id)
+
+        data= {
+                'canal_':canal.id,
+                'admin_':admin,
+                'cliente_':cliente,
+                'data_mensajes':mensajes,
+                'usuario_cliente_photo':u_cliente
+                }
+        print(data)
+        print("=========================================================================")
+
+        return render(request, "Mensajeria/mensajeria.html",data)
+    else:
+        canal,_= Canal.objects.obtener_o_crear_canal_ms(cliente,admin)
+        if canal == None:
+            return JsonResponse({'mensaje':'Canal no creado','status':'Error'})
+
+        if admin == cliente:
+            return JsonResponse({"mensaje":"Canal consigo mismo no puede crearse"})
+        canal.tiempo=datetime.now()
+        canal.save()
+        canal,_.tiempo=datetime.now()
+        canal,_.save()
+    return HttpResponse(status=400)
+
+
+@login_required(login_url='/login/')
+def get_info_admin(request,usuario_admin):
+        #print("holaaa")
+
+        if request.method=='GET':
+            #print("holaaa")
+            qs=Empleado.objects.filter(usuario__username=usuario_admin).values()
+            if(qs):
+                print(qs)
+            return JsonResponse({'data':list(qs)})
+
+        return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def chats_page(request,admin):
+	if request.method=='GET':
+	    nombre=request.GET.get("nombre")
+	    apellido=request.GET.get("apellido")
+	    orden=request.GET.get("filtro")
+	    data_chats=Canal.objects.select_related()
+	    data_mensajes=CanalMensaje.objects.all()
+	    data_chats=data_chats.filter(usuario_admin_id__id_empleado__icontains=admin)
+	    data_mensajes=data_mensajes.filter(usuario_admin_id__id_empleado__icontains=admin)
+	    if nombre!=None:
+	        data_chats=data_chats.filter(usuario_cliente_id__nombre__icontains=nombre)
+	        data_mensajes=data_mensajes.filter(usuario_cliente_id__nombre__icontains=nombre)
+	    if apellido!=None:
+	        data_chats=data_chats.filter(usuario_cliente_id__apellido__icontains=apellido)
+	        data_mensajes=data_mensajes.filter(usuario_cliente_id__apellido__icontains=apellido)
+	    data_chats=data_chats.order_by("-tiempo")
+	    data_mensajes=data_mensajes.order_by("-tiempo")
+	    mensajes=[]
+	    clientes=Cliente.objects.select_related()
+	    for cli in clientes:
+	        mensaje=data_mensajes.filter(usuario_cliente=cli.id_cliente).order_by("-tiempo").first()
+	        if mensaje != None:
+	            mensajes.append(mensaje)
+	    page = request.GET.get('page', 1)
+	    paginator = Paginator(data_chats, 10)
+	    try:
+	    	clientes = paginator.page(page)
+	    except PageNotAnInteger:
+	    	clientes = paginator.page(1)
+	    except EmptyPage:
+	    	clientes = paginator.page(paginator.num_pages)
+
+	    return render(request, "Chats/chats.html",{"datos":clientes,"data_mensajes":mensajes,"filtro":orden,"id_Admin":admin})
+	return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def tarjetasRegalo_page(request):
+    if request.method=='GET':
+        orden=request.GET.get("filtro")
+        desde=request.GET.get("from")
+        hasta=request.GET.get("to")
+        data_clientes=Tarjeta_Monto_Cliente.objects.all().order_by("-id_tarjetaxcliente")
+        data_productos=Tarjeta_Producto_Cliente.objects.all().order_by("-id_tarjetaxcliente")
+        data_clientesfin= data_clientes.union(data_productos)
+        if request.GET.get("from")!=None and request.GET.get("to")!=None:
+            data_clientes=data_clientes.filter(fecha__range=[desde, hasta]).order_by("-id_tarjetaxcliente")
+        elif request.GET.get("from")!=None:
+            data_clientes= data_clientes.select_related().filter(fecha__gte=desde).order_by("-id_tarjetaxcliente")
+        elif request.GET.get("to")!=None:
+            data_clientes= data_clientes.filter(fecha__lte=hasta).order_by("-id_tarjetaxcliente")
+        if orden != None:
+            if orden == 'fecha':
+                data_clientes=data_clientes.order_by('-fecha',"-id_tarjetaxcliente")
+            elif orden == 'cliente':
+                data_clientes=data_clientes.order_by('id_cliente__nombre','id_cliente__apellido',"-id_tarjetaxcliente")
+
+        todos=data_clientes.select_related()
+        espera=data_clientes.select_related().filter(estado__in=['A'])
+        if orden != None:
+            if orden == 'fecha':
+                espera=espera.order_by("-estado",'-fecha',"-id_tarjetaxcliente")
+            elif orden == 'cliente':
+                espera=espera.order_by("-estado",'id_cliente__nombre','id_cliente__apellido',"-id_tarjetaxcliente")
+        else:
+            espera=espera.order_by("-estado","-id_tarjetaxcliente")
+        entregados=data_clientes.select_related().filter(estado="I")
+        devueltos=data_clientes.select_related().filter(estado="Anulado")
+        pagina="THome"
+        page = request.GET.get('page', 1)
+        page0 = request.GET.get('page0', 1)
+        if request.GET.get('page0') != None:
+            pagina="tMenu0"
+        page1 = request.GET.get('page1', 1)
+        if request.GET.get('page1') != None:
+            pagina="tMenu1"
+        page3 = request.GET.get('page3', 1)
+        if request.GET.get('page3') != None:
+            pagina="tMenu3"
+        page4 = request.GET.get('page4', 1)
+        if request.GET.get('page4') != None:
+            pagina="tMenu4"
+        paginator = Paginator(todos, 15)
+        paginator0 = Paginator(espera, 15)
+        paginator3 = Paginator(entregados, 15)
+        paginator4 = Paginator(devueltos, 15)
+        try:
+            tarjetas = paginator.page(page)
+            espera = paginator0.page(page0)
+            entregados = paginator3.page(page3)
+            devueltos = paginator4.page(page4)
+        except PageNotAnInteger:
+            tarjetas = paginator.page(1)
+            espera = paginator0.page(1)
+            entregados = paginator3.page(1)
+            devueltos = paginator4.page(1)
+        except EmptyPage:
+            tarjetas = paginator.page(paginator.num_pages)
+            espera = paginator0.page(paginator0.num_pages)
+            entregados = paginator3.page(paginator3.num_pages)
+            devueltos = paginator4.page(paginator4.num_pages)
+        diccionario={
+           "datos":tarjetas, "espera":espera,"entregados":entregados,
+           "devueltos":devueltos,"filtro":orden,
+           "desde":desde,"hasta":hasta,
+           "tab":pagina, "data_clientesfin":data_clientesfin}
+        return render(request, "TarjetasRegalo/tarjetasRegalo.html",diccionario)
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def get_tarjeta_monto(request,id_tarjetaxcliente):
+	tarjeta=Tarjeta_Monto_Cliente.objects.select_related().filter(id_tarjetaxcliente=id_tarjetaxcliente).first()
+	pedido=Tarjeta_Monto_Pedido.objects.select_related().filter(id_tarjeta=tarjeta.id_tarjeta)
+	#oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
+	#combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
+	#cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
+	context={"data": tarjeta, "pedido":pedido}
+	#,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido
+	return render(request, "TarjetasRegalo/modal-tarjeta-monto.html",context)
+
+@login_required(login_url='/login/')
+def tarjetasRegalo2_page(request):
+    if request.method=='GET':
+        orden=request.GET.get("filtro")
+        desde=request.GET.get("from")
+        hasta=request.GET.get("to")
+        data_clientes=Tarjeta_Producto_Cliente.objects.all().order_by("-id_tarjetaxcliente")
+        if request.GET.get("from")!=None and request.GET.get("to")!=None:
+            data_clientes=data_clientes.filter(fecha__range=[desde, hasta]).order_by("-id_tarjetaxcliente")
+        elif request.GET.get("from")!=None:
+            data_clientes= data_clientes.select_related().filter(fecha__gte=desde).order_by("-id_tarjetaxcliente")
+        elif request.GET.get("to")!=None:
+            data_clientes= data_clientes.filter(fecha__lte=hasta).order_by("-id_tarjetaxcliente")
+        if orden != None:
+            if orden == 'fecha':
+                data_clientes=data_clientes.order_by('-fecha',"-id_tarjetaxcliente")
+            elif orden == 'cliente':
+                data_clientes=data_clientes.order_by('id_cliente__nombre','id_cliente__apellido',"-id_tarjetaxcliente")
+
+        todos=data_clientes.select_related()
+        espera=data_clientes.select_related().filter(estado__in=['A'])
+        if orden != None:
+            if orden == 'fecha':
+                espera=espera.order_by("-estado",'-fecha',"-id_tarjetaxcliente")
+            elif orden == 'cliente':
+                espera=espera.order_by("-estado",'id_cliente__nombre','id_cliente__apellido',"-id_tarjetaxcliente")
+        else:
+            espera=espera.order_by("-estado","-id_tarjetaxcliente")
+        entregados=data_clientes.select_related().filter(estado="I")
+        devueltos=data_clientes.select_related().filter(estado="Anulado")
+        pagina="THome"
+        page = request.GET.get('page', 1)
+        page0 = request.GET.get('page0', 1)
+        if request.GET.get('page0') != None:
+            pagina="tMenu0"
+        page1 = request.GET.get('page1', 1)
+        if request.GET.get('page1') != None:
+            pagina="tMenu1"
+        page3 = request.GET.get('page3', 1)
+        if request.GET.get('page3') != None:
+            pagina="tMenu3"
+        page4 = request.GET.get('page4', 1)
+        if request.GET.get('page4') != None:
+            pagina="tMenu4"
+        paginator = Paginator(todos, 15)
+        paginator0 = Paginator(espera, 15)
+        paginator3 = Paginator(entregados, 15)
+        paginator4 = Paginator(devueltos, 15)
+        try:
+            tarjetas = paginator.page(page)
+            espera = paginator0.page(page0)
+            entregados = paginator3.page(page3)
+            devueltos = paginator4.page(page4)
+        except PageNotAnInteger:
+            tarjetas = paginator.page(1)
+            espera = paginator0.page(1)
+            entregados = paginator3.page(1)
+            devueltos = paginator4.page(1)
+        except EmptyPage:
+            tarjetas = paginator.page(paginator.num_pages)
+            espera = paginator0.page(paginator0.num_pages)
+            entregados = paginator3.page(paginator3.num_pages)
+            devueltos = paginator4.page(paginator4.num_pages)
+        diccionario={
+           "datos":tarjetas, "espera":espera,"entregados":entregados,
+           "devueltos":devueltos,"filtro":orden,
+           "desde":desde,"hasta":hasta,
+           "tab":pagina}
+        return render(request, "TarjetasRegalo/tarjetasRegaloProducto.html",diccionario)
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def get_tarjeta_producto(request,id_tarjetaxcliente):
+	tarjeta=Tarjeta_Producto_Cliente.objects.select_related().filter(id_tarjetaxcliente=id_tarjetaxcliente).first()
+	pedido=Pedido.objects.select_related().filter(id_pedido=tarjeta.id_tarjeta.id_pedido.id_pedido).first()
+	producto=Tarjeta_Producto_Producto.objects.select_related().filter(id_tarjeta=tarjeta.id_tarjeta)
+	#oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
+	#combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
+	#cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
+	context={"data": tarjeta, "pedido":pedido, "productos":producto}
+	#,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido
+	return render(request, "TarjetasRegalo/modal-tarjeta-producto.html",context)
+
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def repartidores(request):
+    system=request.POST.get("system")
+    return render(request,"Repartidores/repartidores.html",{})
+@login_required(login_url='/login/')
+@csrf_exempt
+def asignar_repartidores(request,id_pedido):
+    repartidores=Repartidor.objects.select_related().filter(estado="Activo")
+    pedido=Pedido.objects.select_related().filter(id_pedido=id_pedido).first()
+
+    return render(request,"Repartidores/repartidores.html",{"data":pedido,"repartidores":repartidores})
+@login_required(login_url='/login/')
+@csrf_exempt
+def ocupar_repartidores(request,id_repartidor,id_pedido):
+    text=""
+    text_pro=""
+    repartidor=Repartidor.objects.select_related().filter(id_repartidor=id_repartidor).first()
+    #repartidor.estado="Inactivo"
+    repartidor.save()
+    productos=[]
+    cantidades=[]
+    pedido=Pedido.objects.select_related().filter(id_pedido=id_pedido).first()
+    mensaje="pedido.mensaje"
+    #Historial
+    historial=Repartidor_Pedido(id_repartidor=repartidor, id_pedido=pedido, hora_inicio=datetime.now())
+    historial.save()
+    #PEDIDO
+    pedido.estado="Enviado"
+    pedido.save()
+    nom_cliente=(pedido.cliente)
+    cliente_datos=pedido.cliente
+    correo=cliente_datos.usuario
+    print(correo)
+    direccion=pedido.direccion
+    latitud=str(direccion.latitud)
+    longitud=str(direccion.longitud)
+    productosXpedidos=Producto_Pedido.objects.filter(pedido=id_pedido)
+    for elem in productosXpedidos:
+        productos.append(str(elem.producto.nombre))
+        cantidades.append(str(elem.cantidad))
+    for prod in productos:
+        ind= productos.index(prod)
+        linea= str(ind+1) + ": " + str(prod) + " x " + cantidades[ind] + "\n"
+        text_pro+=linea
+
+    text="Nuevo Pedido a domicilio"+"\nNúmero de Orden: "+str(id_pedido)+"\n \nCliente: "+str(nom_cliente)+"\nTotal: " + \
+            str(pedido.total)+"\nMétodo de Pago: "+str(pedido.tipo_pago)+"\nNombre Tarjeta: "+str(pedido.nombreTarjeta)+"\nNúmero Tarjeta: "+str(pedido.numeroTarjeta)+"\nProductos: \n \n"+text_pro+"\n\nMensaje del Cliente: \n"+mensaje+"\n\nUbicación: "
+
+    chat_id=repartidor.token
+    token = "5951957789:AAHE-yz-8svirZrv5AVjnIO99Q_-uzyqFIs"
+    #text=str(productos)
+    url_req = "https://api.telegram.org/bot"+token + \
+        "/sendMessage"+"?chat_id=" + chat_id + "&text=" + text
+    result = requests.get(url_req)
+
+    url_ubi = "https://api.telegram.org/bot"+token+"/sendLocation"
+    payload = {
+        "latitude": latitud,
+        "longitude": longitud,
+        "disable_notification": False,
+        "reply_to_message_id": None,
+        "chat_id": chat_id,
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json"
+    }
+    response = requests.post(url_ubi, json=payload, headers=headers)
+    #ENVIAMOS EL CORREO CON LOS DATOS DEL REPARTIDOR
+    #autorizacion="SDFGTBHR"
+    #html = render_to_string("Correos/confirmarRepartidor.html",{"repartidor":repartidor,"pedido":pedido,"nombre":nom_cliente,"autorizacion":autorizacion}).strip()
+    #msg = EmailMultiAlternatives('Repartidor Asignado', html, 'cabutosoftware1@gmail.com', ['rjzaruma@gmail.com'])
+    #msg.content_subtype = 'html'  # set the primary content to be text/html
+    #msg.mixed_subtype = 'related'
+    #msg.send()
+    return redirect("../../../../pedidos/")
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def crud_repartidores(request):
+    repartidores=Repartidor.objects.all()
+    total=len(repartidores)
+    return render(request,"Repartidores/crud_repartidores.html",{"data":repartidores,"total":total})
+
+
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def agregar_repartidor(request):
+    nombre=""
+
+    if request.method=='POST':
+            nombre=request.POST.get('nombre',None)
+            apellido = request.POST.get('apellido',None)
+            telefono = request.POST.get('telefono',None)
+            chat = request.POST.get('chat',None)
+            u_chat=Repartidor.objects.select_related().filter(token=chat).first()
+            if u_chat is not None:
+                response_data= 'Ya existe un repartidor con estos datos, intenta de nuevo.'
+                html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+                return JsonResponse({'html': html, 'result': "error"})
+            repartidor = Repartidor(nombre=nombre,apellido = apellido,telefono=telefono,token = chat,estado="Activo")
+            repartidor.save()
+            response_data= '!El repartidor ha sido creado con éxito!'
+            html = render_to_string("Avisos/correcto.html",{"data":response_data})
+            return JsonResponse({'html': html, 'result': "ok"})
+    return render(request,"Repartidores/add_repartidor.html")
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def edit_repartidor(request,id_repartidor):
+    res=[]
+    repartidor=Repartidor.objects.select_related().filter(id_repartidor=id_repartidor).first()
+    if request.method=='POST':
+        nombre=request.POST.get('nombre',None)
+        apellido = request.POST.get('apellido',None)
+        telefono = request.POST.get('telefono',None)
+        chat = request.POST.get('chat',None)
+        estado = request.POST.get('estado',None)
+        if nombre is not None and chat is not None and apellido is not None:
+            repartidor.nombre=nombre
+            repartidor.apellido = apellido
+            repartidor.telefono = telefono
+            repartidor.token= chat
+            repartidor.estado=estado
+            repartidor.save()
+            response_data= '!El repartidor ha sido actualizado con éxito!'
+            html = render_to_string("Avisos/correcto.html",{"data":response_data})
+            return JsonResponse({'html': html, 'result': "ok"})
+        else:
+            response_data= '!Ha ocurrido un error, intente de nuevo!'
+            html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+            return JsonResponse({'html': html, 'result': "error"})
+    return render(request,"Repartidores/edit_repartidor.html",{"data":repartidor})
+
+@login_required(login_url='/login/')
+def publicidad_page(request):
+    if request.method=='GET':
+        data_publicidad=Publicidad.objects
+        valor = request.GET.get("busqueda")
+        if request.GET.get("busqueda")!=None:
+            data_publicidad= data_publicidad.filter(nombre__icontains=str(valor))
+        data_publicidad=data_publicidad.order_by("-id_publicidad")
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(data_publicidad, 5)
+        try:
+            publicidades = paginator.page(page)
+        except PageNotAnInteger:
+            publicidades = paginator.page(1)
+        except EmptyPage:
+            publicidades = paginator.page(paginator.num_pages)
+
+        return render(request, "Publicidad/publicidad.html",{"datos":publicidades,"buscar":valor})
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def agregar_publicidad(request):
+    res=[]
+    if request.method=='POST':
+        name=request.POST.get('nombre',None)
+        imagen = request.FILES.get('image',None)
+        tipo = request.POST.get('tipoPublicidad',None)
+        fromDate=request.POST.get('fromDate',None)
+        toDate= request.POST.get('toDate',None)
+        url= request.POST.get('url',None)
+
+        response_data = {}
+        publi=Publicidad.objects.filter(nombre=name).first()
+        if publi != None:
+            response_data= 'Ya existe una Publicidad con este nombre'
+            html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+            return JsonResponse({'html': html, 'result': "error"})
+        try:
+            publicidad = Publicidad(nombre=name, image=imagen, tipo=tipo, fecha_inicio=fromDate, fecha_fin=toDate, url=url)
+            publicidad.save()
+            return  redirect("/publicidad")
+        except:
+            return  redirect("/publicidad")
+    if request.method=='GET':
+        data_estab= Establecimiento.objects.all()
+        return render(request, "Publicidad/add-publicidades.html", {"estab":data_estab})
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def eliminar_publicidad(request,id_publicidad):
+    data_publi=Publicidad.objects.get(id_publicidad=id_publicidad)
+    if data_publi.image:
+        data_publi.image.delete()
+    data_publi.delete()
+    return redirect("/publicidad")
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def editar_publicidad(request,id_publicidad):
+    res=[]
+    if request.method=='POST':
+        name=request.POST.get('nombre',None)
+        imagen = request.FILES.get('image',None)
+        tipo = request.POST.get('tipoPublicidad',None)
+        fromDate=request.POST.get('fromDate',None)
+        toDate= request.POST.get('toDate',None)
+        url= request.POST.get('url',None)
+        publicidad=Publicidad.objects.get(id_publicidad=id_publicidad)
+        publicidad.nombre=name
+        if(imagen != None):
+            publicidad.image.delete()
+            publicidad.image=imagen
+        publicidad.tipo=tipo
+        publicidad.fecha_inicio=fromDate
+        publicidad.fecha_fin=toDate
+        publicidad.url=url
+        publicidad.save()
+        return redirect("/publicidad")
+    if request.method=='GET':
+        publicidad=Publicidad.objects.get(id_publicidad=id_publicidad)
+        return render(request, "Publicidad/edit-publicidades.html",{"data":publicidad})
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def puntos_page(request):
+    if request.method=='GET':
+        productosLista= Producto.objects.all().order_by("nombre","-id_producto")
+        puntos=Puntos.objects.get(id_puntos=1)
+        dolarAPuntos=puntos.dolarAPuntos
+        puntosADolar=puntos.puntosADolar
+        tarjetaAPuntos=puntos.tarjetaAPuntos
+        puntosATarjeta=puntos.puntosATarjeta
+        data_puntos=Producto.objects
+        valor = request.GET.get("busqueda")
+        if request.GET.get("busqueda")!=None:
+            data_puntos= data_puntos.filter(nombre__icontains=str(valor))
+        #data_puntos=data_puntos.order_by("-id_publicidad")
+        data_puntos= data_puntos.exclude(puntos=0)
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(data_puntos, 5)
+        try:
+            puntos = paginator.page(page)
+        except PageNotAnInteger:
+            puntos = paginator.page(1)
+        except EmptyPage:
+            puntos = paginator.page(paginator.num_pages)
+
+        return render(request, "Puntos/puntos.html",{"datos":puntos,"buscar":valor, "dolarAPuntos":dolarAPuntos, "puntosADolar":puntosADolar, "productosLista":productosLista, "puntosATarjeta":puntosATarjeta, "tarjetaAPuntos":tarjetaAPuntos})
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def add_puntos(request):
+    productosLista= Producto.objects.all().order_by("nombre","-id_producto")
+    if request.method=='GET':
+        return render(request, "Puntos/add-puntos.html",{"productosLista":productosLista})
+    elif request.method == 'POST':
+        idproducto = request.POST.get('producto', None)
+        puntos = request.POST.get('puntos', None)
+        producto= Producto.objects.get(id_producto=idproducto)
+        producto.puntos=puntos
+        producto.save()
+        return  redirect("/puntos")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def puntosxpuntos(request):
+    puntos=Puntos.objects.get(id_puntos=1)
+    if request.method=='GET':
+        return render(request, "Puntos/puntosxpuntos.html",{"puntos":puntos})
+    elif request.method == 'POST':
+        dtp = request.POST.get('dtp', None)
+        ptd = request.POST.get('ptd', None)
+        ptt = request.POST.get('ptt', None)
+        ttp = request.POST.get('ttp', None)
+        puntos.dolarAPuntos=dtp
+        puntos.puntosADolar=ptd
+        puntos.puntosATarjeta=ptt
+        puntos.tarjetaAPuntos=ttp
+        puntos.save()
+        return  redirect("/puntos")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def editar_puntos(request, id_producto):
+    if request.method=='GET':
+        data_products = Producto.objects.get(id_producto=id_producto)
+        return render(request, "Puntos/edit-puntos.html",{"datos_mostrar":data_products})
+    elif request.method == 'POST':
+        puntos=request.POST.get("puntos", None)
+        data= Producto.objects.get(id_producto=id_producto)
+        data.puntos=puntos
+        data.save()
+        return  redirect("/puntos")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def eliminar_puntos(request,id_producto):
+    try:
+        data_producto=Producto.objects.get(id_producto=id_producto)
+        data_producto.puntos=0
+        data_producto.save()
+        return  redirect("/puntos")
+    except:
+        response_data= 'Ha ocurrido un error, intente de nuevo'
+        html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+        return JsonResponse({'html': html, 'result': "error"})
+
+@login_required(login_url='/login/')
+def premios_page(request):
+    if request.method=='GET':
+        premiosLista= Premios.objects.all().order_by("nombre","-id_prermio")
+        data_premios=Premios.objects
+        valor = request.GET.get("busqueda")
+        if request.GET.get("busqueda")!=None:
+            data_premios= data_premios.filter(nombre__icontains=str(valor))
+        #data_puntos=data_puntos.order_by("-id_publicidad")
+        data_premios= data_premios.exclude(puntos=-100000)
+
+        page = request.GET.get('page', 1)
+        paginator = Paginator(data_premios, 5)
+        try:
+            premios = paginator.page(page)
+        except PageNotAnInteger:
+            premios = paginator.page(1)
+        except EmptyPage:
+            premios = paginator.page(paginator.num_pages)
+
+        return render(request, "Premios/premios.html",{"datos":premios,"buscar":valor})
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def add_premios(request):
+    if request.method=='GET':
+        return render(request, "Premios/add-premios.html")
+    elif request.method == 'POST':
+        inicio=request.POST.get("from", None)
+        fin=request.POST.get("to", None)
+        name = request.POST.get('nombre', None)
+        description = request.POST.get('descripcion', None)
+        stock = request.POST.get('cantidad', None)
+        puntos = request.POST.get('puntos', None)
+        imagen = request.FILES.get('image', None)
+        premio = Premios(nombre=name,descripcion=description,cantidad=stock,puntos=puntos,fecha_inicio=inicio,fecha_fin=fin,image=imagen)
+        premio.save()
+        return  redirect("/premios")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def add_premios2(request):
+    if request.method=='GET':
+        productosLista= Producto.objects.all().order_by("nombre","-id_producto")
+        return render(request, "Premios/add-premios2.html",{"productosLista":productosLista})
+    elif request.method == 'POST':
+        idproducto = request.POST.get('producto', None)
+        producto= Producto.objects.get(id_producto=idproducto)
+
+        inicio=request.POST.get("from", None)
+        fin=request.POST.get("to", None)
+        name = producto.nombre
+        description = request.POST.get('descripcion', None)
+        stock = producto.stock_disponible
+        puntos = request.POST.get('puntos', None)
+        imagen = producto.image
+        premio = Premios(nombre=name,descripcion=description,cantidad=stock,puntos=puntos,fecha_inicio=inicio,fecha_fin=fin,image=imagen)
+        premio.save()
+        return  redirect("/premios")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def tipo_premios(request):
+    if request.method=='GET':
+        return render(request, "Premios/tipo-premios.html")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def editar_premios(request, id_premio):
+    if request.method=='GET':
+        data_premio = Premios.objects.get(id_premio=id_premio)
+        return render(request, "Premios/edit-premios.html",{"datos_mostrar":data_premio, "inicio":data_premio.fecha_inicio.strftime("%Y-%m-%d"), "fin":data_premio.fecha_fin.strftime("%Y-%m-%d")})
+    elif request.method == 'POST':
+        data= Premios.objects.get(id_premio=id_premio)
+        data.nombre=request.POST.get("nombre", None)
+        data.descripcion=request.POST.get("descripcion", None)
+        data.cantidad=request.POST.get("cantidad", None)
+        data.puntos=request.POST.get("puntos", None)
+        data.fecha_inicio=request.POST.get("from", None)
+        data.fecha_fin=request.POST.get("to", None)
+        imagen = request.FILES.get("image", None)
+        if(imagen != None):
+            data.image.delete()
+            data.image=imagen
+        data.save()
+        return  redirect("/premios")
+    return HttpResponse(status=400)
+
+@login_required(login_url='/login/')
+def eliminar_premios(request,id_premio):
+    try:
+        data_premio=Premios.objects.get(id_premio=id_premio)
+        data_premio.delete()
+        return  redirect("/premios")
+    except:
+        response_data= 'Ha ocurrido un error, intente de nuevo'
+        html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+        return JsonResponse({'html': html, 'result': "error"})
+
+
+@login_required(login_url='/login/')
+def historial_premios_page(request):
+    if request.method=='GET':
+        orden=request.GET.get("filtro")
+        desde=request.GET.get("from")
+        hasta=request.GET.get("to")
+        data_premio=Premios_Cliente.objects.all().order_by("-id_premioXcliente")
+        if request.GET.get("from")!=None and request.GET.get("to")!=None:
+            data_premio=data_premio.filter(fecha_canje__range=[desde, hasta]).order_by("-id_premioXcliente")
+        elif request.GET.get("from")!=None:
+            data_premio= data_premio.select_related().filter(fecha_canje__gte=desde).order_by("-id_premioXcliente")
+        elif request.GET.get("to")!=None:
+            data_premio= data_premio.filter(fecha_canje__lte=hasta).order_by("-id_premioXcliente")
         print(data_premio)
         if orden != None:
             if orden == 'fecha':
@@ -2700,39 +3601,39 @@ def get_info_admin(request,usuario_admin):
 
 @login_required(login_url='/login/')
 def chats_page(request,admin):
-	if request.method=='GET':
-	    nombre=request.GET.get("nombre")
-	    apellido=request.GET.get("apellido")
-	    orden=request.GET.get("filtro")
-	    data_chats=Canal.objects.select_related()
-	    data_mensajes=CanalMensaje.objects.all()
-	    data_chats=data_chats.filter(usuario_admin_id__id_empleado__icontains=admin)
-	    data_mensajes=data_mensajes.filter(usuario_admin_id__id_empleado__icontains=admin)
-	    if nombre!=None:
-	        data_chats=data_chats.filter(usuario_cliente_id__nombre__icontains=nombre)
-	        data_mensajes=data_mensajes.filter(usuario_cliente_id__nombre__icontains=nombre)
-	    if apellido!=None:
-	        data_chats=data_chats.filter(usuario_cliente_id__apellido__icontains=apellido)
-	        data_mensajes=data_mensajes.filter(usuario_cliente_id__apellido__icontains=apellido)
-	    data_chats=data_chats.order_by("-tiempo")
-	    data_mensajes=data_mensajes.order_by("-tiempo")
-	    mensajes=[]
-	    clientes=Cliente.objects.select_related()
-	    for cli in clientes:
-	        mensaje=data_mensajes.filter(usuario_cliente=cli.id_cliente).order_by("-tiempo").first()
-	        if mensaje != None:
-	            mensajes.append(mensaje)
-	    page = request.GET.get('page', 1)
-	    paginator = Paginator(data_chats, 10)
-	    try:
-	    	clientes = paginator.page(page)
-	    except PageNotAnInteger:
-	    	clientes = paginator.page(1)
-	    except EmptyPage:
-	    	clientes = paginator.page(paginator.num_pages)
+    if request.method=='GET':
+        nombre=request.GET.get("nombre")
+        apellido=request.GET.get("apellido")
+        orden=request.GET.get("filtro")
+        data_chats=Canal.objects.select_related()
+        data_mensajes=CanalMensaje.objects.all()
+        data_chats=data_chats.filter(usuario_admin_id__id_empleado__icontains=admin)
+        data_mensajes=data_mensajes.filter(usuario_admin_id__id_empleado__icontains=admin)
+        if nombre!=None:
+            data_chats=data_chats.filter(usuario_cliente_id__nombre__icontains=nombre)
+            data_mensajes=data_mensajes.filter(usuario_cliente_id__nombre__icontains=nombre)
+        if apellido!=None:
+            data_chats=data_chats.filter(usuario_cliente_id__apellido__icontains=apellido)
+            data_mensajes=data_mensajes.filter(usuario_cliente_id__apellido__icontains=apellido)
+        data_chats=data_chats.order_by("-tiempo")
+        data_mensajes=data_mensajes.order_by("-tiempo")
+        mensajes=[]
+        clientes=Cliente.objects.select_related()
+        for cli in clientes:
+            mensaje=data_mensajes.filter(usuario_cliente=cli.id_cliente).order_by("-tiempo").first()
+            if mensaje != None:
+                mensajes.append(mensaje)
+        page = request.GET.get('page', 1)
+        paginator = Paginator(data_chats, 10)
+        try:
+            clientes = paginator.page(page)
+        except PageNotAnInteger:
+            clientes = paginator.page(1)
+        except EmptyPage:
+            clientes = paginator.page(paginator.num_pages)
 
-	    return render(request, "Chats/chats.html",{"datos":clientes,"data_mensajes":mensajes,"filtro":orden,"id_Admin":admin})
-	return HttpResponse(status=400)
+        return render(request, "Chats/chats.html",{"datos":clientes,"data_mensajes":mensajes,"filtro":orden,"id_Admin":admin})
+    return HttpResponse(status=400)
 
 @login_required(login_url='/login/')
 def tarjetasRegalo_page(request):
@@ -2809,14 +3710,14 @@ def tarjetasRegalo_page(request):
 
 @login_required(login_url='/login/')
 def get_tarjeta_monto(request,id_tarjetaxcliente):
-	tarjeta=Tarjeta_Monto_Cliente.objects.select_related().filter(id_tarjetaxcliente=id_tarjetaxcliente).first()
-	pedido=Tarjeta_Monto_Pedido.objects.select_related().filter(id_tarjeta=tarjeta.id_tarjeta)
-	#oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
-	#combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
-	#cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
-	context={"data": tarjeta, "pedido":pedido}
-	#,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido
-	return render(request, "TarjetasRegalo/modal-tarjeta-monto.html",context)
+    tarjeta=Tarjeta_Monto_Cliente.objects.select_related().filter(id_tarjetaxcliente=id_tarjetaxcliente).first()
+    pedido=Tarjeta_Monto_Pedido.objects.select_related().filter(id_tarjeta=tarjeta.id_tarjeta)
+    #oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
+    #combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
+    #cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
+    context={"data": tarjeta, "pedido":pedido}
+    #,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido
+    return render(request, "TarjetasRegalo/modal-tarjeta-monto.html",context)
 
 @login_required(login_url='/login/')
 def tarjetasRegalo2_page(request):
@@ -2891,18 +3792,118 @@ def tarjetasRegalo2_page(request):
 
 @login_required(login_url='/login/')
 def get_tarjeta_producto(request,id_tarjetaxcliente):
-	tarjeta=Tarjeta_Producto_Cliente.objects.select_related().filter(id_tarjetaxcliente=id_tarjetaxcliente).first()
-	pedido=Pedido.objects.select_related().filter(id_pedido=tarjeta.id_tarjeta.id_pedido.id_pedido).first()
-	producto=Tarjeta_Producto_Producto.objects.select_related().filter(id_tarjeta=tarjeta.id_tarjeta)
-	#oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
-	#combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
-	#cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
-	context={"data": tarjeta, "pedido":pedido, "productos":producto}
-	#,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido
-	return render(request, "TarjetasRegalo/modal-tarjeta-producto.html",context)
+    tarjeta=Tarjeta_Producto_Cliente.objects.select_related().filter(id_tarjetaxcliente=id_tarjetaxcliente).first()
+    pedido=Pedido.objects.select_related().filter(id_pedido=tarjeta.id_tarjeta.id_pedido.id_pedido).first()
+    producto=Tarjeta_Producto_Producto.objects.select_related().filter(id_tarjeta=tarjeta.id_tarjeta)
+    #oferta_pedido=Oferta_Pedido.objects.select_related().filter(pedido=pedido)
+    #combo_pedido=Combo_Pedido.objects.select_related().filter(pedido=pedido)
+    #cupon_pedido=Cupon_Pedido.objects.select_related().filter(pedido=pedido)
+    context={"data": tarjeta, "pedido":pedido, "productos":producto}
+    #,"productos":producto_pedido,"ofertas":oferta_pedido,"combos":combo_pedido,"cupones":cupon_pedido
+    return render(request, "TarjetasRegalo/modal-tarjeta-producto.html",context)
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def repartidores(request):
+    system=request.POST.get("system")
+    return render(request,"Repartidores/repartidores.html",{})
+@login_required(login_url='/login/')
+@csrf_exempt
+def asignar_repartidores(request,id_pedido):
+    repartidores=Repartidor.objects.select_related().filter(estado="Activo")
+    pedido=Pedido.objects.select_related().filter(id_pedido=id_pedido).first()
+
+    return render(request,"Repartidores/repartidores.html",{"data":pedido,"repartidores":repartidores})
+
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def crud_repartidores(request):
+    def crear_codigo():
+        claves=""
+        num=random.randint(100,999)
+        while len(claves)<4:
+            letra=random.choice(string.ascii_letters)
+            claves+=letra
+        prefijo= claves.upper()[:2]
+        sufijo= claves.upper()[2:]
+        codigo=prefijo+str(num)+sufijo
+        try:
+            usuario=Usuario.objects.get(codigo_unico=str(codigo))
+        except Usuario.DoesNotExist:
+            usuario = None
+        if((usuario) is None):
+            return codigo
+        else:
+            crear_codigo()
+
+    def llenar_codigos(ides):
+        for elem in ides:
+            codigo=crear_codigo()
+            usuario=Usuario.objects.select_related().filter(id_usuario=elem).first()
+            if((usuario.codigo_unico) is None):
+                usuario.codigo_unico = codigo
+                usuario.save()
+    usuarios_id=Usuario.objects.all().values("id_usuario")
+    ides=[]
+    for elem in usuarios_id:
+        ides.append(elem["id_usuario"])
+
+    repartidores=Repartidor.objects.all()
+    total=len(repartidores)
+    return render(request,"Repartidores/crud_repartidores.html",{"data":repartidores,"total":total})
 
 
 
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def agregar_repartidor(request):
+    nombre=""
+
+    if request.method=='POST':
+            nombre=request.POST.get('nombre',None)
+            apellido = request.POST.get('apellido',None)
+            telefono = request.POST.get('telefono',None)
+            chat = request.POST.get('chat',None)
+            u_chat=Repartidor.objects.select_related().filter(token=chat).first()
+            if u_chat is not None:
+                response_data= 'Ya existe un repartidor con estos datos, intenta de nuevo.'
+                html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+                return JsonResponse({'html': html, 'result': "error"})
+            repartidor = Repartidor(nombre=nombre,apellido = apellido,telefono=telefono,token = chat,estado="Activo")
+            repartidor.save()
+            response_data= '!El repartidor ha sido creado con éxito!'
+            html = render_to_string("Avisos/correcto.html",{"data":response_data})
+            return JsonResponse({'html': html, 'result': "ok"})
+    return render(request,"Repartidores/add_repartidor.html")
+
+@login_required(login_url='/login/')
+@csrf_exempt
+def edit_repartidor(request,id_repartidor):
+    res=[]
+    repartidor=Repartidor.objects.select_related().filter(id_repartidor=id_repartidor).first()
+    if request.method=='POST':
+        nombre=request.POST.get('nombre',None)
+        apellido = request.POST.get('apellido',None)
+        telefono = request.POST.get('telefono',None)
+        chat = request.POST.get('chat',None)
+        estado = request.POST.get('estado',None)
+        if nombre is not None and chat is not None and apellido is not None:
+            repartidor.nombre=nombre
+            repartidor.apellido = apellido
+            repartidor.telefono = telefono
+            repartidor.token= chat
+            repartidor.estado=estado
+            repartidor.save()
+            response_data= '!El repartidor ha sido actualizado con éxito!'
+            html = render_to_string("Avisos/correcto.html",{"data":response_data})
+            return JsonResponse({'html': html, 'result': "ok"})
+        else:
+            response_data= '!Ha ocurrido un error, intente de nuevo!'
+            html = render_to_string("Avisos/incorrecto.html",{"data":response_data})
+            return JsonResponse({'html': html, 'result': "error"})
+    return render(request,"Repartidores/edit_repartidor.html",{"data":repartidor})
 
 
 

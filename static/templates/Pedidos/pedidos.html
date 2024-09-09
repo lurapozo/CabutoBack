@@ -416,6 +416,25 @@
         }
 
     }
+
+    function anular(id,estado){
+        if(estado=='Tarjeta'){
+            if(confirm('¿Desea anular el pedido?')){
+                location = '../pedidos/anular_pedido/'+id;
+            }else{
+                return false
+            }
+        }
+    }
+    function anularEfectivo(id,estado){
+        if(estado!='Tarjeta'){
+            if(confirm('¿Desea anular el pedido?')){
+                location = '../pedidos/anular_pedido/'+id;
+            }else{
+                return false
+            }
+        }
+    }
 /*
     function copiar(){
         var codigoACopiar = document.getElementById('ruta');

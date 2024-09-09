@@ -361,7 +361,7 @@ def getInicio(request):
             data = list(categorias)
             productos = Producto.objects.select_related().filter().exclude(estado="I").annotate(suma=Sum('establecimiento_producto__stock_disponible')).order_by("-suma").values('nombre', 'image','precio','suma')[:6]
             productos = list(productos)
-            ofertas = Oferta.objects.select_related().filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')[:6]
+            ofertas = Oferta.objects.select_related().filter(fecha_fin__gte=datetime.today()).filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')[:6]
             ofertas = list(ofertas)
             res = {
                 'categorias': data,
@@ -382,7 +382,7 @@ def getInicio2(request, establecimiento):
             productos = Establecimiento_Producto.objects.filter(id_producto__nombre__icontains=str(valor)).filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')[:6]
             #productos = productos.filter(id_establecimiento = establecimiento)[:6]
             productos = list(productos)
-            ofertas = Oferta.objects.select_related().filter(nombre__icontains=str(valor)).filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')
+            ofertas = Oferta.objects.select_related().filter(fecha_fin__gte=datetime.today()).filter(nombre__icontains=str(valor)).filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')
             ofertas = ofertas.filter(id_establecimiento = establecimiento)[:6]
             ofertas = list(ofertas)
             res = {
@@ -399,7 +399,7 @@ def getInicio2(request, establecimiento):
             productos = Establecimiento_Producto.objects.filter(id_establecimiento = establecimiento).exclude(id_producto__estado="I").annotate(suma=Sum('id_producto__establecimiento_producto__stock_disponible')).order_by("-suma").values('id_producto__nombre', 'id_producto__image','id_producto__precio','suma')[:6]
             #productos = productos.filter(id_establecimiento = establecimiento)[:6]
             productos = list(productos)
-            ofertas = Oferta.objects.select_related().filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')
+            ofertas = Oferta.objects.select_related().filter(fecha_fin__gte=datetime.today()).filter(cantidad__gt=0).order_by("-cantidad").values('nombre', 'image','precioAntes','precio','cantidad')
             ofertas = ofertas.filter(id_establecimiento = establecimiento)[:6]
             ofertas = list(ofertas)
             res = {
@@ -634,7 +634,7 @@ def guardarPedido(request):
         subtotal2=response["subtotal"]
         envio=response["envio"]
         descuento=response["descuento"]
-        estadopedido=response["tarjetaRegalo"]
+        #estadopedido=response["tarjetaRegalo"]
         nombreTarjeta=response["nombreTarjeta"]
         numeroTarjeta=response["numeroTarjeta"]
         tarjeta=response["tarj"]
@@ -809,7 +809,7 @@ def guardarPedido2(request):
         subtotal2=response["subtotal"]
         envio=response["envio"]
         descuento=response["descuento"]
-        estadopedido=response["tarjetaRegalo"]
+        #estadopedido=response["tarjetaRegalo"]
 
         tarjeta=response["tarj"]
 
@@ -834,7 +834,7 @@ def guardarPedido2(request):
             puntos = Puntos.objects.get(id_puntos = 1)
             pedido.puntos=subtotal2 * (puntos.puntosADolar / puntos.dolarAPuntos)
             pedido.save()
-            backupPedido=Backup_Pedido(id_pedido=pedido, id_direccion=direccion, fecha=timezone.now(),tipo_entrega=tipoEntrega,tipo_pago=tipoPago,total=total, nombreTarjeta=nombreTarjeta,numeroTarjeta=numeroTarjeta, clienteid=user.id_cliente,clientenombre=user.nombre,clienteapellido=user.apellido,telefono=user.telefono,cedula=user.usuario.cedula)
+            backupPedido=Backup_Pedido(id_pedido=pedido, id_direccion=direccion, fecha=timezone.now(),tipo_entrega=tipoEntrega,tipo_pago=tipoPago,total=total, nombreTarjeta="nombreTarjeta",numeroTarjeta="numeroTarjeta", clienteid=user.id_cliente,clientenombre=user.nombre,clienteapellido=user.apellido,telefono=user.telefono,cedula=user.usuario.cedula)
             backupPedido.save()
             if(tarjeta=="monto"):
                 receptor=response["receptor"]
@@ -3306,3 +3306,94 @@ def actualizarVersion(request,id):
         response_data = {'valid':'OK'}
         return JsonResponse(response_data,safe=False)
     JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def threeds(request):
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        #response = json.loads(request.body)
+        print("ACA EL RESPONSEEEEEE")
+        print(response)
+        print(response["user"]["email"])
+        print(response["transaction"]["amount"])
+        print("ACA EL RESPONSEEEEEE TERmINA")
+        if response["transaction"]["status"] != '4':
+            usuario=Usuario.objects.get(correo=response["user"]["email"])
+            cliente=Cliente.objects.get(usuario=usuario)
+            cliente.numValidacion=float(response["transaction"]["amount"])
+            cliente.save()
+            #response_data = response
+            response_data = {'valid':'OK'}
+        else:
+            response_data = {'valid':'NO post'}
+        return JsonResponse(response_data,safe=False)
+    JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def checkNumValidacion(request):
+    response_data = {'valid':'NO'}
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        clienteId=response["id"]
+        token=response["token"]
+        numVal=response["numVal"]
+        usuario=Usuario.objects.get(id_usuario=clienteId)
+        cliente=Cliente.objects.get(usuario=usuario)
+        tarjeta = Cardauth.objects.get(token=token)
+
+        #cliente = Cliente.objects.get(id_cliente = clienteId)
+        if cliente.numValidacion == numVal:
+            tarjeta.validado = True;
+            tarjeta.save();
+            cliente.numValidacion = -1;
+            cliente.save()
+            response_data = {'valid':'OK'}
+        else:
+            response_data = {'valid':'NO post'}
+        return JsonResponse(response_data,safe=False)
+    return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def checkEstaVal(request):
+    response_data = {'valid':'NO'}
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        token=response["token"]
+        tarjeta = Cardauth.objects.get(token=token)
+        if tarjeta.validado == True:
+            response_data = {'valid':'OK'}
+        else:
+            response_data = {'valid':'NO post'}
+        return JsonResponse(response_data,safe=False)
+    return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def checkFaltaVal(request):
+    response_data = {'valid':'NO'}
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        clienteId=response["id"]
+        usuario=Usuario.objects.get(id_usuario=clienteId)
+        cliente=Cliente.objects.get(usuario=usuario)
+        if cliente.numValidacion == -1:
+            response_data = {'valid':'OK'}
+        else:
+            response_data = {'valid':'NO post'}
+        return JsonResponse(response_data,safe=False)
+    return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def resetNumValidacion(request):
+    response_data = {'valid':'NO'}
+    print("AAAAAAAAAAAAAAAEEEEEEEEEEEHHHHHHHH1")
+    if request.method == 'POST':
+        response = json.loads(request.body)
+        print("AAAAAAAAAAAAAAAEEEEEEEEEEEHHHHHHHH2")
+        clienteId=response["id"]
+        usuario=Usuario.objects.get(id_usuario=clienteId)
+        cliente=Cliente.objects.get(usuario=usuario)
+        cliente.numValidacion = -1;
+        cliente.save()
+        response_data = {'valid':'OK'}
+        return JsonResponse(response_data,safe=False)
+    return JsonResponse(response_data,safe=False)

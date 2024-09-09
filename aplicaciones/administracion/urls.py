@@ -85,6 +85,7 @@ urlpatterns = [
 	url(r'^buscar_pedido/(?P<id_pedido>\d+)', get_pedido, name="buscar_pedido"),
 	url(r'^detalle_pedido/(?P<id_pedido>\d+)', detalle_pedido, name="detalle_pedido"),
 	url(r'^pedidosEspera/confirmar_pedido/(?P<id_pedido>\d+)', confirmar_pedido, name="confirmar_pedido"),
+	url(r'^pedidos/anular_pedido/(?P<id_pedido>\d+)', anular_pedido, name="anular_pedido"),
 	path('cupones/',cupon_page),
 	url(r'cupones/add_cupon/', add_cupon, name="add_cupon"),
 	url(r'cupones/add_cupon2/', add_cupon2, name="add_cupon2"),
@@ -122,4 +123,10 @@ urlpatterns = [
     path('tarjetasregalo2/', tarjetasRegalo2_page),
     url(r'^buscar_tarjeta_producto/(?P<id_tarjetaxcliente>\d+)', get_tarjeta_producto, name="buscar_tarjeta_producto"),
 
+	path("repartidores/",repartidores),
+	url(r'^repartidores/asignar_repartidores/(?P<id_pedido>\d+)', asignar_repartidores, name="asignar_repartidores"),
+	url(r'^repartidores/asignar_repartidores/ocupar_repartidores/(?P<id_repartidor>\d+)/(?P<id_pedido>\d+)', ocupar_repartidores, name="ocupar_repartidores"),
+	path("crud_repartidores/",crud_repartidores, name="crud_repartidores"),
+	url(r'^crud_repartidores/add_repartidor/', agregar_repartidor, name="add_repartidor"),
+	url(r'^crud_repartidores/edit_repartidor/(?P<id_repartidor>\d+)', edit_repartidor, name="edit_repartidor"),
 ]

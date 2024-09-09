@@ -1,1 +1,60 @@
-myvenv
+# Ignorar archivos de credenciales
+google-credentials.json
+
+
+# Archivos de configuración de Django
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+db.sqlite3
+db.sqlite3-journal
+
+# Archivos de entorno virtual
+venv/
+env/
+.myenv/
+
+# Ignorar el entorno virtual
+myenv/
+
+
+# Archivos de configuración local
+.env
+
+
+# Archivos de caché
+*.cache
+*.tmp
+
+# Archivos de configuración de IDE y editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de compilación
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Archivos de distribución de paquetes
+*.tar.gz
+*.zip
+
+# Archivos de cobertura de pruebas
+.coverage
+.coverage.*
+
+# Archivos generados por sistemas de prueba
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db

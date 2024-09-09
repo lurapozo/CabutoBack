@@ -317,6 +317,12 @@
                         Entregar
                     {% endif %}
                 </button>
+                {% if data.tipo_pago == "Tarjeta" %}
+                    <button class="btn btn-danger" id="anular-btn" onclick="anular({{data.id_pedido}},'{{data.tipo_pago}}')">Anular</button>
+                {% endif %}
+                {% if data.tipo_pago != "Tarjeta" %}
+                    <button class="btn btn-danger" id="anular-btn" onclick="anularEfectivo({{data.id_pedido}},'{{data.tipo_pago}}')">Anular</button>
+                {% endif %}
             </div>
         </div>
     </div>
