@@ -690,7 +690,7 @@ def confirmar_pedido(request, id_pedido):
 	    #print(fecha)
 	    print(fecha.strftime("%d/%m/%Y"))
 	    mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" está siendo despachado."
-	    data = {"title":"Pedido despachado","titulo": "Pedido enviado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
+	    data = {"title":"Pedido despachado","titulo": "Pedido enviado","id":str(pedido.id_pedido), "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
 	    devices.send_message(mensaje, extra=data)
 	    datasend={"to": usuario.token,
     	    "notification": {
@@ -711,7 +711,7 @@ def confirmar_pedido(request, id_pedido):
         #print(fecha)
         print(fecha.strftime("%d/%m/%Y"))
         mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" se encuentra en camino."
-        data = {"title":"Pedido enviado","titulo": "Pedido enviado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
+        data = {"title":"Pedido enviado","titulo": "Pedido enviado","id":str(pedido.id_pedido), "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
         devices.send_message(mensaje, extra=data)
         datasend={"to": usuario.token, "notification": {"title": "Pedido enviado","subtitle": "Pedido enviado","body": mensaje,"id":pedido.id_pedido}, "data": data}
         response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)
@@ -729,7 +729,7 @@ def confirmar_pedido(request, id_pedido):
 	    #print(fecha)
 	    print(fecha.strftime("%d/%m/%Y"))
 	    mensaje= "Su pedido con fecha "+fecha.strftime("%d/%m/%Y")+" ha sido entregado, en la ventana historial de compras puede calificar su compra, esto nos ayudará a brindarle un mejor servicio."
-	    data = {"title":"Pedido entregado","titulo": "Pedido entregado","id":pedido.id_pedido, "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
+	    data = {"title":"Pedido entregado","titulo": "Pedido entregado","id":str(pedido.id_pedido), "mensaje":mensaje,"color":"#ff7c55", "priority":"high","notification_foreground": "true"}
 	    devices.send_message(mensaje, extra=data)
 	    datasend={"to": usuario.token, "notification": {"title": "Pedido entregado","subtitle": "Pedido entregado","body": mensaje,"id":pedido.id_pedido},"data": data}
 	    response = requests.post(notificacion_URL, headers=notificacion_header, json=datasend)

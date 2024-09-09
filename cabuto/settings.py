@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 from django.urls import reverse_lazy
+from firebase_admin import credentials, initialize_app
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,8 +46,15 @@ INSTALLED_APPS = [
     'push_notifications',
 ]
 
+
+cred = credentials.Certificate(os.path.join(BASE_DIR, "google-credentials.json"))
+firebase_app = initialize_app(cred)
+
 PUSH_NOTIFICATIONS_SETTINGS = {
-    "FCM_API_KEY": "AAAAfK-HTLc:APA91bHkgzXZbzKIhpfreDv215qmTHJjhq1A2GPPm4R9Qc4VGjuTHkuYpsq6bike4TI7zraeehle2Uakv7CWfsp4zzjeKj8NBuOSNvmZigHnybD7a2CdITlJYfMJGjr0R2Gr_eks2CnE",
+    "APLICATIONS":{
+        "PLATFORM": "FCM",
+        "FIREBASE_APP": firebase_app
+    },
     "USER_MODEL": "administracion.usuario",
     "WP_PRIVATE_KEY": os.path.join(BASE_DIR, "private_key.pem"),
     "WP_CLAIMS": {'sub': "mailto: cabutosoftware1@gmail.com"},
