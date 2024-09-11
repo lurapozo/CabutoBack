@@ -48,7 +48,9 @@ INSTALLED_APPS = [
 
 
 cred = credentials.Certificate(os.path.join(BASE_DIR, "google-credentials.json"))
-firebase_app = initialize_app(cred)
+firebase_app = initialize_app(cred,{
+    'databaseURL': 'https://cabutos.firebaseio.com/',
+})
 
 PUSH_NOTIFICATIONS_SETTINGS = {
     "APLICATIONS":{

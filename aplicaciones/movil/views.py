@@ -15,6 +15,8 @@ from push_notifications.models import GCMDevice
 from django.db.models import Count, Sum, Avg
 from datetime import datetime, timedelta
 from django.utils import timezone
+from firebase_admin import db
+from time import time
 import requests
 import json
 import random
@@ -3343,9 +3345,9 @@ def checkNumValidacion(request):
 
         #cliente = Cliente.objects.get(id_cliente = clienteId)
         if cliente.numValidacion == numVal:
-            tarjeta.validado = True;
-            tarjeta.save();
-            cliente.numValidacion = -1;
+            tarjeta.validado = True
+            tarjeta.save()
+            cliente.numValidacion = -1
             cliente.save()
             response_data = {'valid':'OK'}
         else:
@@ -3392,8 +3394,29 @@ def resetNumValidacion(request):
         clienteId=response["id"]
         usuario=Usuario.objects.get(id_usuario=clienteId)
         cliente=Cliente.objects.get(usuario=usuario)
-        cliente.numValidacion = -1;
+        cliente.numValidacion = -1
         cliente.save()
         response_data = {'valid':'OK'}
         return JsonResponse(response_data,safe=False)
     return JsonResponse(response_data,safe=False)
+
+@csrf_exempt
+def actualizar_pedido_firebase(request):
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            numero_pedido = data.get('numeroPedido')
+            
+            if not numero_pedido:
+                return JsonResponse({"status": "error", "message": "Número de pedido no proporcionado"}, status=400)
+
+            ref = db.reference('pedidos/ultimoPedido')
+            ref.set({'numeroPedido': numero_pedido,
+                     'timestamp': int(time()*1000)})
+
+            return JsonResponse({"status": "success", "message": "Número del pedido actualizado en Firebase"}, status=200)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+    else:
+        return JsonResponse({"status": "error", "message": "Método no permitido"}, status=405)
+    

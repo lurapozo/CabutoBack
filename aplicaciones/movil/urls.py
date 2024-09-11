@@ -94,4 +94,5 @@ urlpatterns = [
     path('actualizarVersion/<int:id>', actualizarVersion),
 
     path('threeds/', threeds),
+    path('actualizarPedidoFirebase',actualizar_pedido_firebase),
 ]

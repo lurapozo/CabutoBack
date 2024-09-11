@@ -3,6 +3,10 @@
 {% include 'Shared/sidebar.html' %}
 {% include 'Shared/navbar.html' %}
 
+<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
+<script type="text/javascript" src="{% static 'js/firebase-utils.js' %}"></script>
+
 <style>
     h3 {
         padding-top: 4rem;
@@ -124,6 +128,7 @@
         margin-right: 20px;
     }
 </style>
+
 <script type="text/javascript">
     $(document).ready(function() {
         var modalDiv = $("#modal-div");
@@ -135,6 +140,7 @@
             this.currentTime = 0;
             this.play();
         }, false);
+        
         $(".open-modal").on("click", function() {
           $.ajax({
             beforeSend: function(){
@@ -150,8 +156,10 @@
             }
           });
         });
-        setTimeout(function(){ location="" }, 300000);
+
+        actualizarPedidosEspera();
     });
+
     function ubicacion(nombre,latitud, longitud){
 
         var nombreLocal = document.getElementById("texto-modal");
