@@ -15,31 +15,41 @@ Repositorio en [GitHub](https://github.com/CabutoMarket/CabutoBack)
 ## Instalación
 
 Clonar el proyecto
-```
+
+```bash
 git clone https://github.com/CabutoMarket/CabutoBack.git
 ```
 
 Crear un entorno virtual para que las dependencias instaladas y sus versiones se manejen dentro del contexto del proyecto y no de forma global.
 
-```
+> IMPORTANTE: Usar una versión adecuada de Python, se ha reaizado con Python 3.8.x
+```bash
 python -m venv myvenv
 ```
+
 Activar entorno virtual
-```
+
+```bash
 myenv\Scripts\activate
 ```
+
 El proyecto cuenta con un archivo requirements.txt donde se encuentran listadas todas las dependencias que requiere el proyecto para su correcta ejecución.
-```
+
+```bash
 pip install -r requirements.txt
 ```
 
-*Si se instalan nuevas dependencias es necesario mantener este archivo actualizado para ello se debe ejecutar:*
-```
+> NOTA: Si se instalan nuevas depedencias actualizar 'requirements.txt'
+
+Para actualizar requirements.txt se debe ejecutar:
+
+```bash
 pip freeze > requirements.txt
 ```
 Una vez instaladas todas las dependencias procedemos a cambiar la conexión a la base de datos por nuestra versión en local.
 Para ello nos dirigimos a la ruta `./cabuto/settings.py`. Aquí buscaremos el siguiente bloque codigo:
-```
+
+```python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -55,8 +65,10 @@ DATABASES = {
     }
 }
 ```
+
 y lo reemplazamos por la conexión a nuestra base de datos en local, por ejemplo con postgresql:
-```
+
+```python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
