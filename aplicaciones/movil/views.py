@@ -556,6 +556,7 @@ def pagarPedido(request):
             res = {
                 'valid': 'ok'
             }
+            print(actualizar_pedido_firebase())
             return JsonResponse(res,safe=False)
 
         if not pedido.pagado:
@@ -573,6 +574,7 @@ def pagarPedido(request):
             res = {
                 'valid': 'ok'
             }
+            print(actualizar_pedido_firebase())
             return JsonResponse(res,safe=False)
 
         else:
@@ -3400,23 +3402,12 @@ def resetNumValidacion(request):
         return JsonResponse(response_data,safe=False)
     return JsonResponse(response_data,safe=False)
 
-@csrf_exempt
-def actualizar_pedido_firebase(request):
-    if request.method == "PUT":
-        try:
-            data = json.loads(request.body)
-            numero_pedido = data.get('numeroPedido')
-            
-            if not numero_pedido:
-                return JsonResponse({"status": "error", "message": "Número de pedido no proporcionado"}, status=400)
+def actualizar_pedido_firebase():
+    try:
+        # Actualiza solo el timestamp en Firebase
+        ref = db.reference('pedidos/ultimoPedido')
+        ref.update({'timestamp': int(time() * 1000)})
 
-            ref = db.reference('pedidos/ultimoPedido')
-            ref.set({'numeroPedido': numero_pedido,
-                     'timestamp': int(time()*1000)})
-
-            return JsonResponse({"status": "success", "message": "Número del pedido actualizado en Firebase"}, status=200)
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=400)
-    else:
-        return JsonResponse({"status": "error", "message": "Método no permitido"}, status=405)
-    
+        return {"status": "success", "message": "Timestamp del pedido actualizado en Firebase"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
