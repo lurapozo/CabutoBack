@@ -7,11 +7,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.14/js/bootstrap-select.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/i18n/defaults-es_ES.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
-
-<script type="text/javascript" src="{% static 'js/firebase-utils.js' %}"></script>
-
 
 <style>
     h3 {
@@ -299,9 +294,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        var audio = document.getElementById("miAudio");
-        if(audio){
-           audio.volume = 0.75;
+        var audio = document.getElementById("audioPedido");
+        if({{ espera|length }} == 0) {
+            audio.pause();
         }
         var activeTab = "{{tab}}";
         if (activeTab != "") {
@@ -348,7 +343,6 @@
         $('#filtro').val("{{filtro}}");
         $('.selectpicker').selectpicker('refresh')
 
-        actualizarPedidosEspera();
     });
     function ubicacion(nombre,latitud, longitud){
 
@@ -471,9 +465,8 @@
             }
         }*/
 </script>
-{% if recibidos %}
-    <audio src="https://cabutoshop.pythonanywhere.com/media/audio/Fit_fo_an_Autopsy-The_Conqueror.mp3" id="miAudio" autoplay></audio>
-{% endif %}
+
+<audio src="{% static 'audio/Fit_fo_an_Autopsy-The_Conqueror.mp3' %}" id="audioPedido" autoplay></audio>
 {% timezone "America/Guayaquil" %}
 <div class="col-12">
     <div class="col-md-12">

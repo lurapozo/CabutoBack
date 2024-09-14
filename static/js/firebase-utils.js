@@ -13,22 +13,33 @@ if (!firebase.apps.length) {
 }
 
 const database = firebase.database();
-const pedidosRef = database.ref('pedidos/');
 
-function actualizarPedidosEspera() {
-    let lastProcessedTimestamp = localStorage.getItem('lastProcessedTimestamp') || 0;
-
-    const ultimoPedidoRef = database.ref('pedidos/ultimoPedido');
+function enviarSonido() {
+    const audioPedido = document.getElementById('audioPedido');
+    const audioNotificacionPedido = document.getElementById('audioNotificacionPedido');
     
-    ultimoPedidoRef.on('value', (snapshot) => {
-        const nuevoPedido = snapshot.val();
-        const pedidoTimestamp = snapshot.child("timestamp").val();
-
-        if (nuevoPedido && pedidoTimestamp > lastProcessedTimestamp) {
-            console.log("Nuevo pedido detectado:", nuevoPedido);
-            localStorage.setItem('lastProcessedTimestamp', pedidoTimestamp);
-            location.reload();
-        }
-    });
+    if (audioPedido) {
+        location.reload();
+    }
+    if (!audioNotificacionPedido) {
+        const nuevoAudio = document.createElement('audio');
+        nuevoAudio.id = 'audioNotificacionPedido';
+        nuevoAudio.src = 'https://www.bensound.com/bensound-music/bensound-theelevatorbossanova.mp3';
+        document.body.appendChild(nuevoAudio);
+        nuevoAudio.play();
+    } else {
+        audioNotificacionPedido.currentTime = 0;
+        audioNotificacionPedido.play();
+    }
 }
 
+function actualizarPedidosEspera() {
+    const ultimoPedidoRef = database.ref('pedidos/ultimoPedido');    
+    ultimoPedidoRef.on('child_changed', (snapshot) => {
+            enviarSonido();
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    actualizarPedidosEspera();
+});

@@ -3,10 +3,6 @@
 {% include 'Shared/sidebar.html' %}
 {% include 'Shared/navbar.html' %}
 
-<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-database-compat.js"></script>
-<script type="text/javascript" src="{% static 'js/firebase-utils.js' %}"></script>
-
 <style>
     h3 {
         padding-top: 4rem;
@@ -132,9 +128,9 @@
 <script type="text/javascript">
     $(document).ready(function() {
         var modalDiv = $("#modal-div");
-        let audio=document.querySelector("#audio");
-        if("{{datos.count}}"==0){
-            audio.pause();
+        var audio = document.getElementById("audioPedido");
+        if (audio) {
+            audio.play();
         }
         audio.addEventListener('ended', function() {
             this.currentTime = 0;
@@ -157,7 +153,6 @@
           });
         });
 
-        actualizarPedidosEspera();
     });
 
     function ubicacion(nombre,latitud, longitud){
@@ -214,6 +209,7 @@
     <h3 class="row titulo">PEDIDOS EN ESPERA</h3>
     <div class="contenedor-pedido">
         {% if datos %}
+        <audio src="https://www.bensound.com/bensound-music/bensound-theelevatorbossanova.mp3" id="audioPedido"></audio>
         {% for data in datos %}
         <div class="div-contenedor-pedido">
             <h4 class="indice">{{ forloop.counter }}</h4>
@@ -252,7 +248,6 @@
     </div>
   </div>
 </div>
-<audio src="https://www.bensound.com/bensound-music/bensound-theelevatorbossanova.mp3" id="audio" autoplay></audio>
 <div id="modal-div"></div>
 <div id="modalDireccion" class="modal fade" role="dialog">
   <div class="modal-dialog">
