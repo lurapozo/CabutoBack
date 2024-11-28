@@ -22,7 +22,7 @@ git clone https://github.com/CabutoMarket/CabutoBack.git
 
 Crear un entorno virtual para que las dependencias instaladas y sus versiones se manejen dentro del contexto del proyecto y no de forma global.
 
-> IMPORTANTE: Usar una versión adecuada de Python, se ha reaizado con Python 3.8.x
+> IMPORTANTE: Usar una versión adecuada de Python, se ha realizado con Python 3.8.x
 ```bash
 python -m venv myvenv
 ```
